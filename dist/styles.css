@@ -127,3 +127,11 @@ body[data-page="public"] .tabs{width:100%;overflow:hidden}
 #event-list .tree-line{min-height:32px;gap:8px}
 #event-list .tree-leaf{padding:6px 4px;border-top:1px solid #edf2f1}
 #event-list .tree-create{padding:8px 2px 2px}
+
+/* Admin interface clean-up: calm hierarchy, consistent controls, compact editing. */
+.admin-shell{max-width:1440px;padding-top:28px}.admin-top{padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid #c9dcda}.admin-top h1{font-size:clamp(2rem,3.4vw,3.1rem)}.admin-top .back{box-shadow:none}
+.admin-shell .grid{grid-template-columns:minmax(0,1fr) 330px;align-items:start}.admin-shell .panel{border-radius:14px;overflow:clip}.admin-shell .panel>h2{padding:15px 18px;background:#f7fbfa;font-size:1rem;letter-spacing:.01em}
+#event-list{padding:14px}.tree-node strong{font-size:.95rem}.tree-toggle{width:24px;height:24px;font-size:1.1rem}.tree-actions{gap:5px;padding:2px 0}.tree-actions .rename{height:30px;background:#fff;font-size:.83rem}.icon{height:30px;min-width:30px;transition:background .15s,border-color .15s}.icon:hover{background:#e8f5f2;border-color:#6faaa1}.icon.danger:hover{background:#fff0ed;border-color:#c86f65}
+#event-list>.tree-node>.tree-line{padding:2px 1px}#event-list .tree-children>.tree-node>.tree-line{padding:1px 0}.tree-create .btn{min-height:34px;padding:7px 11px;font-size:.8rem}.unassigned-race{border-top:1px solid #e6efed;padding:10px 4px}.unassigned-race:first-child{border-top:0}.unassigned-race .btn{min-height:34px}
+.admin-shell .settings{gap:14px}.admin-shell .settings p{margin:0;padding:10px 11px;border-radius:8px;background:#f7fbfa;font-size:.82rem;line-height:1.35}.admin-shell .field label{font-size:.82rem}.admin-shell .field input,.admin-shell .field select{font-size:.84rem}
+@media(max-width:900px){.admin-shell .grid{grid-template-columns:1fr}.admin-shell aside.panel{order:-1}}@media(max-width:700px){#event-list{padding:10px}.admin-shell .panel>h2{padding:13px}.tree-actions{margin-left:0;padding-left:30px}.tree-actions .rename{min-width:120px}.admin-top{gap:12px}}
