@@ -43,6 +43,21 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table tournaments add column sort_order integer not null default 0")
  except sqlite3.OperationalError:pass
+ # Older installations used an INTEGER primary key for events. RaceTec event IDs
+ # are compound text values (for example, "14:43"), so migrate without losing
+ # the existing published rows before the next import.
+ event_id_type=next((str(x[2]).lower() for x in c.execute("pragma table_info(events)") if x[1]=="id"),"text")
+ if "int" in event_id_type:
+  c.execute("alter table events rename to events_legacy")
+  c.execute("create table events(id text primary key,name text not null,visible integer not null default 1,sort_order integer not null default 0,tournament text not null default '',level text not null default '',stage text not null default '')")
+  c.execute("insert into events(id,name,visible,sort_order,tournament,level,stage) select cast(id as text),name,coalesce(visible,1),coalesce(sort_order,0),coalesce(tournament,''),coalesce(level,''),coalesce(stage,'') from events_legacy")
+  c.execute("drop table events_legacy")
+ mapping_id_type=next((str(x[2]).lower() for x in c.execute("pragma table_info(event_mappings)") if x[1]=="event_id"),"text")
+ if "int" in mapping_id_type:
+  c.execute("alter table event_mappings rename to event_mappings_legacy")
+  c.execute("create table event_mappings(event_id text primary key,tournament text,level text,stage text,event_name text,race_id integer)")
+  c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) select cast(event_id as text),tournament,coalesce(level,''),stage,event_name,race_id from event_mappings_legacy")
+  c.execute("drop table event_mappings_legacy")
  for tournament_id, in c.execute("select distinct tournament_id from races where level_id is null"):
   row=c.execute("select id from levels where tournament_id=? and name='General'",(tournament_id,)).fetchone();level_id=row[0] if row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,"General")).lastrowid
   c.execute("update races set level_id=? where tournament_id=? and level_id is null",(level_id,tournament_id))
