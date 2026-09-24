@@ -10,6 +10,7 @@ from html.parser import HTMLParser
 
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = ROOT / "dist"
+APP_VERSION = (ROOT / "VERSION").read_text().strip()
 DB_FILE = Path(os.getenv("DATABASE_FILE", "/data/results.sqlite"))
 POLL_SECONDS = max(1, int(os.getenv("POLL_SECONDS", "5")))
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
@@ -99,7 +100,7 @@ class App(SimpleHTTPRequestHandler):
             event_id=path.split("/")[4]; con=db(); rows=con.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position",(event_id,)).fetchall(); con.close(); return self.json([dict(x) for x in rows])
         if path == "/api/admin/status":
             if not self.authorized(): return self.json({"error":"Unauthorized"},401)
-            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; sources=[dict(r) for r in con.execute("select rowid,url,active from sources order by rowid")]; con.close(); return self.json({"sources":sources,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
+            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; sources=[dict(r) for r in con.execute("select rowid,url,active from sources order by rowid")]; con.close(); return self.json({"version":APP_VERSION,"sources":sources,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
         return super().do_GET()
     def do_POST(self):
         path=urlparse(self.path).path
