@@ -61,6 +61,7 @@ def parse(raw):
   if val(r,0): races[val(r,0)]=val(r,1)
  for r in rows(text,"RaceEvent"):
   if val(r,0) and val(r,1): events[val(r,0)+":"+val(r,1)]=(races.get(val(r,0),"Tournament "+val(r,0)),val(r,2,1,3))
+ out={event_id:[] for event_id in events}
  for r in rows(text,"EventAthlete"):
   eid,aid=val(r,0)+":"+val(r,1),val(r,2)
   try: pos=int(val(r,24,26))
@@ -70,7 +71,7 @@ def parse(raw):
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
   parsed.append((eid,name,tournament,order,sorted(standing,key=lambda x:(x[3],x[1].casefold()))))
- if not parsed: raise ValueError("The RDF export contains no placed EventAthlete results")
+ if not parsed: raise ValueError("The RDF export contains no RaceEvent definitions")
  return parsed
 def meta(key,value):
  c=db()
