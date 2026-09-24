@@ -43,6 +43,8 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table tournaments add column sort_order integer not null default 0")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table events add column publish_mode text not null default 'populated'")
+ except sqlite3.OperationalError:pass
  # Older installations used an INTEGER primary key for events. RaceTec event IDs
  # are compound text values (for example, "14:43"), so migrate without losing
  # the existing published rows before the next import.
@@ -210,7 +212,7 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id "+("" if show and show[0]=="true" else "having count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id "+("where 1=1" if show and show[0]=="true" else "where e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
    if show and show[0]=="true":
     for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
    c.close();return self.js({"status":s[0] if s else "Live","events":e})
@@ -232,7 +234,7 @@ class App(SimpleHTTPRequestHandler):
    return self.js({"id":rider["id"],"name":rider["name"],"records":records})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -344,6 +346,8 @@ class App(SimpleHTTPRequestHandler):
     if p.get("mapping"):
      c.execute("insert into event_mappings(event_id,tournament,stage,event_name) values(?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,stage=excluded.stage,event_name=excluded.event_name",(event_id,p.get("tournament",""),p.get("stage",""),p.get("name","")))
      c.execute("update events set tournament=?,stage=?,name=? where id=?",(p.get("tournament",""),p.get("stage",""),p.get("name",""),event_id))
+    elif p.get("mode") in ("populated","always","hide"):
+     mode=p["mode"];c.execute("update events set publish_mode=?,visible=? where id=?",(mode,0 if mode=="hide" else 1,event_id))
     else:c.execute("update events set visible=? where id=?",(1 if p.get("visible") else 0,event_id))
    c.close()
   else:return self.js({"error":"Not found"},404)
