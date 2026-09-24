@@ -390,5 +390,8 @@ class App(SimpleHTTPRequestHandler):
   else:return self.js({"error":"Not found"},404)
   return self.js({"ok":True})
 if __name__=="__main__":
- DB_FILE.parent.mkdir(parents=True,exist_ok=True);threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
+ DB_FILE.parent.mkdir(parents=True,exist_ok=True)
+ try:import_historical()
+ except Exception as e:print("Bundled historic history import failed:",e,flush=True)
+ threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
 
