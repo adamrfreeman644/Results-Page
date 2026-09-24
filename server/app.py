@@ -169,7 +169,7 @@ def history_score(left,right):
  return max(difflib.SequenceMatcher(None,a,b).ratio(),difflib.SequenceMatcher(None," ".join(sorted(a.split()))," ".join(sorted(b.split()))).ratio())
 def relink_history(c):
  riders=[dict(x) for x in c.execute("select distinct a.id,a.name,e.tournament from athletes a join results r on r.athlete_id=a.id join events e on e.id=r.event_id")]
- for row in c.execute("select source,row_number,division,rider_name from historical_results"):
+ for row in list(c.execute("select source,row_number,division,rider_name from historical_results")):
   candidates=[x for x in riders if match_division(x["tournament"])==row[2]]
   best=max(((history_score(row[3],x["name"]),x) for x in candidates),default=(0,None),key=lambda x:x[0])
   c.execute("update historical_results set athlete_id=?,match_score=? where source=? and row_number=?",(best[1]["id"] if best[1] and best[0]>=.9 else None,best[0],row[0],row[1]))
@@ -197,8 +197,9 @@ def meta(key,value):
  c.close()
 def import_file(raw,digest):
  parsed=parse(raw);c=db()
+ if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone():
+  c.close();return False
  with c:
-  if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone(): c.close();return False
   cur=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(digest,now(),EXPORT_FILENAME,len(parsed),sum(len(r[4]) for r in parsed)));iid=cur.lastrowid
   mappings={r[0]:r for r in c.execute("select event_id,tournament,level,stage,event_name,race_id from event_mappings")}
   prepared=[dict(r) for r in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race,r.fastest_lap from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
@@ -371,7 +372,8 @@ class App(SimpleHTTPRequestHandler):
      for row in c.execute("select name,sort_order,fastest_lap from races where level_id=?",(level[0],)):c.execute("insert into races(tournament_id,level_id,name,sort_order,fastest_lap) values(?,?,?,?,?)",(new_id,level_id,row[0],row[1],row[2]))
    c.close()
   elif path=="/api/admin/historical-import":
-   return self.js({"ok":True,"rows":import_historical()})
+   try:return self.js({"ok":True,"rows":import_historical()})
+   except Exception as e:return self.js({"error":"Historic import failed: "+str(e)[:300]},502)
   elif path=="/api/admin/import-now":
    if not EXPORT_FILE.exists():return self.js({"error":"RDF file not found"},404)
    raw=EXPORT_FILE.read_bytes();import_file(raw,hashlib.sha256(raw).hexdigest()+"-manual-"+str(time.time_ns()));meta("source_state","Manually imported current RDF file")
