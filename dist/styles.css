@@ -104,3 +104,5 @@ body{color:var(--ink);background:#eef7f4}
  .tab{width:auto;min-width:0;min-height:42px;padding:6px 3px;border-radius:9px;font-size:clamp(.67rem,2.65vw,.78rem);line-height:1.05;overflow-wrap:normal;word-break:normal}
  .updated{padding:1px 2px 0}
 }
+.tree-toolbar{display:flex;gap:10px;margin:0 0 18px}.tree-toolbar input{flex:1}.tree{display:grid;gap:12px}.tree-node{border:1px solid #d7e2e3;border-radius:12px;overflow:hidden;background:#fff}.tree-node h2{margin:0;padding:13px 16px;background:#f4f8f7;font-size:1rem}.tree-children{padding:0 16px}.tree-heat{margin:0;padding:12px 0;border-bottom:1px solid #edf1f1;display:grid;grid-template-columns:1fr minmax(180px,auto) auto;gap:8px;align-items:center}.tree-heat:last-child{border-bottom:0}.tree-heat h3{margin:0;font-size:.95rem}.tree-heat p{margin:3px 0 0;font-size:.8rem}.unassigned h2{background:#fff6df}@media(max-width:650px){.tree-toolbar,.tree-heat{display:flex;flex-wrap:wrap}.tree-heat>div{width:100%}}
+
