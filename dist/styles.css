@@ -117,3 +117,13 @@ body[data-page="public"] .tabs{width:100%;overflow:hidden}
 
 /* Editable admin tree */
 .tree-actions{margin-left:auto;display:flex;align-items:center;gap:4px}.tree-actions .rename{width:min(180px,30vw);padding:5px 7px;border:1px solid var(--line);border-radius:6px}.icon{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;min-width:28px;height:28px;cursor:pointer;font-weight:900}.icon.danger{color:#a42b22;border-color:#d89d96}.tree-create{display:flex;gap:8px;padding:12px 0}.tree-create input{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:7px}.tree-create.compact{padding-left:4px}.object-tree .tree-node{padding:7px 0}.object-tree .tree-children{padding-left:22px}.tree-line{flex-wrap:wrap}.unassigned-race .btn{padding:8px 12px}@media(max-width:700px){.tree-actions{width:100%;margin:4px 0 0 25px}.tree-actions .rename{flex:1;width:auto}.tree-create{margin-left:0}.unassigned-race select{min-width:0;width:100%}}
+
+/* Compact, separated tiles for the editable admin tree. */
+#event-list{display:grid;gap:10px}
+#event-list>.tree-node{border:1px solid #b9d0cd!important;border-radius:12px!important;background:#fff!important;padding:8px 10px!important;box-shadow:none}
+#event-list>.tree-node>.tree-children{padding:5px 4px 2px!important}
+#event-list .tree-children>.tree-node{border:1px solid #d7e4e1!important;border-radius:9px!important;background:#fafffe!important;margin:7px 0!important;padding:6px 8px!important}
+#event-list .tree-children>.tree-node>.tree-children{padding:4px 6px 1px!important}
+#event-list .tree-line{min-height:32px;gap:8px}
+#event-list .tree-leaf{padding:6px 4px;border-top:1px solid #edf2f1}
+#event-list .tree-create{padding:8px 2px 2px}
