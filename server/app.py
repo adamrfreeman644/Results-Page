@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Self-contained OWAR live-results server.  Uses only Python's standard library."""
-import json, os, re, sqlite3, threading, time
+import hashlib, json, os, re, sqlite3, threading, time
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -24,7 +24,7 @@ def db():
       create table if not exists athletes (id integer primary key, name text not null);
       create table if not exists results (event_id integer, athlete_id integer, bib text, position integer, time text, primary key(event_id,athlete_id));
       create table if not exists meta (key text primary key, value text not null);
-      create table if not exists sources (url text primary key, active integer not null default 1);
+      create table if not exists sources (url text primary key, active integer not null default 1, last_success text, last_error text);
     """)
     return con
 
@@ -49,16 +49,17 @@ class RaceTecTable(HTMLParser):
         elif tag=='tr' and self.in_row: self.in_row=False; self.rows.append(self.row)
         elif tag=='table' and self.in_table: self.in_table=False
 
+def stable_id(value): return int(hashlib.sha256(value.encode()).hexdigest()[:15], 16) % 2000000000
 def import_racetec(url):
-    page=urlopen(Request(url,headers={'User-Agent':'OWAR-results-bot/1.0'}),timeout=20).read().decode('utf-8','replace')
+    page=urlopen(Request(url,headers={'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36','Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}),timeout=30).read().decode('utf-8','replace')
     parser=RaceTecTable(); parser.feed(page)
-    if len(parser.rows)<2: return
+    if len(parser.rows)<2: raise ValueError('RaceTec returned no published result table')
     header=[x.upper() for x in parser.rows[0]]; pos=header.index('POS') if 'POS' in header else 1; name=header.index('NAME') if 'NAME' in header else 2; timing=header.index('TIME') if 'TIME' in header else 3
-    event_id=abs(hash(url)) % 2000000000; event_name=re.search(r'<title>\s*(.*?)\s*</title>',page,re.I|re.S); event_name=re.sub('<.*?>','',event_name.group(1)).strip() if event_name else 'RaceTec results'
+    event_id=stable_id(url); event_name=re.search(r'<title>\s*(.*?)\s*</title>',page,re.I|re.S); event_name=re.sub('<.*?>','',event_name.group(1)).strip() if event_name else 'RaceTec results'
     rows=[]
     for row in parser.rows[1:]:
         if len(row)<=max(pos,name,timing) or not row[pos].isdigit(): continue
-        label=row[name]; bib=re.search(r'#(\S+)',label); rows.append((event_id,abs(hash(label))%2000000000,bib.group(1) if bib else '',int(row[pos]),row[timing],re.sub(r'\s*#\S+','',label).strip()))
+        label=row[name]; bib=re.search(r'#(\S+)',label); rider=re.sub(r'\s*#\S+','',label).strip(); rows.append((event_id,stable_id(url+'|'+rider),bib.group(1) if bib else '',int(row[pos]),row[timing],rider))
     con = db()
     with con:
         con.execute("insert into events(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(event_id,event_name))
@@ -67,6 +68,7 @@ def import_racetec(url):
             con.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(aid,rider))
             con.execute("insert into results(event_id,athlete_id,bib,position,time) values(?,?,?,?,?)",(eid,aid,bib,position,timing))
         con.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(datetime.now(timezone.utc).isoformat(),))
+        con.execute("update sources set last_success=?,last_error=null where url=?",(datetime.now(timezone.utc).isoformat(),url))
         con.execute("insert into meta(key,value) values('status','Live') on conflict(key) do nothing")
     con.close()
 
@@ -76,7 +78,10 @@ def watch():
             con=db(); paused=con.execute("select value from meta where key='feed_paused'").fetchone(); con.close()
             if not paused or paused[0] != 'true':
                 con=db(); urls=[r[0] for r in con.execute("select url from sources where active=1")]; con.close()
-                for url in urls: import_racetec(url)
+                for url in urls:
+                    try: import_racetec(url)
+                    except Exception as exc:
+                        con=db(); con.execute("update sources set last_error=? where url=?",(str(exc)[:300],url)); con.commit(); con.close(); print(f"Import failed for {url}: {exc}",flush=True)
                 if urls: print("Imported RaceTec results", flush=True)
         except Exception as exc: print(f"Import failed: {exc}", flush=True)
         time.sleep(POLL_SECONDS)
@@ -100,7 +105,7 @@ class App(SimpleHTTPRequestHandler):
             event_id=path.split("/")[4]; con=db(); rows=con.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position",(event_id,)).fetchall(); con.close(); return self.json([dict(x) for x in rows])
         if path == "/api/admin/status":
             if not self.authorized(): return self.json({"error":"Unauthorized"},401)
-            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; sources=[dict(r) for r in con.execute("select rowid,url,active from sources order by rowid")]; con.close(); return self.json({"version":APP_VERSION,"sources":sources,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
+            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; sources=[dict(r) for r in con.execute("select rowid,url,active,last_success,last_error from sources order by rowid")]; con.close(); return self.json({"version":APP_VERSION,"sources":sources,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
         return super().do_GET()
     def do_POST(self):
         path=urlparse(self.path).path
