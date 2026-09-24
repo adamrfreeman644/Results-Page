@@ -146,3 +146,5 @@ body[data-page="public"] .tabs{width:100%;overflow:hidden}
 #event-list:not(.editing) .tree-leaf{padding:4px 2px;color:#53717a;font-size:.82rem}
 #event-list.editing .tree-toolbar{border-bottom:1px solid #d9e7e4;margin-bottom:8px}
 @media(max-width:700px){#event-list .tree-toolbar{align-items:flex-start;flex-direction:column}#event-list .tree-toolbar .btn{width:100%}}
+
+#event-list:not(.editing) .tree-leaf>.publish-mode{display:none}.publish-mode{margin-left:8px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;font:inherit;font-size:.78rem}
