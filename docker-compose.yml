@@ -1,0 +1,15 @@
+services:
+  results:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ADMIN_TOKEN: change-this-to-a-long-random-secret
+      RDF_FILE: /data/race.rdf
+      POLL_SECONDS: 5
+    volumes:
+      - /path/on/byte-me/current-race.rdf:/data/race.rdf:ro
+      - results-data:/data
+    restart: unless-stopped
+volumes:
+  results-data:

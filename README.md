@@ -24,3 +24,7 @@ The static website is in `dist/`.
 Current demo: https://owar-2026-live-results.adam-ow.chatgpt.site/
 
 The automatic results-file import and server-side admin authentication are intentionally left for the backend stage.
+
+## Live results service
+
+The Docker service polls a read-only RDF file, stores only the public result fields in SQLite, and serves the public page and admin API. See `docker-compose.yml` for the Byte-Me mount and admin-token configuration.
