@@ -18,7 +18,13 @@ def db():
  create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,primary key(event_id,athlete_id));
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
- create table if not exists meta(key text primary key,value text not null);""");return c
+ create table if not exists event_mappings(event_id text primary key,tournament text,stage text,event_name text);
+ create table if not exists meta(key text primary key,value text not null);""")
+ try:c.execute("alter table events add column tournament text not null default ''")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table events add column stage text not null default ''")
+ except sqlite3.OperationalError:pass
+ return c
 def clean(x):
  x=(x or "").strip();return "" if x.upper() in ("NULL","NONE","-") else x
 def val(row,*ix):
@@ -35,18 +41,22 @@ def parse(raw):
  elif raw.startswith(b"\xfe\xff"): text=raw.decode("utf-16")
  else: text=raw.decode("utf-8-sig","replace")
  if "[DATA].[EventAthlete]:" not in text: raise ValueError("Not a RaceTec RDF export: EventAthlete data is missing")
- athletes={};events={};out={}
+ athletes={};races={};events={};out={}
  for r in rows(text,"Athlete"):
   if val(r,0): athletes[val(r,0)]=" ".join(x for x in (val(r,1),val(r,2)) if x)
+ for r in rows(text,"Race"):
+  if val(r,0): races[val(r,0)]=val(r,1)
  for r in rows(text,"RaceEvent"):
-  if val(r,1,0): events[val(r,1,0)]=val(r,2,1,3)
+  if val(r,0) and val(r,1): events[val(r,0)+":"+val(r,1)]=(races.get(val(r,0),"Tournament "+val(r,0)),val(r,2,1,3))
  for r in rows(text,"EventAthlete"):
-  eid,aid=val(r,1),val(r,2)
+  eid,aid=val(r,0)+":"+val(r,1),val(r,2)
   try: pos=int(val(r,24,26))
   except ValueError: continue
   if eid and aid: out.setdefault(eid,[]).append((aid,athletes.get(aid,"Rider "+aid),val(r,18),pos,val(r,21,22,23)))
  parsed=[]
- for order,(eid,standing) in enumerate(out.items()): parsed.append((eid,events.get(eid,"Event "+eid),order,sorted(standing,key=lambda x:(x[3],x[1].casefold()))))
+ for order,(eid,standing) in enumerate(out.items()):
+  tournament,name=events.get(eid,("Tournament", "Event "+eid))
+  parsed.append((eid,name,tournament,order,sorted(standing,key=lambda x:(x[3],x[1].casefold()))))
  if not parsed: raise ValueError("The RDF export contains no placed EventAthlete results")
  return parsed
 def meta(key,value):
@@ -58,8 +68,13 @@ def import_file(raw,digest):
  with c:
   if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone(): c.close();return False
   cur=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(digest,now(),EXPORT_FILENAME,len(parsed),sum(len(r) for *_,r in parsed)));iid=cur.lastrowid
-  for eid,name,order,standing in parsed:
-   c.execute("insert into events(id,name,sort_order) values(?,?,?) on conflict(id) do update set name=excluded.name,sort_order=excluded.sort_order",(eid,name,order));c.execute("delete from results where event_id=?",(eid,))
+  mappings={r[0]:r for r in c.execute("select event_id,tournament,stage,event_name from event_mappings")}
+  c.execute("delete from results");c.execute("delete from events")
+  for eid,name,tournament,order,standing in parsed:
+   mapping=mappings.get(eid)
+   if mapping: tournament=mapping[1] or tournament;stage=mapping[2] or "";name=mapping[3] or name
+   else: stage=""
+   c.execute("insert into events(id,name,tournament,stage,sort_order) values(?,?,?,?,?)",(eid,name,tournament,stage,order))
    for aid,rider,bib,pos,timing in standing:
     c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(aid,rider))
     c.execute("insert into results values(?,?,?,?,?)",(eid,aid,bib,pos,timing));c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,eid,aid,bib,pos,timing))
@@ -80,7 +95,7 @@ def watch():
     else:
      raw=EXPORT_FILE.read_bytes();digest=hashlib.sha256(raw).hexdigest()
      if candidate==digest:
-      if import_file(raw,digest): print("Imported stable RaceTec RDF",flush=True)
+      if import_file(raw,digest+"-tournaments-v1"): print("Imported stable RaceTec RDF",flush=True)
       candidate=None;meta("source_state","Imported stable file")
      else: candidate=digest;meta("source_state","File changed; verifying stability")
   except Exception as e:candidate=None;meta("last_error",str(e)[:500]);print("RDF import failed:",e,flush=True)
@@ -94,12 +109,12 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();e=c.execute("select e.id,e.name,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id having count(r.athlete_id)>0 order by e.sort_order,e.name").fetchall();c.close();return self.js({"status":s[0] if s else "Live","events":[dict(x) for x in e]})
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();e=c.execute("select e.id,e.name,e.tournament,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id having count(r.athlete_id)>0 order by e.tournament,e.sort_order,e.name").fetchall();c.close();return self.js({"status":s[0] if s else "Live","events":[dict(x) for x in e]})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    c=db();r=c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],)).fetchall();c.close();return self.js([dict(x) for x in r])
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -110,7 +125,12 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path.startswith("/api/admin/events/"):
    c=db()
-   with c:c.execute("update events set visible=? where id=?",(1 if p.get("visible") else 0,path.rsplit("/",1)[1]))
+   event_id=path.rsplit("/",1)[1]
+   with c:
+    if p.get("mapping"):
+     c.execute("insert into event_mappings(event_id,tournament,stage,event_name) values(?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,stage=excluded.stage,event_name=excluded.event_name",(event_id,p.get("tournament",""),p.get("stage",""),p.get("name","")))
+     c.execute("update events set tournament=?,stage=?,name=? where id=?",(p.get("tournament",""),p.get("stage",""),p.get("name",""),event_id))
+    else:c.execute("update events set visible=? where id=?",(1 if p.get("visible") else 0,event_id))
    c.close()
   else:return self.js({"error":"Not found"},404)
   return self.js({"ok":True})
