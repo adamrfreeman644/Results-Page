@@ -5,7 +5,7 @@ import re
 from datetime import datetime,timezone
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse,unquote
 ROOT=Path(__file__).resolve().parents[1]; STATIC=ROOT/"dist"
 VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
 POLL_SECONDS=30; ADMIN_TOKEN=os.getenv("ADMIN_TOKEN","")
@@ -142,7 +142,7 @@ class App(SimpleHTTPRequestHandler):
   if path=="/api/public/events":
    c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=c.execute("select e.id,e.name,e.tournament,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id "+("" if show and show[0]=="true" else "having count(r.athlete_id)>0")+" order by e.tournament,e.sort_order,e.name").fetchall();c.close();return self.js({"status":s[0] if s else "Live","events":[dict(x) for x in e]})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   c=db();r=[dict(x) for x in c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],))];c.close()
+   c=db();r=[dict(x) for x in c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(unquote(path.split("/")[4]),))];c.close()
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
   if path=="/api/admin/status":
@@ -190,7 +190,7 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/save":meta("setup_saved",now())
   elif path.startswith("/api/admin/events/"):
    c=db()
-   event_id=path.rsplit("/",1)[1]
+   event_id=unquote(path.rsplit("/",1)[1])
    with c:
     if p.get("mapping"):
      c.execute("insert into event_mappings(event_id,tournament,stage,event_name) values(?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,stage=excluded.stage,event_name=excluded.event_name",(event_id,p.get("tournament",""),p.get("stage",""),p.get("name","")))
