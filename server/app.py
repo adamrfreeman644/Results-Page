@@ -324,6 +324,9 @@ class App(SimpleHTTPRequestHandler):
      level_id=c.execute("insert into levels(tournament_id,name,sort_order) values(?,?,?)",(new_id,level[1],level[2])).lastrowid
      for row in c.execute("select name,sort_order,fastest_lap from races where level_id=?",(level[0],)):c.execute("insert into races(tournament_id,level_id,name,sort_order,fastest_lap) values(?,?,?,?,?)",(new_id,level_id,row[0],row[1],row[2]))
    c.close()
+  elif path=="/api/admin/import-now":
+   if not EXPORT_FILE.exists():return self.js({"error":"RDF file not found"},404)
+   raw=EXPORT_FILE.read_bytes();import_file(raw,hashlib.sha256(raw).hexdigest()+"-manual-"+str(time.time_ns()));meta("source_state","Manually imported current RDF file")
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path=="/api/admin/show-empty":meta("force_show_all","true" if p.get("enabled") else "false")
   elif path=="/api/admin/save":meta("setup_saved",now())
