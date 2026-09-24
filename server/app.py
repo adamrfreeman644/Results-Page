@@ -46,6 +46,15 @@ def display_time(value):
   return minute.zfill(2)+":"+second+"."+decimal
  hour,minute,second,decimal=match.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
  return (str(int(hour))+":" if int(hour) else "")+minute+":"+second+"."+decimal
+def match_name(value):
+ value=re.sub(r"[^a-z0-9]+"," ",clean(value).lower().replace("heats","heat").replace("semifinal","semi").replace("quarterfinal","quarter"))
+ return re.sub(r"\b(women|womens|men|mens|grom|groms|open)\b","",value).strip()
+def match_division(value):
+ value=clean(value).lower()
+ if "woman" in value:return "women"
+ if "grom" in value:return "groms"
+ if "men" in value or "open" in value:return "open"
+ return ""
 def rows(text,table):
  p="[DATA].["+table+"]:"
  for line in text.splitlines():
@@ -85,11 +94,17 @@ def import_file(raw,digest):
   if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone(): c.close();return False
   cur=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(digest,now(),EXPORT_FILENAME,len(parsed),sum(len(r) for *_,r in parsed)));iid=cur.lastrowid
   mappings={r[0]:r for r in c.execute("select event_id,tournament,stage,event_name from event_mappings")}
+  prepared=[dict(r) for r in c.execute("select t.name tournament,r.name race from races r join tournaments t on t.id=r.tournament_id")]
   c.execute("delete from results");c.execute("delete from events")
   for eid,name,tournament,order,standing in parsed:
    mapping=mappings.get(eid)
    if mapping: tournament=mapping[1] or tournament;stage=mapping[2] or "";name=mapping[3] or name
-   else: stage=""
+   else:
+    division=match_division(name);candidates=[x for x in prepared if match_name(x["race"])==match_name(name) and (not division or match_division(x["tournament"])==division)]
+    if len(candidates)==1:
+     tournament,stage=candidates[0]["tournament"],candidates[0]["race"]
+     c.execute("insert into event_mappings(event_id,tournament,stage,event_name) values(?,?,?,?)",(eid,tournament,stage,name))
+    else: stage=""
    c.execute("insert into events(id,name,tournament,stage,sort_order) values(?,?,?,?,?)",(eid,name,tournament,stage,order))
    for aid,rider,bib,pos,timing in standing:
     c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(aid,rider))
