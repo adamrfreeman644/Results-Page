@@ -41,6 +41,8 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table event_mappings add column race_id integer")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table tournaments add column sort_order integer not null default 0")
+ except sqlite3.OperationalError:pass
  for tournament_id, in c.execute("select distinct tournament_id from races where level_id is null"):
   row=c.execute("select id from levels where tournament_id=? and name='General'",(tournament_id,)).fetchone();level_id=row[0] if row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,"General")).lastrowid
   c.execute("update races set level_id=? where tournament_id=? and level_id is null",(level_id,tournament_id))
@@ -215,7 +217,7 @@ class App(SimpleHTTPRequestHandler):
    return self.js({"id":rider["id"],"name":rider["name"],"records":records})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -260,6 +262,45 @@ class App(SimpleHTTPRequestHandler):
    race_id=int(path.split("/")[4]);c=db()
    with c:c.execute("update races set fastest_lap=? where id=?",(1 if p.get("enabled") else 0,race_id))
    c.close();meta("config_revision",str(time.time_ns()))
+  elif re.fullmatch(r"/api/admin/tournaments/\\d+",path):
+   item_id=int(path.rsplit("/",1)[1]);c=db()
+   with c:
+    row=c.execute("select name from tournaments where id=?",(item_id,)).fetchone()
+    if row and p.get("delete"):
+     old=row[0];c.execute("delete from event_mappings where tournament=?",(old,));c.execute("update events set tournament='',level='',stage='' where tournament=?",(old,));c.execute("delete from races where tournament_id=?",(item_id,));c.execute("delete from levels where tournament_id=?",(item_id,));c.execute("delete from tournaments where id=?",(item_id,))
+    elif row and p.get("name","").strip():
+     new=p["name"].strip();old=row[0];c.execute("update tournaments set name=? where id=?",(new,item_id));c.execute("update event_mappings set tournament=? where tournament=?",(new,old));c.execute("update events set tournament=? where tournament=?",(new,old))
+   c.close()
+  elif re.fullmatch(r"/api/admin/tournaments/\\d+/move",path):
+   item_id=int(path.split("/")[4]);c=db();ordered=[x[0] for x in c.execute("select id from tournaments order by sort_order,id")];i=ordered.index(item_id) if item_id in ordered else -1;j=i+(-1 if p.get("direction")=="up" else 1)
+   if 0<=i<len(ordered) and 0<=j<len(ordered): ordered[i],ordered[j]=ordered[j],ordered[i]
+   with c:
+    for n,item in enumerate(ordered):c.execute("update tournaments set sort_order=? where id=?",(n,item))
+   c.close()
+  elif re.fullmatch(r"/api/admin/levels/\\d+",path):
+   item_id=int(path.rsplit("/",1)[1]);c=db()
+   with c:
+    row=c.execute("select l.name,t.name tournament from levels l join tournaments t on t.id=l.tournament_id where l.id=?",(item_id,)).fetchone()
+    if row and p.get("delete"):
+     old,tournament=row[0],row[1];c.execute("delete from event_mappings where tournament=? and level=?",(tournament,old));c.execute("update events set level='',stage='' where tournament=? and level=?",(tournament,old));c.execute("delete from races where level_id=?",(item_id,));c.execute("delete from levels where id=?",(item_id,))
+    elif row and p.get("name","").strip():
+     new=p["name"].strip();old,tournament=row[0],row[1];c.execute("update levels set name=? where id=?",(new,item_id));c.execute("update event_mappings set level=? where tournament=? and level=?",(new,tournament,old));c.execute("update events set level=? where tournament=? and level=?",(new,tournament,old))
+   c.close()
+  elif re.fullmatch(r"/api/admin/levels/\\d+/move",path):
+   item_id=int(path.split("/")[4]);c=db();row=c.execute("select tournament_id from levels where id=?",(item_id,)).fetchone();ordered=[] if not row else [x[0] for x in c.execute("select id from levels where tournament_id=? order by sort_order,id",(row[0],))];i=ordered.index(item_id) if item_id in ordered else -1;j=i+(-1 if p.get("direction")=="up" else 1)
+   if 0<=i<len(ordered) and 0<=j<len(ordered): ordered[i],ordered[j]=ordered[j],ordered[i]
+   with c:
+    for n,item in enumerate(ordered):c.execute("update levels set sort_order=? where id=?",(n,item))
+   c.close()
+  elif re.fullmatch(r"/api/admin/races/\\d+",path):
+   item_id=int(path.rsplit("/",1)[1]);c=db()
+   with c:
+    row=c.execute("select r.name,t.name tournament,coalesce(l.name,'') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where r.id=?",(item_id,)).fetchone()
+    if row and p.get("delete"):
+     old,tournament,level=row[0],row[1],row[2];c.execute("delete from event_mappings where race_id=?",(item_id,));c.execute("update events set stage='' where tournament=? and level=? and stage=?",(tournament,level,old));c.execute("delete from races where id=?",(item_id,))
+    elif row and p.get("name","").strip():
+     new=p["name"].strip();old,tournament,level=row[0],row[1],row[2];c.execute("update races set name=? where id=?",(new,item_id));c.execute("update event_mappings set stage=? where race_id=?",(new,item_id));c.execute("update events set stage=? where tournament=? and level=? and stage=?",(new,tournament,level,old))
+   c.close()
   elif path.startswith("/api/admin/tournaments/") and path.endswith("/duplicate"):
    source_id=int(path.split("/")[4]);name=p.get("name","").strip();c=db()
    with c:
