@@ -151,16 +151,7 @@ def parse(raw):
   parsed.append((eid,name,tournament,order,normal,fastest,lap_details))
  if not parsed: raise ValueError("The RDF export contains no RaceEvent definitions")
  return parsed
-HISTORICAL_SOURCES=(
- ("2025","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=1074696296&single=true&output=csv"),
- ("2025","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=866535366&single=true&output=csv"),
- ("2025","groms","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=872103594&single=true&output=csv"),
- ("2023/24","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=1074696296&single=true&output=csv"),
- ("2023/24","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=866535366&single=true&output=csv"),
- ("2023/24","groms","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=872103594&single=true&output=csv"),
- ("2023","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vTiBf0K54PWKthL0koKqVlKykNmkfOQ-oQ2w-_bD4XFNSouY06kLGQdPLXoLWFrq0H7NppC7cz7UvS5/pub?gid=1074696296&single=true&output=csv"),
- ("2023","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vTiBf0K54PWKthL0koKqVlKykNmkfOQ-oQ2w-_bD4XFNSouY06kLGQdPLXoLWFrq0H7NppC7cz7UvS5/pub?gid=866535366&single=true&output=csv"),
-)
+HISTORICAL_SNAPSHOT=Path(__file__).with_name("historical_snapshot.json")
 def history_name(value):
  return re.sub(r"[^a-z0-9]+"," ",unicodedata.normalize("NFKD",clean(value)).encode("ascii","ignore").decode().lower()).strip()
 def history_score(left,right):
@@ -174,23 +165,21 @@ def relink_history(c):
   best=max(((history_score(row[3],x["name"]),x) for x in candidates),default=(0,None),key=lambda x:x[0])
   c.execute("update historical_results set athlete_id=?,match_score=? where source=? and row_number=?",(best[1]["id"] if best[1] and best[0]>=.9 else None,best[0],row[0],row[1]))
 def import_historical():
- c=db();total=0
+ if not HISTORICAL_SNAPSHOT.exists():raise RuntimeError("Bundled historic snapshot is not available")
+ try:records=json.loads(HISTORICAL_SNAPSHOT.read_text(encoding="utf-8")).get("records",[])
+ except (OSError,json.JSONDecodeError) as e:raise RuntimeError("Bundled historic snapshot could not be read: "+str(e))
+ c=db()
  with c:
   c.execute("delete from historical_results")
-  for season,division,source in HISTORICAL_SOURCES:
-   raw=urlopen(source,timeout=20).read().decode("utf-8-sig","replace");rows=list(csv.DictReader(io.StringIO(raw)))
-   for index,row in enumerate(rows,1):
-    fields={re.sub(r"[^a-z]","",str(k).lower()):clean(v) for k,v in row.items() if k}
-    name=next((v for k,v in fields.items() if k in ("rider","ridername","name","athlete","athletename","competitor") and v),"")
-    if not name:continue
-    position=next((v for k,v in fields.items() if k in ("rank","position","place","pos") and v),"")
-    points=next((v for k,v in fields.items() if "point" in k and v),"")
-    event=next((v for k,v in fields.items() if k in ("event","race","competition") and v),"League ranking")
-    c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,season,division,event,name,history_name(name),position,points));total+=1
+  for index,row in enumerate(records,1):
+   name=clean(row.get("rider_name",""))
+   if not name:continue
+   source="snapshot:"+str(row.get("season","unknown"))+":"+str(row.get("division","unknown"))
+   c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,str(row.get("season","")),str(row.get("division","")),clean(row.get("event_name","League ranking")),name,history_name(name),clean(row.get("position","")),clean(row.get("points",""))))
   relink_history(c)
   c.execute("insert into meta(key,value) values('historical_last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
-  c.execute("insert into meta(key,value) values('historical_rows',?) on conflict(key) do update set value=excluded.value",(str(total),))
- c.close();return total
+  c.execute("insert into meta(key,value) values('historical_rows',?) on conflict(key) do update set value=excluded.value",(str(len(records)),))
+ c.close();return len(records)
 def meta(key,value):
  c=db()
  with c:c.execute("insert into meta(key,value) values(?,?) on conflict(key) do update set value=excluded.value",(key,value))
