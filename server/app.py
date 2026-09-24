@@ -21,8 +21,9 @@ def db():
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
  create table if not exists result_laps(event_id text,athlete_id text,lap_number integer,time text,primary key(event_id,athlete_id,lap_number));
  create table if not exists tournaments(id integer primary key,name text not null unique);
- create table if not exists races(id integer primary key,tournament_id integer not null,name text not null,unique(tournament_id,name));
- create table if not exists event_mappings(event_id text primary key,tournament text,stage text,event_name text,race_id integer);
+ create table if not exists levels(id integer primary key,tournament_id integer not null,name text not null,sort_order integer not null default 0,unique(tournament_id,name));
+ create table if not exists races(id integer primary key,tournament_id integer not null,level_id integer,name text not null,unique(tournament_id,name));
+ create table if not exists event_mappings(event_id text primary key,tournament text,level text,stage text,event_name text,race_id integer);
  create table if not exists meta(key text primary key,value text not null);""")
  try:c.execute("alter table events add column tournament text not null default ''")
  except sqlite3.OperationalError:pass
@@ -32,6 +33,15 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table races add column fastest_lap integer not null default 0")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table races add column level_id integer")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table events add column level text not null default ''")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table event_mappings add column level text not null default ''")
+ except sqlite3.OperationalError:pass
+ for tournament_id, in c.execute("select distinct tournament_id from races where level_id is null"):
+  row=c.execute("select id from levels where tournament_id=? and name='General'",(tournament_id,)).fetchone();level_id=row[0] if row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,"General")).lastrowid
+  c.execute("update races set level_id=? where tournament_id=? and level_id is null",(level_id,tournament_id))
  return c
 def clean(x):
  x=(x or "").strip();return "" if x.upper() in ("NULL","NONE","-") else x
@@ -127,24 +137,24 @@ def import_file(raw,digest):
  with c:
   if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone(): c.close();return False
   cur=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(digest,now(),EXPORT_FILENAME,len(parsed),sum(len(r[4]) for r in parsed)));iid=cur.lastrowid
-  mappings={r[0]:r for r in c.execute("select event_id,tournament,stage,event_name,race_id from event_mappings")}
-  prepared=[dict(r) for r in c.execute("select r.id,t.name tournament,r.name race,r.fastest_lap from races r join tournaments t on t.id=r.tournament_id")]
+  mappings={r[0]:r for r in c.execute("select event_id,tournament,level,stage,event_name,race_id from event_mappings")}
+  prepared=[dict(r) for r in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race,r.fastest_lap from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
   prepared_by_id={x["id"]:x for x in prepared};prepared_by_name={(x["tournament"],x["race"]):x for x in prepared}
   c.execute("delete from results");c.execute("delete from result_laps");c.execute("delete from events")
   for eid,name,tournament,order,standing,fastest,lap_details in parsed:
    mapping=mappings.get(eid)
-   race_config=None
+   race_config=None;level=""
    if mapping:
-    tournament=mapping[1] or tournament;stage=mapping[2] or "";name=mapping[3] or name
-    race_config=prepared_by_id.get(mapping[4]) or prepared_by_name.get((tournament,stage))
+    tournament=mapping[1] or tournament;level=mapping[2] or "";stage=mapping[3] or "";name=mapping[4] or name
+    race_config=prepared_by_id.get(mapping[5]) or prepared_by_name.get((tournament,stage));level=level or (race_config["level"] if race_config else "")
    else:
     division=match_division(name);candidates=[x for x in prepared if match_name(x["race"])==match_name(name) and (not division or match_division(x["tournament"])==division)]
     if len(candidates)==1:
-     tournament,stage=candidates[0]["tournament"],candidates[0]["race"]
-     race_config=candidates[0];c.execute("insert into event_mappings(event_id,tournament,stage,event_name,race_id) values(?,?,?,?,?)",(eid,tournament,stage,name,race_config["id"]))
+     tournament,level,stage=candidates[0]["tournament"],candidates[0]["level"],candidates[0]["race"]
+     race_config=candidates[0];c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?)",(eid,tournament,level,stage,name,race_config["id"]))
     else: stage=""
    if race_config and race_config["fastest_lap"]: standing=fastest
-   c.execute("insert into events(id,name,tournament,stage,sort_order) values(?,?,?,?,?)",(eid,name,tournament,stage,order))
+   c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(eid,name,tournament,level,stage,order))
    for aid,rider,bib,pos,timing in standing:
     c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(aid,rider))
     c.execute("insert into results values(?,?,?,?,?)",(eid,aid,bib,pos,timing));c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,eid,aid,bib,pos,timing))
@@ -181,9 +191,9 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id "+("" if show and show[0]=="true" else "having count(r.athlete_id)>0")+" order by e.tournament,e.sort_order,e.name")]
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id "+("" if show and show[0]=="true" else "having count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
    if show and show[0]=="true":
-    for row in c.execute("select r.id,r.name,t.name tournament from races r join tournaments t on t.id=r.tournament_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"stage":row[1],"count":0})
+    for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
    c.close();return self.js({"status":s[0] if s else "Live","events":e})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(event_id,))]
@@ -194,7 +204,7 @@ class App(SimpleHTTPRequestHandler):
    return self.js(r)
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"races":rs})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -207,16 +217,22 @@ class App(SimpleHTTPRequestHandler):
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
    c.close()
   elif path=="/api/admin/standard-structure":
-   names=[*(f"Heat {n}" for n in range(1,9)),*(f"Quarter {n}" for n in range(1,5)),*(f"Semi {n}" for n in range(1,3)),"4th's","3rd's","Runner Up's","Final"];c=db()
+   qualifier=[*(f"Heat {n}" for n in range(1,9))];finals=[*(f"Quarter {n}" for n in range(1,5)),*(f"Semi {n}" for n in range(1,3)),"4th's","3rd's","Runner Up's","Final"];c=db()
    with c:
     for tournament in ("Women","Open","Groms"):
      row=c.execute("select id from tournaments where name=?",(tournament,)).fetchone()
      tournament_id=row[0] if row else c.execute("insert into tournaments(name) values(?)",(tournament,)).lastrowid
-     for name in names:c.execute("insert or ignore into races(tournament_id,name) values(?,?)",(tournament_id,name))
+     for level,names in (("Qualifiers",qualifier),("Finals",finals)):
+      level_row=c.execute("select id from levels where tournament_id=? and name=?",(tournament_id,level)).fetchone();level_id=level_row[0] if level_row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,level)).lastrowid
+      for name in names:c.execute("insert or ignore into races(tournament_id,level_id,name) values(?,?,?)",(tournament_id,level_id,name))
+   c.close()
+  elif path=="/api/admin/levels":
+   c=db()
+   with c:c.execute("insert into levels(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
    c.close()
   elif path=="/api/admin/races":
    c=db()
-   with c:c.execute("insert into races(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
+   with c:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(p.get("tournamentId"),p.get("levelId"),p.get("name","").strip()))
    c.close()
   elif path.startswith("/api/admin/races/") and path.endswith("/move"):
    race_id=int(path.split("/")[4]);c=db();row=c.execute("select tournament_id from races where id=?",(race_id,)).fetchone()
@@ -234,7 +250,9 @@ class App(SimpleHTTPRequestHandler):
    source_id=int(path.split("/")[4]);name=p.get("name","").strip();c=db()
    with c:
     new_id=c.execute("insert into tournaments(name) values(?)",(name,)).lastrowid
-    for row in c.execute("select name,sort_order,fastest_lap from races where tournament_id=?",(source_id,)):c.execute("insert into races(tournament_id,name,sort_order,fastest_lap) values(?,?,?,?)",(new_id,row[0],row[1],row[2]))
+    for level in c.execute("select id,name,sort_order from levels where tournament_id=?",(source_id,)):
+     level_id=c.execute("insert into levels(tournament_id,name,sort_order) values(?,?,?)",(new_id,level[1],level[2])).lastrowid
+     for row in c.execute("select name,sort_order,fastest_lap from races where level_id=?",(level[0],)):c.execute("insert into races(tournament_id,level_id,name,sort_order,fastest_lap) values(?,?,?,?,?)",(new_id,level_id,row[0],row[1],row[2]))
    c.close()
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path=="/api/admin/show-empty":meta("force_show_all","true" if p.get("enabled") else "false")
@@ -243,8 +261,8 @@ class App(SimpleHTTPRequestHandler):
    c=db()
    with c:
     for item in p.get("assignments",[]):
-     c.execute("insert into event_mappings(event_id,tournament,stage,event_name,race_id) values(?,?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,stage=excluded.stage,event_name=excluded.event_name,race_id=excluded.race_id",(item["eventId"],item["tournament"],item["race"],item["name"],item.get("raceId")))
-     c.execute("update events set tournament=?,stage=?,name=? where id=?",(item["tournament"],item["race"],item["name"],item["eventId"]))
+     c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,level=excluded.level,stage=excluded.stage,event_name=excluded.event_name,race_id=excluded.race_id",(item["eventId"],item["tournament"],item.get("level",""),item["race"],item["name"],item.get("raceId")))
+     c.execute("update events set tournament=?,level=?,stage=?,name=? where id=?",(item["tournament"],item.get("level",""),item["race"],item["name"],item["eventId"]))
    c.close()
   elif path.startswith("/api/admin/events/"):
    c=db()
