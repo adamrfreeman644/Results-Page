@@ -6,6 +6,7 @@ services:
     environment:
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
       RACE_EXPORT_DIR: /race-export
+      RACE_EXPORT_HOST_DIR: ${RACE_EXPORT_DIR:?Set RACE_EXPORT_DIR in .env}
       RACE_EXPORT_FILENAME: ${RACE_EXPORT_FILENAME:-results.rdf}
       POLL_SECONDS: 5
     volumes:

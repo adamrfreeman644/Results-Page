@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]; STATIC=ROOT/"dist"
 VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
 POLL_SECONDS=5; ADMIN_TOKEN=os.getenv("ADMIN_TOKEN","")
 EXPORT_DIR=Path(os.getenv("RACE_EXPORT_DIR","/race-export")); EXPORT_FILENAME=os.getenv("RACE_EXPORT_FILENAME","results.rdf"); EXPORT_FILE=EXPORT_DIR/EXPORT_FILENAME
+EXPORT_HOST_DIR=os.getenv("RACE_EXPORT_HOST_DIR",str(EXPORT_DIR))
 def now(): return datetime.now(timezone.utc).isoformat()
 def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
@@ -95,7 +96,7 @@ class App(SimpleHTTPRequestHandler):
    c=db();r=c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],)).fetchall();c.close();return self.js([dict(x) for x in r])
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"meta":m,"events":e})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
