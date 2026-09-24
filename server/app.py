@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Private-folder RaceTec RDF results service; Python standard library only."""
-import hashlib,json,os,sqlite3,threading,time
+import csv,difflib,hashlib,io,json,os,sqlite3,threading,time,unicodedata
 import re
 from datetime import datetime,timezone
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse,unquote
+from urllib.request import urlopen
 ROOT=Path(__file__).resolve().parents[1]; STATIC=ROOT/"dist"
 VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
 POLL_SECONDS=30; ADMIN_TOKEN=os.getenv("ADMIN_TOKEN","")
@@ -24,7 +25,8 @@ def db():
  create table if not exists levels(id integer primary key,tournament_id integer not null,name text not null,sort_order integer not null default 0,unique(tournament_id,name));
  create table if not exists races(id integer primary key,tournament_id integer not null,level_id integer,name text not null,unique(tournament_id,name));
  create table if not exists event_mappings(event_id text primary key,tournament text,level text,stage text,event_name text,race_id integer);
- create table if not exists meta(key text primary key,value text not null);""")
+ create table if not exists meta(key text primary key,value text not null);
+ create table if not exists historical_results(source text not null,row_number integer not null,season text not null,division text not null,event_name text not null,rider_name text not null,normal_name text not null,position text,points text,athlete_id text,match_score real,primary key(source,row_number));""")
  try:c.execute("alter table events add column tournament text not null default ''")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table events add column stage text not null default ''")
@@ -149,6 +151,44 @@ def parse(raw):
   parsed.append((eid,name,tournament,order,normal,fastest,lap_details))
  if not parsed: raise ValueError("The RDF export contains no RaceEvent definitions")
  return parsed
+HISTORICAL_SOURCES=(
+ ("2025","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=1074696296&single=true&output=csv"),
+ ("2025","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=866535366&single=true&output=csv"),
+ ("2025","groms","https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7K9cZFvpDKRlN3lSzzrkiOdskwCz_pzHrHxTwGbRp_Of6baG_hb59TPSswu613RSTnoHR56IbfN2N/pub?gid=872103594&single=true&output=csv"),
+ ("2023/24","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=1074696296&single=true&output=csv"),
+ ("2023/24","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=866535366&single=true&output=csv"),
+ ("2023/24","groms","https://docs.google.com/spreadsheets/d/e/2PACX-1vSii6C3LTzRBxKYJG9bmu2x1kUcPaFkBfmtMj2Nplcg2CFwDm0wocBy0_-LfBN6mldB27tpn5JwJEui/pub?gid=872103594&single=true&output=csv"),
+ ("2023","open","https://docs.google.com/spreadsheets/d/e/2PACX-1vTiBf0K54PWKthL0koKqVlKykNmkfOQ-oQ2w-_bD4XFNSouY06kLGQdPLXoLWFrq0H7NppC7cz7UvS5/pub?gid=1074696296&single=true&output=csv"),
+ ("2023","women","https://docs.google.com/spreadsheets/d/e/2PACX-1vTiBf0K54PWKthL0koKqVlKykNmkfOQ-oQ2w-_bD4XFNSouY06kLGQdPLXoLWFrq0H7NppC7cz7UvS5/pub?gid=866535366&single=true&output=csv"),
+)
+def history_name(value):
+ return re.sub(r"[^a-z0-9]+"," ",unicodedata.normalize("NFKD",clean(value)).encode("ascii","ignore").decode().lower()).strip()
+def history_score(left,right):
+ a,b=history_name(left),history_name(right)
+ if not a or not b:return 0
+ return max(difflib.SequenceMatcher(None,a,b).ratio(),difflib.SequenceMatcher(None," ".join(sorted(a.split()))," ".join(sorted(b.split()))).ratio())
+def relink_history(c):
+ riders=[dict(x) for x in c.execute("select distinct a.id,a.name,e.tournament from athletes a join results r on r.athlete_id=a.id join events e on e.id=r.event_id")]
+ for row in c.execute("select source,row_number,division,rider_name from historical_results"):
+  candidates=[x for x in riders if match_division(x["tournament"])==row[2]]
+  best=max(((history_score(row[3],x["name"]),x) for x in candidates),default=(0,None),key=lambda x:x[0])
+  c.execute("update historical_results set athlete_id=?,match_score=? where source=? and row_number=?",(best[1]["id"] if best[1] and best[0]>=.9 else None,best[0],row[0],row[1]))
+def import_historical():
+ c=db();total=0
+ with c:
+  c.execute("delete from historical_results")
+  for season,division,source in HISTORICAL_SOURCES:
+   raw=urlopen(source,timeout=20).read().decode("utf-8-sig","replace");rows=list(csv.DictReader(io.StringIO(raw)))
+   for index,row in enumerate(rows,1):
+    fields={re.sub(r"[^a-z]","",str(k).lower()):clean(v) for k,v in row.items() if k}
+    name=next((v for k,v in fields.items() if k in ("rider","ridername","name","athlete","athletename","competitor") and v),"")
+    if not name:continue
+    position=next((v for k,v in fields.items() if k in ("rank","position","place","pos") and v),"")
+    points=next((v for k,v in fields.items() if "point" in k and v),"")
+    event=next((v for k,v in fields.items() if k in ("event","race","competition") and v),"League ranking")
+    c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,season,division,event,name,history_name(name),position,points));total+=1
+  relink_history(c);meta("historical_last_import",now());meta("historical_rows",str(total))
+ c.close();return total
 def meta(key,value):
  c=db()
  with c:c.execute("insert into meta(key,value) values(?,?) on conflict(key) do update set value=excluded.value",(key,value))
@@ -182,6 +222,7 @@ def import_file(raw,digest):
     for lap_number,lap_time in lap_details.get(aid,[]):c.execute("insert into result_laps values(?,?,?,?)",(eid,aid,lap_number,lap_time))
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),));c.execute("insert into meta(key,value) values('last_error','') on conflict(key) do update set value=excluded.value")
   c.execute("insert into meta(key,value) values('status','Live') on conflict(key) do nothing")
+ relink_history(c)
  c.close();return True
 def fstatus():
  try:
@@ -231,7 +272,8 @@ class App(SimpleHTTPRequestHandler):
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    c.close()
    for record in records:record["time"]=display_time(record["time"])
-   return self.js({"id":rider["id"],"name":rider["name"],"records":records})
+   historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? order by season desc,event_name",(athlete_id,))]
+   return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
@@ -326,6 +368,8 @@ class App(SimpleHTTPRequestHandler):
      level_id=c.execute("insert into levels(tournament_id,name,sort_order) values(?,?,?)",(new_id,level[1],level[2])).lastrowid
      for row in c.execute("select name,sort_order,fastest_lap from races where level_id=?",(level[0],)):c.execute("insert into races(tournament_id,level_id,name,sort_order,fastest_lap) values(?,?,?,?,?)",(new_id,level_id,row[0],row[1],row[2]))
    c.close()
+  elif path=="/api/admin/historical-import":
+   return self.js({"ok":True,"rows":import_historical()})
   elif path=="/api/admin/import-now":
    if not EXPORT_FILE.exists():return self.js({"error":"RDF file not found"},404)
    raw=EXPORT_FILE.read_bytes();import_file(raw,hashlib.sha256(raw).hexdigest()+"-manual-"+str(time.time_ns()));meta("source_state","Manually imported current RDF file")
