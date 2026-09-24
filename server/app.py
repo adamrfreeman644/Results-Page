@@ -217,7 +217,7 @@ class App(SimpleHTTPRequestHandler):
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
    c.close()
   elif path=="/api/admin/standard-structure":
-   structure=(("Qualifiers",()),("Heats",tuple(f"Heat {n}" for n in range(1,9))),("Quarters",tuple(f"Quarter {n}" for n in range(1,5))),("Semi",tuple(f"Semi {n}" for n in range(1,3))),("Finals",("4th's","3rd's","Runner Up's","Final")));c=db()
+   structure=(("Qualifiers",()),("Heats",tuple(f"Heat {n}" for n in range(1,9))),("Quarters",tuple(f"Quarter {n}" for n in range(1,5))),("Semi",("Semi 1","Semi 2","4th's","3rd's")),("Finals",("Runner Up's","Final")));c=db()
    with c:
     for tournament in ("Women","Open","Groms"):
      row=c.execute("select id from tournaments where name=?",(tournament,)).fetchone()
