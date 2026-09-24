@@ -39,6 +39,8 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table event_mappings add column level text not null default ''")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table event_mappings add column race_id integer")
+ except sqlite3.OperationalError:pass
  for tournament_id, in c.execute("select distinct tournament_id from races where level_id is null"):
   row=c.execute("select id from levels where tournament_id=? and name='General'",(tournament_id,)).fetchone();level_id=row[0] if row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,"General")).lastrowid
   c.execute("update races set level_id=? where tournament_id=? and level_id is null",(level_id,tournament_id))
