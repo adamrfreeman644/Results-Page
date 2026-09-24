@@ -148,6 +148,7 @@ class App(SimpleHTTPRequestHandler):
    c.close()
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path=="/api/admin/show-empty":meta("force_show_all","true" if p.get("enabled") else "false")
+  elif path=="/api/admin/save":meta("setup_saved",now())
   elif path.startswith("/api/admin/events/"):
    c=db()
    event_id=path.rsplit("/",1)[1]
