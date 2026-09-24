@@ -114,3 +114,6 @@ body[data-page="public"] .round-nav{display:grid;grid-template-columns:repeat(5,
 body[data-page="public"] .round{min-width:0;width:100%;white-space:normal;overflow-wrap:anywhere}
 body[data-page="public"] .tabs{width:100%;overflow:hidden}
 @media(max-width:600px){body[data-page="public"] .round-nav{grid-template-columns:repeat(5,minmax(0,1fr));overflow:hidden}body[data-page="public"] .round{min-width:0;white-space:normal;overflow-wrap:anywhere}}
+
+/* Editable admin tree */
+.tree-actions{margin-left:auto;display:flex;align-items:center;gap:4px}.tree-actions .rename{width:min(180px,30vw);padding:5px 7px;border:1px solid var(--line);border-radius:6px}.icon{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;min-width:28px;height:28px;cursor:pointer;font-weight:900}.icon.danger{color:#a42b22;border-color:#d89d96}.tree-create{display:flex;gap:8px;padding:12px 0}.tree-create input{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:7px}.tree-create.compact{padding-left:4px}.object-tree .tree-node{padding:7px 0}.object-tree .tree-children{padding-left:22px}.tree-line{flex-wrap:wrap}.unassigned-race .btn{padding:8px 12px}@media(max-width:700px){.tree-actions{width:100%;margin:4px 0 0 25px}.tree-actions .rename{flex:1;width:auto}.tree-create{margin-left:0}.unassigned-race select{min-width:0;width:100%}}
