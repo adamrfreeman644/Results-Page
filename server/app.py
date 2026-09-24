@@ -224,7 +224,10 @@ class App(SimpleHTTPRequestHandler):
      tournament_id=row[0] if row else c.execute("insert into tournaments(name) values(?)",(tournament,)).lastrowid
      for level,names in (("Qualifiers",qualifier),("Finals",finals)):
       level_row=c.execute("select id from levels where tournament_id=? and name=?",(tournament_id,level)).fetchone();level_id=level_row[0] if level_row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,level)).lastrowid
-      for name in names:c.execute("insert or ignore into races(tournament_id,level_id,name) values(?,?,?)",(tournament_id,level_id,name))
+      for position,name in enumerate(names):
+       existing=c.execute("select id from races where tournament_id=? and name=?",(tournament_id,name)).fetchone()
+       if existing:c.execute("update races set level_id=?,sort_order=? where id=?",(level_id,position,existing[0]))
+       else:c.execute("insert into races(tournament_id,level_id,name,sort_order) values(?,?,?,?)",(tournament_id,level_id,name,position))
    c.close()
   elif path=="/api/admin/levels":
    c=db()
