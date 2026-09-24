@@ -4,10 +4,10 @@ services:
     ports:
       - "6543:6543"
     environment:
-      ADMIN_TOKEN: change-this-to-a-long-random-secret
-      POLL_SECONDS: 30
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      POLL_SECONDS: ${POLL_SECONDS:-30}
       # Same central updater used by your other Byte-Me applications.
-      SHARED_UPDATER_URL: http://host.docker.internal:8093/apps/results-page
+      SHARED_UPDATER_URL: ${SHARED_UPDATER_URL:-http://host.docker.internal:8093/apps/results-page}
       # Separate multiple public RaceTec result URLs with a | character.
       RACETEC_URLS: ""
     volumes:
