@@ -70,9 +70,17 @@ def fetch_racetec_page(url):
     # clients. Chromium renders the public page, without credentials or AI.
     browser=os.getenv('CHROMIUM_BIN','chromium-browser')
     result=subprocess.run([browser,'--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--dump-dom',url],capture_output=True,text=True,timeout=45)
-    if result.returncode or 'ctl00_Content_Main_tblResults' not in result.stdout:
-        detail=(result.stderr or result.stdout or 'RaceTec rejected the request').strip().replace('\n',' ')
-        raise ValueError(f'RaceTec blocked the public results page: {detail[:240]}')
+    if result.returncode:
+        # Chromium emits harmless DBus warnings first in Docker, so report the
+        # final lines where the actual failure is normally written.
+        detail=' '.join((result.stderr or result.stdout or 'Chromium exited without a response').strip().splitlines()[-4:])
+        raise ValueError(f'RaceTec browser request failed: {detail[:300]}')
+    if 'ctl00_Content_Main_tblResults' not in result.stdout:
+        title=re.search(r'<title[^>]*>(.*?)</title>',result.stdout,re.I|re.S)
+        text=re.sub(r'<[^>]+>',' ',result.stdout)
+        detail=re.sub(r'\s+',' ',text).strip()
+        heading=re.sub(r'\s+',' ',title.group(1)).strip() if title else 'no page title'
+        raise ValueError(f'RaceTec returned no result table ({heading}): {detail[:220]}')
     return result.stdout
 
 def racetec_event_name(page, fallback):
@@ -146,11 +154,14 @@ def watch():
             con=db(); paused=con.execute("select value from meta where key='feed_paused'").fetchone(); con.close()
             if not paused or paused[0] != 'true':
                 con=db(); urls=[r[0] for r in con.execute("select url from sources where active=1")]; con.close()
+                successful=0
                 for url in urls:
-                    try: import_racetec_meeting(url)
+                    try:
+                        import_racetec_meeting(url)
+                        successful += 1
                     except Exception as exc:
                         con=db(); con.execute("update sources set last_error=? where url=?",(str(exc)[:300],url)); con.commit(); con.close(); print(f"Import failed for {url}: {exc}",flush=True)
-                if urls: print("Imported RaceTec results", flush=True)
+                if successful: print(f"Imported RaceTec results from {successful} source(s)", flush=True)
         except Exception as exc: print(f"Import failed: {exc}", flush=True)
         time.sleep(POLL_SECONDS)
 
