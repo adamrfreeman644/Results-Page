@@ -32,3 +32,17 @@ The Docker service exposes the public page and admin API on Byte-Me port `6543`.
 Before the first start, copy `.env.example` to `.env` and set `ADMIN_TOKEN`. The `.env` file remains on Byte-Me and is deliberately not tracked by Git, so later application updates do not overwrite your token.
 
 If the AD53 Shared App Updater is installed on Byte-Me, the Admin page uses its Results Page entry at `http://host.docker.internal:8093/apps/results-page` for checked, backed-up updates and rollback.
+
+## Direct RaceTec upload endpoint
+
+RaceTec Live-To-Web can send the generated results file directly to this stack instead of the RaceTec-hosted site. The `racetec-upload` service is deliberately an opt-in Compose profile so that no FTP port is open until it is configured.
+
+Set `FTP_PUBLIC_HOST`, `RACETEC_FTP_USERNAME`, and `RACETEC_FTP_PASSWORD` in the server-only `.env` file. `FTP_PUBLIC_HOST` must be a DNS-only hostname resolving to Byte-Me's public IP; it must not be Cloudflare proxied. Forward TCP `2121` and `30000-30009` from the Bristol router to Byte-Me.
+
+Start it with:
+
+```bash
+docker compose --profile racetec-upload up -d
+```
+
+In RaceTec choose **Use custom server**, set the server to that hostname, port to `2121`, enter the dedicated credentials, leave Target folder blank, and use a fixed filename such as `owar-live`. The receiver has no anonymous access and its account is isolated to the incoming-results volume.

@@ -12,8 +12,26 @@ services:
       RACETEC_URLS: ""
     volumes:
       - results-data:/data
+      - racetec-feed:/source:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+  racetec-upload:
+    image: stilliard/pure-ftpd:hardened
+    profiles: ["racetec-upload"]
+    ports:
+      - "2121:21"
+      - "30000-30009:30000-30009"
+    environment:
+      PUBLICHOST: ${FTP_PUBLIC_HOST:?Set FTP_PUBLIC_HOST in .env}
+      FTP_USER_NAME: ${RACETEC_FTP_USERNAME:?Set RACETEC_FTP_USERNAME in .env}
+      FTP_USER_PASS: ${RACETEC_FTP_PASSWORD:?Set RACETEC_FTP_PASSWORD in .env}
+      FTP_USER_HOME: /home/ftpusers/racetec
+      FTP_PASSIVE_PORTS: 30000:30009
+      ADDED_FLAGS: --noanonymous --notruncate --maxclientsperip 2
+    volumes:
+      - racetec-feed:/home/ftpusers/racetec
+    restart: unless-stopped
 volumes:
   results-data:
+  racetec-feed:
