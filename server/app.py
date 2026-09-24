@@ -142,6 +142,14 @@ class App(SimpleHTTPRequestHandler):
    c=db()
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
    c.close()
+  elif path=="/api/admin/standard-structure":
+   names=[*(f"Heat {n}" for n in range(1,9)),*(f"Quarter {n}" for n in range(1,5)),*(f"Semi {n}" for n in range(1,3)),"4th's","3rd's","Runner Up's","Final"];c=db()
+   with c:
+    for tournament in ("Women","Open","Groms"):
+     row=c.execute("select id from tournaments where name=?",(tournament,)).fetchone()
+     tournament_id=row[0] if row else c.execute("insert into tournaments(name) values(?)",(tournament,)).lastrowid
+     for name in names:c.execute("insert or ignore into races(tournament_id,name) values(?,?)",(tournament_id,name))
+   c.close()
   elif path=="/api/admin/races":
    c=db()
    with c:c.execute("insert into races(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
