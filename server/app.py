@@ -187,7 +187,9 @@ def import_historical():
     points=next((v for k,v in fields.items() if "point" in k and v),"")
     event=next((v for k,v in fields.items() if k in ("event","race","competition") and v),"League ranking")
     c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,season,division,event,name,history_name(name),position,points));total+=1
-  relink_history(c);meta("historical_last_import",now());meta("historical_rows",str(total))
+  relink_history(c)
+  c.execute("insert into meta(key,value) values('historical_last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
+  c.execute("insert into meta(key,value) values('historical_rows',?) on conflict(key) do update set value=excluded.value",(str(total),))
  c.close();return total
 def meta(key,value):
  c=db()
@@ -270,9 +272,9 @@ class App(SimpleHTTPRequestHandler):
    if not rider:
     c.close();return self.js({"error":"Rider not found"},404)
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
-   c.close()
    for record in records:record["time"]=display_time(record["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? order by season desc,event_name",(athlete_id,))]
+   c.close()
    return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
