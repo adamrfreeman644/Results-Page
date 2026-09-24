@@ -30,7 +30,10 @@ def rows(text,table):
  for line in text.splitlines():
   if line.startswith(p): yield line[len(p):].split("|")
 def parse(raw):
- text=raw.decode("utf-8-sig","replace")
+ # RaceTec commonly exports Unicode (UTF-16 LE) RDF; accept both that and UTF-8.
+ if raw.startswith(b"\xff\xfe"): text=raw.decode("utf-16")
+ elif raw.startswith(b"\xfe\xff"): text=raw.decode("utf-16")
+ else: text=raw.decode("utf-8-sig","replace")
  if "[DATA].[EventAthlete]:" not in text: raise ValueError("Not a RaceTec RDF export: EventAthlete data is missing")
  athletes={};events={};out={}
  for r in rows(text,"Athlete"):
