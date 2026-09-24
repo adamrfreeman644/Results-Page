@@ -217,12 +217,12 @@ class App(SimpleHTTPRequestHandler):
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
    c.close()
   elif path=="/api/admin/standard-structure":
-   qualifier=[*(f"Heat {n}" for n in range(1,9))];finals=[*(f"Quarter {n}" for n in range(1,5)),*(f"Semi {n}" for n in range(1,3)),"4th's","3rd's","Runner Up's","Final"];c=db()
+   structure=(("Qualifiers",()),("Heats",tuple(f"Heat {n}" for n in range(1,9))),("Quarters",tuple(f"Quarter {n}" for n in range(1,5))),("Semi",tuple(f"Semi {n}" for n in range(1,3))),("Finals",("4th's","3rd's","Runner Up's","Final")));c=db()
    with c:
     for tournament in ("Women","Open","Groms"):
      row=c.execute("select id from tournaments where name=?",(tournament,)).fetchone()
      tournament_id=row[0] if row else c.execute("insert into tournaments(name) values(?)",(tournament,)).lastrowid
-     for level,names in (("Qualifiers",qualifier),("Finals",finals)):
+     for level,names in structure:
       level_row=c.execute("select id from levels where tournament_id=? and name=?",(tournament_id,level)).fetchone();level_id=level_row[0] if level_row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,level)).lastrowid
       for position,name in enumerate(names):
        existing=c.execute("select id from races where tournament_id=? and name=?",(tournament_id,name)).fetchone()
