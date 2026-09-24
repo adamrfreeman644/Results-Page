@@ -1,48 +1,32 @@
 # OWAR 2026 Live Results
 
-Mobile-first live race results for OWAR 2026, presented by Flow State PEV.
+The public results site keeps the existing OWAR visual design and is served on Byte-Me port **6543**. It imports only a single RaceTec RDF export from a private shared folder.
 
-## Included
+## What it does
 
-- Public live-results page
-- Tournament stages and race tables
-- Rider history pages
-- Separate token-protected `/admin` controls for RaceTec sources, visibility, event status, and live-polling stop/start
-- Responsive, high-contrast outdoor design
-- Links to OW Algarve and Flow State PEV
+- Uses no AI, website scraping, public FTP/SFTP, reverse proxy, tunnel endpoint, router forwarding, Cloudflare, or public timing URL.
+- Reads the RaceTec export folder in Docker as **read-only**.
+- Checks it every 5 seconds and imports only after the same file contents have been observed twice (a full stable interval).
+- Parses RaceTec RDF events/heats, riders, bibs, positions, and times.
+- Displays every imported event/heat in the existing public results interface.
+- Stores every import in SQLite, including a historical copy of each rider result.
+- Keeps the token-protected Admin page for start/stop, file status, last successful import, errors, event visibility, and application version. None of this data is in the public API or public page.
 
-## Structure
+## Byte-Me setup
 
-The static website is in `dist/`.
+1. On Byte-Me, create a private folder that the secure Algarve-to-Bristol share can write to, for example `/srv/racetec-export`. Configure RaceTec to replace one RDF export in that folder, for example `results.rdf`. The share must be private; do not expose a port or create an external endpoint.
+2. Copy `.env.example` to `.env`, then set a long random `ADMIN_TOKEN`, the real host folder as `RACE_EXPORT_DIR`, and the RaceTec filename as `RACE_EXPORT_FILENAME`.
+3. Start or update the service:
 
-- `dist/index.html` — public results
-- `dist/admin/index.html` — admin demo
-- `dist/rider/index.html` — rider details
-- `dist/app.js` — demo data and interactions
-- `dist/styles.css` — responsive styling
+   ```bash
+   docker compose up -d --build
+   ```
 
-Current demo: https://owar-2026-live-results.adam-ow.chatgpt.site/
+4. Open `http://byte-me:6543/` for the public site. Open `http://byte-me:6543/admin/` and enter the admin token for controls and diagnostics.
 
-RaceTec public-meeting URLs are imported automatically. The service discovers the meeting's event/stage list and refreshes published standings without changing timing files.
+Docker mounts the configured host folder at `/race-export:ro`; the service cannot write to the RaceTec share. Its persistent SQLite database is a separate Docker volume.
 
-## Live results service
+## Stable replacement behaviour
 
-The Docker service exposes the public page and admin API on Byte-Me port `6543`. RaceTec sometimes blocks plain HTTP clients, so the image includes Chromium as a browser-only fallback for its public pages. See `docker-compose.yml` for configuration.
+Use RaceTec's local/shared-folder export routine to write the same configured RDF filename each time. The service waits for two identical snapshots five seconds apart before parsing. If the file is missing, malformed, or still changing, the public site continues showing the last successful results and the Admin page reports the error.
 
-Before the first start, copy `.env.example` to `.env` and set `ADMIN_TOKEN`. The `.env` file remains on Byte-Me and is deliberately not tracked by Git, so later application updates do not overwrite your token.
-
-If the AD53 Shared App Updater is installed on Byte-Me, the Admin page uses its Results Page entry at `http://host.docker.internal:8093/apps/results-page` for checked, backed-up updates and rollback.
-
-## Direct RaceTec upload endpoint
-
-RaceTec Live-To-Web can send the generated results file directly to this stack instead of the RaceTec-hosted site. The `racetec-upload` service is deliberately an opt-in Compose profile so that no SFTP port is open until it is configured.
-
-Set `SFTP_PUBLIC_HOST`, `RACETEC_SFTP_USERNAME`, and `RACETEC_SFTP_PASSWORD` in the server-only `.env` file. `SFTP_PUBLIC_HOST` must be a DNS-only hostname resolving to Byte-Me's public IP; it must not be Cloudflare proxied. Forward only TCP `2222` from the Bristol router to Byte-Me.
-
-Start it with:
-
-```bash
-docker compose --profile racetec-upload up -d
-```
-
-In RaceTec choose **SFTP**, set the server to that hostname, port to `2222`, enter the dedicated credentials, set Target folder to `upload`, and use a fixed filename such as `owar-live`. The receiver is encrypted, has no anonymous access, and its account is isolated to the incoming-results volume.

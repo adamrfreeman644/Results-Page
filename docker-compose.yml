@@ -5,26 +5,13 @@ services:
       - "6543:6543"
     environment:
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
-      POLL_SECONDS: ${POLL_SECONDS:-30}
-      # Same central updater used by your other Byte-Me applications.
-      SHARED_UPDATER_URL: ${SHARED_UPDATER_URL:-http://host.docker.internal:8093/apps/results-page}
-      # Separate multiple public RaceTec result URLs with a | character.
-      RACETEC_URLS: ""
+      RACE_EXPORT_DIR: /race-export
+      RACE_EXPORT_FILENAME: ${RACE_EXPORT_FILENAME:-results.rdf}
+      POLL_SECONDS: 5
     volumes:
       - results-data:/data
-      - racetec-feed:/source:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
-  racetec-upload:
-    image: atmoz/sftp:alpine
-    profiles: ["racetec-upload"]
-    ports:
-      - "2222:22"
-    command: ${RACETEC_SFTP_USERNAME:?Set RACETEC_SFTP_USERNAME in .env}:${RACETEC_SFTP_PASSWORD:?Set RACETEC_SFTP_PASSWORD in .env}:::upload
-    volumes:
-      - racetec-feed:/home/${RACETEC_SFTP_USERNAME:?Set RACETEC_SFTP_USERNAME in .env}/upload
+      - ${RACE_EXPORT_DIR:?Set RACE_EXPORT_DIR in .env}:/race-export:ro
     restart: unless-stopped
 volumes:
   results-data:
-  racetec-feed:
+
