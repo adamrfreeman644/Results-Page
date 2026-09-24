@@ -5,10 +5,11 @@ services:
       - "8080:8080"
     environment:
       ADMIN_TOKEN: change-this-to-a-long-random-secret
-      RDF_FILE: /data/race.rdf
+      RDF_FILE: /source/current-race.rdf
       POLL_SECONDS: 5
     volumes:
-      - /path/on/byte-me/current-race.rdf:/data/race.rdf:ro
+      # Mount the folder, rather than a single file, so replacement exports are detected.
+      - /path/on/byte-me/race-exports:/source:ro
       - results-data:/data
     restart: unless-stopped
 volumes:
