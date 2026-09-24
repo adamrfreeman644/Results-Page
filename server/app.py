@@ -188,6 +188,13 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path=="/api/admin/show-empty":meta("force_show_all","true" if p.get("enabled") else "false")
   elif path=="/api/admin/save":meta("setup_saved",now())
+  elif path=="/api/admin/assignments":
+   c=db()
+   with c:
+    for item in p.get("assignments",[]):
+     c.execute("insert into event_mappings(event_id,tournament,stage,event_name) values(?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,stage=excluded.stage,event_name=excluded.event_name",(item["eventId"],item["tournament"],item["race"],item["name"]))
+     c.execute("update events set tournament=?,stage=?,name=? where id=?",(item["tournament"],item["race"],item["name"],item["eventId"]))
+   c.close()
   elif path.startswith("/api/admin/events/"):
    c=db()
    event_id=unquote(path.rsplit("/",1)[1])
