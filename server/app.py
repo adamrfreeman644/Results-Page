@@ -200,10 +200,19 @@ class App(SimpleHTTPRequestHandler):
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(event_id,))]
    for item in r:
-    item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item.pop("athlete_id")))]
+    item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
    c.close()
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
+  if path.startswith("/api/public/riders/"):
+   athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
+   rider=c.execute("select id,name from athletes where id=?",(athlete_id,)).fetchone()
+   if not rider:
+    c.close();return self.js({"error":"Rider not found"},404)
+   records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
+   c.close()
+   for record in records:record["time"]=display_time(record["time"])
+   return self.js({"id":rider["id"],"name":rider["name"],"records":records})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
