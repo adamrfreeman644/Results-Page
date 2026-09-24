@@ -1,7 +1,7 @@
 const DEFAULT_STATE={status:'Provisional',events:[
  {id:'open',name:'Open',detail:'Tournament',visible:true},
- {id:'women',name:'EOL Women',detail:'Tournament',visible:true},
- {id:'groms',name:'EOL Groms',detail:'Tournament',visible:true},
+ {id:'women',name:'Women',detail:'Tournament',visible:true},
+ {id:'groms',name:'Groms',detail:'Tournament',visible:true},
  {id:'infinity',name:'Infinity Race',detail:'Mass race',visible:true},
  {id:'surf',name:'Surf & Dirt',detail:'Mass race',visible:true},
  {id:'legends',name:'Legends',detail:'Race',visible:true},
@@ -23,7 +23,7 @@ const TOURNAMENT_STAGES=[
  {id:'semis',label:'Semi-finals',count:2,size:8,prefix:'Semi-final'},
  {id:'final',label:'Final',count:1,size:4,prefix:'Final'}
 ];
-function appState(){try{return {...DEFAULT_STATE,...JSON.parse(localStorage.getItem('owar-demo-state-v5')||'{}')}}catch{return DEFAULT_STATE}}
+function appState(){try{const saved=JSON.parse(localStorage.getItem('owar-demo-state-v5')||'{}');const events=DEFAULT_STATE.events.map(base=>({...base,...(saved.events||[]).find(e=>e.id===base.id),name:base.name}));return {...DEFAULT_STATE,...saved,events}}catch{return DEFAULT_STATE}}
 function saveState(s){localStorage.setItem('owar-demo-state-v5',JSON.stringify(s));window.dispatchEvent(new Event('owar-update'))}
 function escapeHtml(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function eventById(id){return appState().events.find(e=>e.id===id)||appState().events[0]}
