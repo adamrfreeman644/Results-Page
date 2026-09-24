@@ -148,3 +148,7 @@ body[data-page="public"] .tabs{width:100%;overflow:hidden}
 @media(max-width:700px){#event-list .tree-toolbar{align-items:flex-start;flex-direction:column}#event-list .tree-toolbar .btn{width:100%}}
 
 #event-list:not(.editing) .tree-leaf>.publish-mode{display:none}.publish-mode{margin-left:8px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;font:inherit;font-size:.78rem}
+
+
+/* Historic rankings stay compact and live only on a rider's personal profile. */
+.historical-card{margin:18px 0}.historical-card .history-heading{background:#f7fbfa;border-bottom:1px solid #d8e7e4}.historical-card .history-heading p{margin:5px 0 0;color:var(--muted);font-size:.86rem}.settings-divider{width:100%;height:1px;margin:2px 0;border:0;background:#d9e7e4}.historic-control{display:grid;gap:8px}.historic-control strong{font-size:.88rem}.historic-control p{margin:0!important}.historic-control .btn{width:100%}
