@@ -146,6 +146,12 @@ class App(SimpleHTTPRequestHandler):
    c=db()
    with c:c.execute("insert into races(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
    c.close()
+  elif path.startswith("/api/admin/tournaments/") and path.endswith("/duplicate"):
+   source_id=int(path.split("/")[4]);name=p.get("name","").strip();c=db()
+   with c:
+    new_id=c.execute("insert into tournaments(name) values(?)",(name,)).lastrowid
+    for row in c.execute("select name from races where tournament_id=?",(source_id,)):c.execute("insert into races(tournament_id,name) values(?,?)",(new_id,row[0]))
+   c.close()
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path=="/api/admin/show-empty":meta("force_show_all","true" if p.get("enabled") else "false")
   elif path=="/api/admin/save":meta("setup_saved",now())
