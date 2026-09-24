@@ -45,4 +45,4 @@ Start it with:
 docker compose --profile racetec-upload up -d
 ```
 
-In RaceTec choose **SFTP**, set the server to that hostname, port to `2222`, enter the dedicated credentials, leave Target folder blank, and use a fixed filename such as `owar-live`. The receiver is encrypted, has no anonymous access, and its account is isolated to the incoming-results volume.
+In RaceTec choose **SFTP**, set the server to that hostname, port to `2222`, enter the dedicated credentials, set Target folder to `upload`, and use a fixed filename such as `owar-live`. The receiver is encrypted, has no anonymous access, and its account is isolated to the incoming-results volume.
