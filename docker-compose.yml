@@ -8,7 +8,7 @@ services:
       RACE_EXPORT_DIR: /race-export
       RACE_EXPORT_HOST_DIR: ${RACE_EXPORT_DIR:?Set RACE_EXPORT_DIR in .env}
       RACE_EXPORT_FILENAME: ${RACE_EXPORT_FILENAME:-results.rdf}
-      POLL_SECONDS: 5
+      POLL_SECONDS: 30
     volumes:
       - results-data:/data
       - ${RACE_EXPORT_DIR:?Set RACE_EXPORT_DIR in .env}:/race-export:ro

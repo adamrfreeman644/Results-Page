@@ -6,7 +6,7 @@ The public results site keeps the existing OWAR visual design and is served on B
 
 - Uses no AI, website scraping, public FTP/SFTP, reverse proxy, tunnel endpoint, router forwarding, Cloudflare, or public timing URL.
 - Reads the RaceTec export folder in Docker as **read-only**.
-- Checks it every 5 seconds and imports only after the same file contents have been observed twice (a full stable interval).
+- Checks it every 30 seconds and imports only after the same file contents have been observed twice (a full stable interval).
 - Parses RaceTec RDF events/heats, riders, bibs, positions, and times.
 - Displays every imported event/heat in the existing public results interface.
 - Stores every import in SQLite, including a historical copy of each rider result.
