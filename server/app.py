@@ -18,7 +18,9 @@ def db():
  create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,primary key(event_id,athlete_id));
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
- create table if not exists event_mappings(event_id text primary key,tournament text,stage text,event_name text);
+ create table if not exists tournaments(id integer primary key,name text not null unique);
+ create table if not exists races(id integer primary key,tournament_id integer not null,name text not null,unique(tournament_id,name));
+ create table if not exists event_mappings(event_id text primary key,tournament text,stage text,event_name text,race_id integer);
  create table if not exists meta(key text primary key,value text not null);""")
  try:c.execute("alter table events add column tournament text not null default ''")
  except sqlite3.OperationalError:pass
@@ -114,7 +116,7 @@ class App(SimpleHTTPRequestHandler):
    c=db();r=c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],)).fetchall();c.close();return self.js([dict(x) for x in r])
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];rs=[dict(x) for x in c.execute("select * from races order by name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"races":rs})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -122,6 +124,14 @@ class App(SimpleHTTPRequestHandler):
   except json.JSONDecodeError:return self.js({"error":"Invalid JSON"},400)
   path=urlparse(self.path).path
   if path=="/api/admin/status":meta("status",p.get("status","Live"))
+  elif path=="/api/admin/tournaments":
+   c=db()
+   with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
+   c.close()
+  elif path=="/api/admin/races":
+   c=db()
+   with c:c.execute("insert into races(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
+   c.close()
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
   elif path.startswith("/api/admin/events/"):
    c=db()
