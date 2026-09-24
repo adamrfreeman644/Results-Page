@@ -23,6 +23,7 @@ def db():
       create table if not exists athletes (id integer primary key, name text not null);
       create table if not exists results (event_id integer, athlete_id integer, bib text, position integer, time text, primary key(event_id,athlete_id));
       create table if not exists meta (key text primary key, value text not null);
+      create table if not exists sources (url text primary key, active integer not null default 1);
     """)
     return con
 
@@ -73,8 +74,9 @@ def watch():
         try:
             con=db(); paused=con.execute("select value from meta where key='feed_paused'").fetchone(); con.close()
             if not paused or paused[0] != 'true':
-                for url in RACETEC_URLS: import_racetec(url)
-                if RACETEC_URLS: print("Imported RaceTec results", flush=True)
+                con=db(); urls=[r[0] for r in con.execute("select url from sources where active=1")]; con.close()
+                for url in urls: import_racetec(url)
+                if urls: print("Imported RaceTec results", flush=True)
         except Exception as exc: print(f"Import failed: {exc}", flush=True)
         time.sleep(POLL_SECONDS)
 
@@ -97,7 +99,7 @@ class App(SimpleHTTPRequestHandler):
             event_id=path.split("/")[4]; con=db(); rows=con.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position",(event_id,)).fetchall(); con.close(); return self.json([dict(x) for x in rows])
         if path == "/api/admin/status":
             if not self.authorized(): return self.json({"error":"Unauthorized"},401)
-            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; con.close(); return self.json({"sources":RACETEC_URLS,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
+            con=db(); meta={r[0]:r[1] for r in con.execute("select key,value from meta")}; events=[dict(r) for r in con.execute("select e.id,e.name,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.id")]; sources=[dict(r) for r in con.execute("select rowid,url,active from sources order by rowid")]; con.close(); return self.json({"sources":sources,"pollSeconds":POLL_SECONDS,"meta":meta,"events":events})
         return super().do_GET()
     def do_POST(self):
         path=urlparse(self.path).path
@@ -108,12 +110,21 @@ class App(SimpleHTTPRequestHandler):
         with con:
             if path == "/api/admin/status": con.execute("insert into meta(key,value) values('status',?) on conflict(key) do update set value=excluded.value",(payload.get("status","Live"),))
             elif path == "/api/admin/feed": con.execute("insert into meta(key,value) values('feed_paused',?) on conflict(key) do update set value=excluded.value",('false' if payload.get('running') else 'true',))
+            elif path == "/api/admin/sources":
+                url=payload.get('url','').strip()
+                if not url.startswith('https://www.racetecresults.com/results.aspx?'): con.close(); return self.json({"error":"Enter a RaceTec results URL"},400)
+                con.execute("insert into sources(url,active) values(?,1) on conflict(url) do update set active=1",(url,))
+            elif path.startswith("/api/admin/sources/"):
+                con.execute("update sources set active=? where rowid=?",(1 if payload.get('active') else 0,path.rsplit("/",1)[1]))
             elif path.startswith("/api/admin/events/"):
                 con.execute("update events set visible=? where id=?",(1 if payload.get("visible") else 0,path.rsplit("/",1)[1]))
             else: con.close(); return self.json({"error":"Not found"},404)
         con.close(); return self.json({"ok":True})
 
 if __name__ == "__main__":
-    DB_FILE.parent.mkdir(parents=True,exist_ok=True); db().close()
+    DB_FILE.parent.mkdir(parents=True,exist_ok=True)
+    con=db()
+    for url in RACETEC_URLS: con.execute("insert into sources(url,active) values(?,1) on conflict(url) do nothing",(url,))
+    con.commit(); con.close()
     threading.Thread(target=watch,daemon=True).start()
     ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","8080"))),App).serve_forever()
