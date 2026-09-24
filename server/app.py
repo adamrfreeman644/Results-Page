@@ -27,6 +27,8 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table events add column stage text not null default ''")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table races add column sort_order integer not null default 0")
+ except sqlite3.OperationalError:pass
  return c
 def clean(x):
  x=(x or "").strip();return "" if x.upper() in ("NULL","NONE","-") else x
@@ -130,7 +132,7 @@ class App(SimpleHTTPRequestHandler):
    return self.js(r)
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];rs=[dict(x) for x in c.execute("select * from races order by name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"races":rs})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"races":rs})
   return super().do_GET()
  def do_POST(self):
   if not self.auth():return self.js({"error":"Unauthorized"},401)
@@ -153,6 +155,14 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/races":
    c=db()
    with c:c.execute("insert into races(tournament_id,name) values(?,?)",(p.get("tournamentId"),p.get("name","").strip()))
+   c.close()
+  elif path.startswith("/api/admin/races/") and path.endswith("/move"):
+   race_id=int(path.split("/")[4]);c=db();row=c.execute("select tournament_id from races where id=?",(race_id,)).fetchone()
+   if row:
+    ordered=[x[0] for x in c.execute("select id from races where tournament_id=? order by sort_order,id",(row[0],))];index=ordered.index(race_id);other=index+(-1 if p.get("direction")=="up" else 1)
+    if 0<=other<len(ordered):ordered[index],ordered[other]=ordered[other],ordered[index]
+    with c:
+     for position,item in enumerate(ordered):c.execute("update races set sort_order=? where id=?",(position,item))
    c.close()
   elif path.startswith("/api/admin/tournaments/") and path.endswith("/duplicate"):
    source_id=int(path.split("/")[4]);name=p.get("name","").strip();c=db()
