@@ -27,4 +27,4 @@ The automatic results-file import and server-side admin authentication are inten
 
 ## Live results service
 
-The Docker service polls a read-only RDF file, stores only the public result fields in SQLite, and serves the public page and admin API. See `docker-compose.yml` for the Byte-Me mount and admin-token configuration.
+The Docker service exposes the public page and admin API on Byte-Me port `6543`. See `docker-compose.yml` for configuration.
