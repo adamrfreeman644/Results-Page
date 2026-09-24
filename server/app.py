@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Private-folder RaceTec RDF results service; Python standard library only."""
 import hashlib,json,os,sqlite3,threading,time
+import re
 from datetime import datetime,timezone
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
@@ -33,6 +34,16 @@ def val(row,*ix):
  for i in ix:
   if i<len(row) and clean(row[i]): return clean(row[i])
  return ""
+def display_time(value):
+ value=clean(value)
+ match=re.search(r"(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?",value)
+ if not match:
+  short=re.search(r"(\d{1,2}):(\d{2})(?:\.(\d+))?$",value)
+  if not short:return value
+  minute,second,decimal=short.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
+  return minute.zfill(2)+":"+second+"."+decimal
+ hour,minute,second,decimal=match.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
+ return (str(int(hour))+":" if int(hour) else "")+minute+":"+second+"."+decimal
 def rows(text,table):
  p="[DATA].["+table+"]:"
  for line in text.splitlines():
@@ -54,7 +65,7 @@ def parse(raw):
   eid,aid=val(r,0)+":"+val(r,1),val(r,2)
   try: pos=int(val(r,24,26))
   except ValueError: continue
-  if eid and aid: out.setdefault(eid,[]).append((aid,athletes.get(aid,"Rider "+aid),val(r,18),pos,val(r,21,22,23)))
+  if eid and aid: out.setdefault(eid,[]).append((aid,athletes.get(aid,"Rider "+aid),val(r,18),pos,display_time(val(r,21,22,23))))
  parsed=[]
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
@@ -97,7 +108,7 @@ def watch():
     else:
      raw=EXPORT_FILE.read_bytes();digest=hashlib.sha256(raw).hexdigest()
      if candidate==digest:
-      if import_file(raw,digest+"-tournaments-v1"): print("Imported stable RaceTec RDF",flush=True)
+      if import_file(raw,digest+"-tournaments-v2"): print("Imported stable RaceTec RDF",flush=True)
       candidate=None;meta("source_state","Imported stable file")
      else: candidate=digest;meta("source_state","File changed; verifying stability")
   except Exception as e:candidate=None;meta("last_error",str(e)[:500]);print("RDF import failed:",e,flush=True)
@@ -113,7 +124,9 @@ class App(SimpleHTTPRequestHandler):
   if path=="/api/public/events":
    c=db();s=c.execute("select value from meta where key='status'").fetchone();e=c.execute("select e.id,e.name,e.tournament,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where e.visible=1 group by e.id having count(r.athlete_id)>0 order by e.tournament,e.sort_order,e.name").fetchall();c.close();return self.js({"status":s[0] if s else "Live","events":[dict(x) for x in e]})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   c=db();r=c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],)).fetchall();c.close();return self.js([dict(x) for x in r])
+   c=db();r=[dict(x) for x in c.execute("select r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(path.split("/")[4],))];c.close()
+   for item in r:item["time"]=display_time(item["time"])
+   return self.js(r)
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.stage,e.visible,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by name")];rs=[dict(x) for x in c.execute("select * from races order by name")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"races":rs})
