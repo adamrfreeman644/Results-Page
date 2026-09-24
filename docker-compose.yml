@@ -17,20 +17,13 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
   racetec-upload:
-    image: stilliard/pure-ftpd:hardened
+    image: atmoz/sftp:alpine
     profiles: ["racetec-upload"]
     ports:
-      - "2121:21"
-      - "30000-30009:30000-30009"
-    environment:
-      PUBLICHOST: ${FTP_PUBLIC_HOST:?Set FTP_PUBLIC_HOST in .env}
-      FTP_USER_NAME: ${RACETEC_FTP_USERNAME:?Set RACETEC_FTP_USERNAME in .env}
-      FTP_USER_PASS: ${RACETEC_FTP_PASSWORD:?Set RACETEC_FTP_PASSWORD in .env}
-      FTP_USER_HOME: /home/ftpusers/racetec
-      FTP_PASSIVE_PORTS: 30000:30009
-      ADDED_FLAGS: --noanonymous --notruncate --maxclientsperip 2
+      - "2222:22"
+    command: ${RACETEC_SFTP_USERNAME:?Set RACETEC_SFTP_USERNAME in .env}:${RACETEC_SFTP_PASSWORD:?Set RACETEC_SFTP_PASSWORD in .env}:::upload
     volumes:
-      - racetec-feed:/home/ftpusers/racetec
+      - racetec-feed:/home/${RACETEC_SFTP_USERNAME:?Set RACETEC_SFTP_USERNAME in .env}/upload
     restart: unless-stopped
 volumes:
   results-data:

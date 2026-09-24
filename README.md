@@ -35,9 +35,9 @@ If the AD53 Shared App Updater is installed on Byte-Me, the Admin page uses its 
 
 ## Direct RaceTec upload endpoint
 
-RaceTec Live-To-Web can send the generated results file directly to this stack instead of the RaceTec-hosted site. The `racetec-upload` service is deliberately an opt-in Compose profile so that no FTP port is open until it is configured.
+RaceTec Live-To-Web can send the generated results file directly to this stack instead of the RaceTec-hosted site. The `racetec-upload` service is deliberately an opt-in Compose profile so that no SFTP port is open until it is configured.
 
-Set `FTP_PUBLIC_HOST`, `RACETEC_FTP_USERNAME`, and `RACETEC_FTP_PASSWORD` in the server-only `.env` file. `FTP_PUBLIC_HOST` must be a DNS-only hostname resolving to Byte-Me's public IP; it must not be Cloudflare proxied. Forward TCP `2121` and `30000-30009` from the Bristol router to Byte-Me.
+Set `SFTP_PUBLIC_HOST`, `RACETEC_SFTP_USERNAME`, and `RACETEC_SFTP_PASSWORD` in the server-only `.env` file. `SFTP_PUBLIC_HOST` must be a DNS-only hostname resolving to Byte-Me's public IP; it must not be Cloudflare proxied. Forward only TCP `2222` from the Bristol router to Byte-Me.
 
 Start it with:
 
@@ -45,4 +45,4 @@ Start it with:
 docker compose --profile racetec-upload up -d
 ```
 
-In RaceTec choose **Use custom server**, set the server to that hostname, port to `2121`, enter the dedicated credentials, leave Target folder blank, and use a fixed filename such as `owar-live`. The receiver has no anonymous access and its account is isolated to the incoming-results volume.
+In RaceTec choose **SFTP**, set the server to that hostname, port to `2222`, enter the dedicated credentials, leave Target folder blank, and use a fixed filename such as `owar-live`. The receiver is encrypted, has no anonymous access, and its account is isolated to the incoming-results volume.
