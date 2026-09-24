@@ -1,13 +1,13 @@
 # OWAR 2026 Live Results
 
-Mobile-first interactive race results demo for OWAR 2026, presented by Flow State PEV.
+Mobile-first live race results for OWAR 2026, presented by Flow State PEV.
 
 ## Included
 
 - Public live-results page
 - Tournament stages and race tables
 - Rider history pages
-- Separate `/admin` demo controls
+- Separate token-protected `/admin` controls for RaceTec sources, visibility, event status, and live-polling stop/start
 - Responsive, high-contrast outdoor design
 - Links to OW Algarve and Flow State PEV
 
@@ -23,8 +23,10 @@ The static website is in `dist/`.
 
 Current demo: https://owar-2026-live-results.adam-ow.chatgpt.site/
 
-The automatic results-file import and server-side admin authentication are intentionally left for the backend stage.
+RaceTec public-meeting URLs are imported automatically. The service discovers the meeting's event/stage list and refreshes published standings without changing timing files.
 
 ## Live results service
 
-The Docker service exposes the public page and admin API on Byte-Me port `6543`. See `docker-compose.yml` for configuration.
+The Docker service exposes the public page and admin API on Byte-Me port `6543`. RaceTec sometimes blocks plain HTTP clients, so the image includes Chromium as a browser-only fallback for its public pages. See `docker-compose.yml` for configuration.
+
+If the AD53 Shared App Updater is installed on Byte-Me, the Admin page uses its Results Page entry at `http://host.docker.internal:8093/apps/results-page` for checked, backed-up updates and rollback.
