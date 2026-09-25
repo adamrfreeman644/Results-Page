@@ -5,7 +5,7 @@ import re
 from datetime import datetime,timezone
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse,unquote
+from urllib.parse import urlparse,unquote,parse_qs
 from urllib.request import urlopen
 ROOT=Path(__file__).resolve().parents[1]; STATIC=ROOT/"dist"
 VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
