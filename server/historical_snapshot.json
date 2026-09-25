@@ -1,5 +1,4 @@
 {
-  "generated_at": "2026-09-25T18:21:53.8744461+01:00",
   "records": [
     {
       "season": "2023",
@@ -3761,6 +3760,150 @@
       "event_name": "Overall league standing",
       "rider_name": "Luke Massey",
       "position": 156,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Alexis Matton",
+      "position": 13,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Jay Kenward",
+      "position": 1,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Adrian Krige",
+      "position": 6,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Fábio Costa",
+      "position": 10,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Daniel Turner",
+      "position": 3,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Vid Gladovic",
+      "position": 9,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Vincent François",
+      "position": 4,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Jaffa Gamon",
+      "position": 11,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "James Grant",
+      "position": 12,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Vince Vaughn",
+      "position": 14,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Gerard Rincon",
+      "position": 15,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Benoit Rousseaux",
+      "position": 7,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "James Antony",
+      "position": 8,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Joselito Dendoncker",
+      "position": 16,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Hannes Schatzmann",
+      "position": 2,
+      "source": "2023-24 Points Running Totals - Male_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Thorkild Rasmussen",
+      "position": 5,
       "source": "2023-24 Points Running Totals - Male_files"
     },
     {
@@ -8207,6 +8350,78 @@
       "event_name": "Overall league standing",
       "rider_name": "Veronika Trojanová",
       "position": 17,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Kate Paxton",
+      "position": 7,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Alicia Hemmings",
+      "position": 2,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Rahel Schatzmann",
+      "position": 1,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Jessica Jones",
+      "position": 6,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Chantelle Warner-Wells",
+      "position": 8,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Leyla Zi",
+      "position": 5,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Diana Demarmels",
+      "position": 3,
+      "source": "2023-24 Points Running Totals Female_files"
+    },
+    {
+      "season": "2023/24",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "European Onewheel Championship",
+      "rider_name": "Veronika Trojanová",
+      "position": 4,
       "source": "2023-24 Points Running Totals Female_files"
     },
     {
@@ -18388,6 +18603,7 @@
       "position": 20,
       "source": "2026 Points Total - groms_files"
     }
-  ]
+  ],
+  "generated_at": "2026-09-25T18:24:00.8184899+01:00"
 }
 
