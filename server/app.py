@@ -83,10 +83,10 @@ def display_time(value):
  hour,minute,second,decimal=match.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
  return (str(int(hour))+":" if int(hour) else "")+minute+":"+second+"."+decimal
 def time_ms(value):
- """Convert RaceTec's 1900 date/time value to a time-of-day in milliseconds."""
- m=re.search(r"(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?",clean(value))
+ """Convert RaceTec clock values and displayed durations to milliseconds."""
+ m=re.search(r"(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?:\.(\d+))?",clean(value))
  if not m:return None
- h,minute,second,fraction=m.groups();return ((int(h)*3600+int(minute)*60+int(second))*1000)+int((fraction or "0")[:3].ljust(3,"0"))
+ h,minute,second,fraction=m.groups();return (((int(h or 0)*3600)+int(minute)*60+int(second))*1000)+int((fraction or "0")[:3].ljust(3,"0"))
 def ms_display(total):
  h,total=divmod(total,3600000);minute,total=divmod(total,60000);second,milli=divmod(total,1000)
  return (str(h)+":" if h else "")+str(minute).zfill(2)+":"+str(second).zfill(2)+"."+str(milli).zfill(3)
@@ -377,6 +377,7 @@ if __name__=="__main__":
  try:import_historical()
  except Exception as e:print("Bundled historic history import failed:",e,flush=True)
  threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
+
 
 
 
