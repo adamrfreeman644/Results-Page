@@ -262,6 +262,12 @@ class App(SimpleHTTPRequestHandler):
    c.close()
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
+  if path=="/api/public/historical/search":
+   query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db()
+   rows=[] if len(query)<2 else [dict(x) for x in c.execute("select normal_name,min(rider_name) rider_name,count(*) records from historical_results where lower(rider_name) like ? group by normal_name order by records desc,rider_name limit 12",("%"+query.lower()+"%",))]
+   c.close();return self.js(rows)
+  if path=="/api/public/historical/by-name":
+   key=parse_qs(urlparse(self.path).query).get("key",[""])[0];c=db();rows=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points from historical_results where normal_name=? order by season desc,event_name",(key,))];c.close();return self.js(rows)
   if path.startswith("/api/public/riders/"):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
    rider=c.execute("select id,name from athletes where id=?",(athlete_id,)).fetchone()
