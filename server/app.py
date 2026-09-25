@@ -240,7 +240,10 @@ class App(SimpleHTTPRequestHandler):
  def translate_path(self,path):
   route=urlparse(path).path or "/";route="/index.html" if route=="/" else route;p=(STATIC/route.lstrip("/")).resolve();return str(p if STATIC.resolve() in p.parents or p==STATIC.resolve() else STATIC/"index.html")
  def js(self,b,code=200):
-  data=json.dumps(b).encode();self.send_response(code);self.send_header("Content-Type","application/json");self.send_header("Cache-Control","no-store");self.end_headers();self.wfile.write(data)
+  data=json.dumps(b).encode();self.send_response(code);self.send_header("Content-Type","application/json");self.end_headers();self.wfile.write(data)
+ def end_headers(self):
+  self.send_header("Cache-Control","no-store, max-age=0")
+  super().end_headers()
  def auth(self):return bool(ADMIN_TOKEN) and self.headers.get("Authorization")=="Bearer "+ADMIN_TOKEN
  def do_GET(self):
   path=urlparse(self.path).path
@@ -279,19 +282,6 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/tournaments":
    c=db()
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
-   c.close()
-  elif path=="/api/admin/standard-structure":
-   structure=(("Qualifiers",()),("Heats",tuple(f"Heat {n}" for n in range(1,9))),("Quarters",tuple(f"Quarter {n}" for n in range(1,5))),("Semi",("Semi 1","Semi 2","4th's","3rd's")),("Finals",("Runner Up's","Final")));c=db()
-   with c:
-    for tournament in ("Women","Open","Groms"):
-     row=c.execute("select id from tournaments where name=?",(tournament,)).fetchone()
-     tournament_id=row[0] if row else c.execute("insert into tournaments(name) values(?)",(tournament,)).lastrowid
-     for level,names in structure:
-      level_row=c.execute("select id from levels where tournament_id=? and name=?",(tournament_id,level)).fetchone();level_id=level_row[0] if level_row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,level)).lastrowid
-      for position,name in enumerate(names):
-       existing=c.execute("select id from races where tournament_id=? and name=?",(tournament_id,name)).fetchone()
-       if existing:c.execute("update races set level_id=?,sort_order=? where id=?",(level_id,position,existing[0]))
-       else:c.execute("insert into races(tournament_id,level_id,name,sort_order) values(?,?,?,?)",(tournament_id,level_id,name,position))
    c.close()
   elif path=="/api/admin/levels":
    c=db()
@@ -351,14 +341,6 @@ class App(SimpleHTTPRequestHandler):
      old,tournament,level=row[0],row[1],row[2];c.execute("delete from event_mappings where race_id=?",(item_id,));c.execute("update events set stage='' where tournament=? and level=? and stage=?",(tournament,level,old));c.execute("delete from races where id=?",(item_id,))
     elif row and p.get("name","").strip():
      new=p["name"].strip();old,tournament,level=row[0],row[1],row[2];c.execute("update races set name=? where id=?",(new,item_id));c.execute("update event_mappings set stage=? where race_id=?",(new,item_id));c.execute("update events set stage=? where tournament=? and level=? and stage=?",(new,tournament,level,old))
-   c.close()
-  elif path.startswith("/api/admin/tournaments/") and path.endswith("/duplicate"):
-   source_id=int(path.split("/")[4]);name=p.get("name","").strip();c=db()
-   with c:
-    new_id=c.execute("insert into tournaments(name) values(?)",(name,)).lastrowid
-    for level in c.execute("select id,name,sort_order from levels where tournament_id=?",(source_id,)):
-     level_id=c.execute("insert into levels(tournament_id,name,sort_order) values(?,?,?)",(new_id,level[1],level[2])).lastrowid
-     for row in c.execute("select name,sort_order,fastest_lap from races where level_id=?",(level[0],)):c.execute("insert into races(tournament_id,level_id,name,sort_order,fastest_lap) values(?,?,?,?,?)",(new_id,level_id,row[0],row[1],row[2]))
    c.close()
   elif path=="/api/admin/historical-import":
    try:return self.js({"ok":True,"rows":import_historical()})
