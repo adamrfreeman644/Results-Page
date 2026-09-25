@@ -313,7 +313,7 @@ class App(SimpleHTTPRequestHandler):
    race_id=int(path.split("/")[4]);c=db()
    with c:c.execute("update races set fastest_lap=? where id=?",(1 if p.get("enabled") else 0,race_id))
    c.close();meta("config_revision",str(time.time_ns()))
-  elif re.fullmatch(r"/api/admin/tournaments/\\d+",path):
+  elif re.fullmatch(r"/api/admin/tournaments/\d+",path):
    item_id=int(path.rsplit("/",1)[1]);c=db()
    with c:
     row=c.execute("select name from tournaments where id=?",(item_id,)).fetchone()
@@ -322,13 +322,13 @@ class App(SimpleHTTPRequestHandler):
     elif row and p.get("name","").strip():
      new=p["name"].strip();old=row[0];c.execute("update tournaments set name=? where id=?",(new,item_id));c.execute("update event_mappings set tournament=? where tournament=?",(new,old));c.execute("update events set tournament=? where tournament=?",(new,old))
    c.close()
-  elif re.fullmatch(r"/api/admin/tournaments/\\d+/move",path):
+  elif re.fullmatch(r"/api/admin/tournaments/\d+/move",path):
    item_id=int(path.split("/")[4]);c=db();ordered=[x[0] for x in c.execute("select id from tournaments order by sort_order,id")];i=ordered.index(item_id) if item_id in ordered else -1;j=i+(-1 if p.get("direction")=="up" else 1)
    if 0<=i<len(ordered) and 0<=j<len(ordered): ordered[i],ordered[j]=ordered[j],ordered[i]
    with c:
     for n,item in enumerate(ordered):c.execute("update tournaments set sort_order=? where id=?",(n,item))
    c.close()
-  elif re.fullmatch(r"/api/admin/levels/\\d+",path):
+  elif re.fullmatch(r"/api/admin/levels/\d+",path):
    item_id=int(path.rsplit("/",1)[1]);c=db()
    with c:
     row=c.execute("select l.name,t.name tournament from levels l join tournaments t on t.id=l.tournament_id where l.id=?",(item_id,)).fetchone()
@@ -337,13 +337,13 @@ class App(SimpleHTTPRequestHandler):
     elif row and p.get("name","").strip():
      new=p["name"].strip();old,tournament=row[0],row[1];c.execute("update levels set name=? where id=?",(new,item_id));c.execute("update event_mappings set level=? where tournament=? and level=?",(new,tournament,old));c.execute("update events set level=? where tournament=? and level=?",(new,tournament,old))
    c.close()
-  elif re.fullmatch(r"/api/admin/levels/\\d+/move",path):
+  elif re.fullmatch(r"/api/admin/levels/\d+/move",path):
    item_id=int(path.split("/")[4]);c=db();row=c.execute("select tournament_id from levels where id=?",(item_id,)).fetchone();ordered=[] if not row else [x[0] for x in c.execute("select id from levels where tournament_id=? order by sort_order,id",(row[0],))];i=ordered.index(item_id) if item_id in ordered else -1;j=i+(-1 if p.get("direction")=="up" else 1)
    if 0<=i<len(ordered) and 0<=j<len(ordered): ordered[i],ordered[j]=ordered[j],ordered[i]
    with c:
     for n,item in enumerate(ordered):c.execute("update levels set sort_order=? where id=?",(n,item))
    c.close()
-  elif re.fullmatch(r"/api/admin/races/\\d+",path):
+  elif re.fullmatch(r"/api/admin/races/\d+",path):
    item_id=int(path.rsplit("/",1)[1]);c=db()
    with c:
     row=c.execute("select r.name,t.name tournament,coalesce(l.name,'') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where r.id=?",(item_id,)).fetchone()
