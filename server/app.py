@@ -276,7 +276,7 @@ class App(SimpleHTTPRequestHandler):
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
    manual=c.execute("select normal_name from historical_manual_matches where athlete_id=?",(athlete_id,)).fetchone();manual_key=manual[0] if manual else ""
-   historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? or normal_name=? order by season desc,event_name",(athlete_id,manual_key))]
+   historical=[] if not manual_key else [dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where normal_name=? order by season desc,event_name",(manual_key,))]
    c.close()
    return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical})
   if path=="/api/admin/status":
