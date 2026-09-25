@@ -1,4 +1,5 @@
 {
+  "generated_at": "2026-09-25T18:20:10.4771679+01:00",
   "records": [
     {
       "season": "2023",
@@ -9524,6 +9525,339 @@
     },
     {
       "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jessica Jones",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Jessica Jones",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Jessica Jones",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jessica Jones",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Barbara Tokarska",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Barbara Tokarska",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Barbara Tokarska",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Barbara Tokarska",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Kate Paxton",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Kate Paxton",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Kate Paxton",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Kate Paxton",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Kate Paxton",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Chantelle Warner-Wells",
+      "position": 6,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Chantelle Warner-Wells",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Chantelle Warner-Wells",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Alicia Hemmings",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Alicia Hemmings",
+      "position": 6,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Quirine Posno",
+      "position": 5,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Quirine Posno",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Diana Demarmels",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Mollie Stuart",
+      "position": 7,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Mollie Stuart",
+      "position": 5,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Florane Kadisch",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Veronika Trojanová",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Lola Dendoncker",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Camille Lelièvre",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Aneta Málková",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Rahel Schatzmann",
+      "position": 5,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Soraya Albin",
+      "position": 6,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Heather Adams",
+      "position": 7,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Nadine Tunnicliffe",
+      "position": 8,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Mio Wunderlin",
+      "position": 8,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Lia Rhae",
+      "position": 9,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Brooke Rhodes",
+      "position": 10,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Sara Tschersich",
+      "position": 11,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Sara Visaggio",
+      "position": 12,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
       "division": "open",
       "record_type": "league",
       "event_name": "Overall league standing",
@@ -11122,6 +11456,2391 @@
       "event_name": "Overall league standing",
       "rider_name": "Adrian Krige",
       "position": 180,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Alexis Matton",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Alexis Matton",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Alexis Matton",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Alexis Matton",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Alexis Matton",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Dan Turner",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Dan Turner",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Dan Turner",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Dan Turner",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jay Kenward",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Jay Kenward",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Joselito Dendoncker",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Joselito Dendoncker",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Joselito Dendoncker",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Fábio Costa",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Fábio Costa",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Fábio Costa",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Fábio Costa",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Fábio Costa",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Fábio Costa",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Joel Jones",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Joel Jones",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Joel Jones",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Vid Gladovič",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Vid Gladovič",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Vid Gladovič",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Vid Gladovič",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Vid Gladovič",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Sebastian Cusick",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Sebastian Cusick",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Maiko Wunderlin",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Maiko Wunderlin",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Maiko Wunderlin",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Vlastimil Batovec",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Vlastimil Batovec",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Vlastimil Batovec",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Marian Koláček",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Marian Koláček",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Thorkild Rasmussen",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Thorkild Rasmussen",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Giacomo Del Curto",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Giacomo Del Curto",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Darren Attew",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Darren Attew",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Darren Attew",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Lukáš Hrázký",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Lukáš Hrázký",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Lukáš Hrázký",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Lukáš Hrázký",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "James Grant",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "James Grant",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "James Grant",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "James Grant",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Florent Audrit",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Florent Audrit",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Gerard Rincón",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Gerard Rincón",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Benoit Rousseaux",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Benoit Rousseaux",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Tomáš Mach",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Tomáš Mach",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Tomáš Mach",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Wiktor Sowinski",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Wiktor Sowinski",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Wiktor Sowinski",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Sam O'Connell",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Sam O'Connell",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jonas Andersen",
+      "position": 37,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Jonas Andersen",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Jonas Andersen",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Jaccopo Lavezzi",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Jaccopo Lavezzi",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Hannes Schatzmann",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Vince François",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Lars Lottrup",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Lars Lottrup",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jacob Jones",
+      "position": 36,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Jacob Jones",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jacob Jones",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Eduardo Queralto",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Eduardo Queralto",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Nick Oppenheimer",
+      "position": 41,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Nick Oppenheimer",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Nick Oppenheimer",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Nick Oppenheimer",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Nick Oppenheimer",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Radek Kelnar",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Constantin Honoré",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Nico Stuart",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Nico Stuart",
+      "position": 45,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Nico Stuart",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Tobi Sünder",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Tobi Sünder",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Marco Rund",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Louis Lovelace",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Louis Lovelace",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Simon Oppenheimer",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Simon Oppenheimer",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Simon Oppenheimer",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Ondrej Bombon",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Clint Lashley",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Clint Lashley",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Max Lee",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Max Lee",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Harley Moss",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Harley Moss",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Duncan Beattie",
+      "position": 42,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Duncan Beattie",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Darren Stevenson",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Darren Stevenson",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jaffa Gamon",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Mihály Balogh",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Adam Freeman",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Adam Freeman",
+      "position": 35,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Georges Wunderlin",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Georges Wunderlin",
+      "position": 36,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Fabian Scherrer",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Radim Klaška",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Zoltan Biro",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Thomas Harasse",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Thomas Harasse",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Gergo Kiss",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Camil Despres",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Mathias Schmidt-Nielsen",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "James Pitcher",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "James Pitcher",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Hannes Christ",
+      "position": 47,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Hannes Christ",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Martin Schlangen",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Martin Schlangen",
+      "position": 42,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Martin Schlangen",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Peter Bor",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Lorenz",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Bartosz Kozak",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Julien Keil",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Dustin Refazo",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Dustin Refazo",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Patrick Lopez",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Patrick Lopez",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Martim Fogaça",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Ricsi Papp",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Vinie Verhoegstraete",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Wolfgang Bauer",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Andy Thompson",
+      "position": 32,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Andy Thompson",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Muddi Show",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Maxime Struye",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Kacper Zwloki",
+      "position": 33,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Kacper Zwloki",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Andras Varadi",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Mikkel Roager",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Tom Ventoulou",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Michal Tomek",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Tommy Sacher",
+      "position": 32,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Tommy Sacher",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Bence Szantosi",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Mark Coningsby",
+      "position": 39,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Mark Coningsby",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Danish Onewheel Games",
+      "rider_name": "Jesper Schlott Rohwedder",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Travis Wilson",
+      "position": 44,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Travis Wilson",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Cédric Ackermann",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Ed Penny",
+      "position": 33,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Ed Penny",
+      "position": 39,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Robert Kovacs",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Martin Petříček",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Jonas Pflüger",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Csaba Rokosz",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Max Cramer",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Kamillo Fora",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Gregory Kadisch",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Martin Dunnage",
+      "position": 50,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Martin Dunnage",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Christopher Filla",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Remo Berli",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Tomas Fejko",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Thomas De Pauw",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Eryk Stopienski",
+      "position": 19,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Michelangelo Petruccio",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Aron Skultety",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Bence Horvath",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Wayne Stewart",
+      "position": 55,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Wayne Stewart",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Patrick Cordes",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "John Ryan",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "David Kaman",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Fabien Znamiec",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Tomáš Vaněk",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Balint Weinberger",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Seb Lafoy",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Daniel Matejicek",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Geza Kecskemethy",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Sergio Espinosa",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Wacky Wheels",
+      "rider_name": "Mara Jelinko",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Nico Christensen",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Luke Massey",
+      "position": 58,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Luke Massey",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Pavel Soukup",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "James Walker",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Jean Louis Arnould",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "D Brian McClure II",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Mayrau Shred Fest",
+      "rider_name": "Jan Boháč",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jamel Grant",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Remigiusz Nowak",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Julien Perrugneau",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Andrew Norris",
+      "position": 61,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Andrew Norris",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Daniel Parker",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "François Xavier Lefèvre",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "David Farries",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Kozak Zwloki",
+      "position": 31,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Thomas Astbury",
+      "position": 31,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Erwan Barboze",
+      "position": 31,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Neil Collins",
+      "position": 52,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Neil Collins",
+      "position": 31,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Kévin Charles",
+      "position": 32,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jason Bright",
+      "position": 32,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Xavier Fichou",
+      "position": 33,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "James Allen",
+      "position": 66,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "James Allen",
+      "position": 33,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Jaro Heim",
+      "position": 34,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Andy Lakin",
+      "position": 34,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Erick Goedde",
+      "position": 34,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Send It Surrey",
+      "rider_name": "Jack Huntley",
+      "position": 34,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Martin Friedli",
+      "position": 35,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "James Frampton",
+      "position": 35,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Alexis Pagli",
+      "position": 35,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Nicolas Urban",
+      "position": 36,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Cyrill Weber",
+      "position": 37,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Tom Louis Garraud",
+      "position": 37,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Vladimir Cincovic",
+      "position": 38,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Lars Vloemans",
+      "position": 38,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Olivier Baier",
+      "position": 38,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Vincent Baier",
+      "position": 39,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Oliver Motlik",
+      "position": 40,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Adam Walding",
+      "position": 40,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Fred Moura",
+      "position": 40,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Florian Löw",
+      "position": 41,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Marco",
+      "position": 41,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Romuald Brenon",
+      "position": 42,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Federico Carretta",
+      "position": 43,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jonny",
+      "position": 43,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Maxime DUFOUR",
+      "position": 43,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Swiss Race Tournament",
+      "rider_name": "Niklaus Oberholzer",
+      "position": 44,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Tristan Guillemot",
+      "position": 44,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Paul Burgess",
+      "position": 45,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Thom LEGOIS",
+      "position": 45,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "George Ellwood",
+      "position": 46,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Yann Quichaud",
+      "position": 46,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Mathias Benoit",
+      "position": 47,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Ben Crundwell",
+      "position": 48,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Andy Rorato",
+      "position": 48,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Matthew Eaton",
+      "position": 49,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "The Float Connection",
+      "rider_name": "Marco Bordet",
+      "position": 49,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Josh Oppenheimer",
+      "position": 51,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jack Freeman",
+      "position": 53,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Tom Vloemans",
+      "position": 54,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Paul Lambert",
+      "position": 56,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Paul Webb",
+      "position": 57,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Chris Wallis",
+      "position": 59,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Gary Bucci",
+      "position": 60,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Gary Elford",
+      "position": 62,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Martin Thomas",
+      "position": 63,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Jay Goss",
+      "position": 64,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "Shred the Shires",
+      "rider_name": "Alex Campbell",
+      "position": 65,
       "source": "2025 Points Total - Male_files"
     },
     {
@@ -15237,7 +17956,6 @@
       "position": 20,
       "source": "2026 Points Total - groms_files"
     }
-  ],
-  "generated_at": "2026-09-25T18:15:19.0935044+01:00"
+  ]
 }
 
