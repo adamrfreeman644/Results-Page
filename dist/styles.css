@@ -196,3 +196,6 @@ body{background:#f1f2f3;color:#202124}.brandbar{background:#242629;border-bottom
 
 /* Reserve only a five-digit rail for race position; names take the remaining row width. */
 .race-table col.result-pos{width:5ch}.race-table th:first-child,.race-table td:first-child{box-sizing:border-box;width:5ch;padding-left:7px;padding-right:7px}.race-table .place{width:5ch}.race-table .rider{width:100%;min-width:0}.race-table .bib{width:5ch;flex:0 0 5ch}
+
+/* Rider record: keep the compact stage badge in its own column. */
+.rider-times{width:100%;min-width:0;table-layout:fixed}.rider-times col.rider-time-stage{width:84px}.rider-times col.rider-time-position{width:120px}.rider-times col.rider-time-value{width:150px}.rider-times th+th{border-left:1px solid rgba(255,255,255,.12)}.rider-times td:first-child{padding-right:8px}.rider-times td:nth-child(2){padding-left:8px}.rider-times .history-stage{display:inline-flex;max-width:68px;min-height:34px;align-items:center;justify-content:center;text-align:center;line-height:1.08;overflow-wrap:anywhere}
