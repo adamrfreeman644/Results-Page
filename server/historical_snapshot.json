@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T18:20:10.4771679+01:00",
+  "generated_at": "2026-09-25T18:21:53.8744461+01:00",
   "records": [
     {
       "season": "2023",
@@ -8861,6 +8861,78 @@
       "season": "2025",
       "division": "groms",
       "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Zack Mcfarlane",
+      "position": 4,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Indiana McFarlane",
+      "position": 2,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Henry Bisping",
+      "position": 1,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Henry Livingstone Dunn",
+      "position": 3,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Maximus McFarlane",
+      "position": 7,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Noah Gamon",
+      "position": 5,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Thomas Skovgaard",
+      "position": 6,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Coby Webb",
+      "position": 8,
+      "source": "2025 Points Total - Groms_files"
+    },
+    {
+      "season": "2025",
+      "division": "groms",
+      "record_type": "event",
       "event_name": "Wacky Wheels",
       "rider_name": "Zack Mcfarlane",
       "position": 1,
@@ -9521,6 +9593,78 @@
       "event_name": "Overall league standing",
       "rider_name": "Chloe Jager",
       "position": 24,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jessica Jones",
+      "position": 1,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Barbara Tokarska",
+      "position": 2,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Kate Paxton",
+      "position": 5,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Chantelle Warner-Wells",
+      "position": 4,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Quirine Posno",
+      "position": 8,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Mollie Stuart",
+      "position": 6,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "LeylaZi Henderson-Jaye",
+      "position": 3,
+      "source": "2025 Points Total - Female_files"
+    },
+    {
+      "season": "2025",
+      "division": "women",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Chloe Jager",
+      "position": 7,
       "source": "2025 Points Total - Female_files"
     },
     {
@@ -11456,6 +11600,294 @@
       "event_name": "Overall league standing",
       "rider_name": "Adrian Krige",
       "position": 180,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Alexis Matton",
+      "position": 3,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Dan Turner",
+      "position": 2,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jay Kenward",
+      "position": 1,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Joselito Dendoncker",
+      "position": 20,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Fábio Costa",
+      "position": 26,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Joel Jones",
+      "position": 5,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Vid Gladovič",
+      "position": 14,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Thorkild Rasmussen",
+      "position": 17,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Giacomo Del Curto",
+      "position": 6,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Lukáš Hrázký",
+      "position": 32,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "James Grant",
+      "position": 12,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Florent Audrit",
+      "position": 11,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Gerard Rincón",
+      "position": 15,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Benoit Rousseaux",
+      "position": 7,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Tomáš Mach",
+      "position": 22,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Wiktor Sowinski",
+      "position": 24,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Sam O'Connell",
+      "position": 4,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jonas Andersen",
+      "position": 28,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jaccopo Lavezzi",
+      "position": 31,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Lars Lottrup",
+      "position": 29,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jacob Jones",
+      "position": 8,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Eduardo Queralto",
+      "position": 21,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Nick Oppenheimer",
+      "position": 23,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Nico Stuart",
+      "position": 9,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Tobi Sünder",
+      "position": 30,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Clint Lashley",
+      "position": 18,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jaffa Gamon",
+      "position": 10,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Fabian Scherrer",
+      "position": 27,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Radim Klaška",
+      "position": 25,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "James Pitcher",
+      "position": 16,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Jonas Pflüger",
+      "position": 13,
+      "source": "2025 Points Total - Male_files"
+    },
+    {
+      "season": "2025",
+      "division": "open",
+      "record_type": "event",
+      "event_name": "EOL Finals (OWAR)",
+      "rider_name": "Adrian Krige",
+      "position": 19,
       "source": "2025 Points Total - Male_files"
     },
     {
