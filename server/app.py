@@ -165,7 +165,7 @@ def relink_history(c):
  for row in list(c.execute("select source,row_number,division,rider_name from historical_results")):
   candidates=[x for x in riders if match_division(x["tournament"])==row[2]]
   best=max(((history_score(row[3],x["name"]),x) for x in candidates),default=(0,None),key=lambda x:x[0])
-  c.execute("update historical_results set athlete_id=?,match_score=? where source=? and row_number=?",(best[1]["id"] if best[1] and best[0]>=.9 else None,best[0],row[0],row[1]))
+  c.execute("update historical_results set athlete_id=?,match_score=? where source=? and row_number=?",(best[1]["id"] if best[1] and best[0]>=.999999 else None,best[0],row[0],row[1]))
 def import_historical():
  if not HISTORICAL_SNAPSHOT.exists():raise RuntimeError("Bundled historic snapshot is not available")
  try:records=json.loads(HISTORICAL_SNAPSHOT.read_text(encoding="utf-8")).get("records",[])
@@ -275,8 +275,7 @@ class App(SimpleHTTPRequestHandler):
     c.close();return self.js({"error":"Rider not found"},404)
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
-   manual=c.execute("select normal_name from historical_manual_matches where athlete_id=?",(athlete_id,)).fetchone();manual_key=manual[0] if manual else ""
-   historical=[] if not manual_key else [dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where normal_name=? order by season desc,event_name",(manual_key,))]
+   historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
    c.close()
    return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical})
   if path=="/api/admin/status":
