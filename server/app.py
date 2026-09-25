@@ -21,7 +21,7 @@ def db():
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
  create table if not exists result_laps(event_id text,athlete_id text,lap_number integer,time text,primary key(event_id,athlete_id,lap_number));
- create table if not exists tournaments(id integer primary key,name text not null unique);
+ create table if not exists tournaments(id integer primary key,name text not null unique,highlight_count integer not null default 2);
  create table if not exists levels(id integer primary key,tournament_id integer not null,name text not null,sort_order integer not null default 0,unique(tournament_id,name));
  create table if not exists races(id integer primary key,tournament_id integer not null,level_id integer,name text not null,unique(tournament_id,name));
  create table if not exists event_mappings(event_id text primary key,tournament text,level text,stage text,event_name text,race_id integer);
@@ -44,6 +44,8 @@ def db():
  try:c.execute("alter table event_mappings add column race_id integer")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table tournaments add column sort_order integer not null default 0")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table tournaments add column highlight_count integer not null default 2")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table events add column publish_mode text not null default 'populated'")
  except sqlite3.OperationalError:pass
@@ -249,7 +251,7 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,case when lower(e.tournament)='multi lap' or exists(select 1 from event_mappings m join races mr on mr.id=m.race_id where m.event_id=e.id and mr.fastest_lap=1) then 1 else 0 end multi_lap,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where exists(select 1 from event_mappings m where m.event_id=e.id)"+("" if show and show[0]=="true" else " and e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,coalesce(t.highlight_count,2) highlight_count,case when lower(e.tournament)='multi lap' or exists(select 1 from event_mappings m join races mr on mr.id=m.race_id where m.event_id=e.id and mr.fastest_lap=1) then 1 else 0 end multi_lap,count(r.athlete_id) count from events e left join tournaments t on t.name=e.tournament left join results r on r.event_id=e.id where exists(select 1 from event_mappings m where m.event_id=e.id)"+("" if show and show[0]=="true" else " and e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
    if show and show[0]=="true":
     for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
    c.close();return self.js({"status":s[0] if s else "Live","events":e})
@@ -304,6 +306,10 @@ class App(SimpleHTTPRequestHandler):
    race_id=int(path.split("/")[4]);c=db()
    with c:c.execute("update races set fastest_lap=? where id=?",(1 if p.get("enabled") else 0,race_id))
    c.close();meta("config_revision",str(time.time_ns()))
+  elif re.fullmatch(r"/api/admin/tournaments/\d+/highlight-count",path):
+   item_id=int(path.split("/")[4]);count=max(0,min(10,int(p.get("count",2))));c=db()
+   with c:c.execute("update tournaments set highlight_count=? where id=?",(count,item_id))
+   c.close()
   elif re.fullmatch(r"/api/admin/tournaments/\d+",path):
    item_id=int(path.rsplit("/",1)[1]);c=db()
    with c:
