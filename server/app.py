@@ -175,7 +175,7 @@ def import_historical():
    name=clean(row.get("rider_name",""))
    if not name:continue
    source="snapshot:"+str(row.get("season","unknown"))+":"+str(row.get("division","unknown"))
-   c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,str(row.get("season","")),str(row.get("division","")),clean(row.get("event_name","League ranking")),name,history_name(name),clean(row.get("position","")),clean(row.get("points",""))))
+   c.execute("insert into historical_results(source,row_number,season,division,event_name,rider_name,normal_name,position,points) values(?,?,?,?,?,?,?,?,?)",(source,index,str(row.get("season","")),str(row.get("division","")),clean(row.get("event_name","League ranking")),name,history_name(name),clean(str(row.get("position",""))),clean(str(row.get("points","")))))
   relink_history(c)
   c.execute("insert into meta(key,value) values('historical_last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
   c.execute("insert into meta(key,value) values('historical_rows',?) on conflict(key) do update set value=excluded.value",(str(len(records)),))
