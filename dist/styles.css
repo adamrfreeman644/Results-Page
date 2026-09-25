@@ -193,3 +193,6 @@ body{background:#f1f2f3;color:#202124}.brandbar{background:#242629;border-bottom
 
 /* Keep the official marks at 90% of the visible brand bar. */
 .brandbar__inner{min-height:76px;padding-top:4px;padding-bottom:4px}.brand-logo{height:68px}.event-logo{height:68px;width:86px}@media(max-width:600px){.brandbar__inner{min-height:60px;padding-top:3px;padding-bottom:3px}.brand-logo{height:54px}.event-logo{height:54px;width:64px}}
+
+/* Reserve only a five-digit rail for race position; names take the remaining row width. */
+.race-table col.result-pos{width:5ch}.race-table th:first-child,.race-table td:first-child{box-sizing:border-box;width:5ch;padding-left:7px;padding-right:7px}.race-table .place{width:5ch}.race-table .rider{width:100%;min-width:0}.race-table .bib{width:5ch;flex:0 0 5ch}
