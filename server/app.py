@@ -26,7 +26,7 @@ def db():
  create table if not exists races(id integer primary key,tournament_id integer not null,level_id integer,name text not null,unique(tournament_id,name));
  create table if not exists event_mappings(event_id text primary key,tournament text,level text,stage text,event_name text,race_id integer);
  create table if not exists meta(key text primary key,value text not null);
- create table if not exists historical_results(source text not null,row_number integer not null,season text not null,division text not null,event_name text not null,rider_name text not null,normal_name text not null,position text,points text,athlete_id text,match_score real,primary key(source,row_number));""")
+ create table if not exists historical_results(source text not null,row_number integer not null,season text not null,division text not null,event_name text not null,rider_name text not null,normal_name text not null,position text,points text,athlete_id text,match_score real,primary key(source,row_number)); create table if not exists historical_manual_matches(athlete_id text primary key,normal_name text not null,rider_name text not null,approved_at text not null); create table if not exists historical_match_requests(id integer primary key,athlete_id text not null,normal_name text not null,rider_name text not null,status text not null default 'pending',requested_at text not null);""")
  try:c.execute("alter table events add column tournament text not null default ''")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table events add column stage text not null default ''")
@@ -275,19 +275,34 @@ class App(SimpleHTTPRequestHandler):
     c.close();return self.js({"error":"Rider not found"},404)
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
-   historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? order by season desc,event_name",(athlete_id,))]
+   manual=c.execute("select normal_name from historical_manual_matches where athlete_id=?",(athlete_id,)).fetchone();manual_key=manual[0] if manual else ""
+   historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? or normal_name=? order by season desc,event_name",(athlete_id,manual_key))]
    c.close()
    return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs})
+   c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];requests=[dict(x) for x in c.execute("select q.id,q.athlete_id,a.name athlete_name,q.rider_name,q.status,q.requested_at from historical_match_requests q left join athletes a on a.id=q.athlete_id where q.status='pending' order by q.id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests})
   return super().do_GET()
  def do_POST(self):
-  if not self.auth():return self.js({"error":"Unauthorized"},401)
+  path=urlparse(self.path).path
   try:p=json.loads(self.rfile.read(int(self.headers.get("Content-Length","0"))) or "{}")
   except json.JSONDecodeError:return self.js({"error":"Invalid JSON"},400)
-  path=urlparse(self.path).path
+  if path=="/api/public/historical/match-request":
+   athlete_id=str(p.get("athleteId",""));key=str(p.get("key",""));c=db();athlete=c.execute("select name from athletes where id=?",(athlete_id,)).fetchone();candidate=c.execute("select min(rider_name) from historical_results where normal_name=?",(key,)).fetchone()
+   if not athlete or not candidate or not key:c.close();return self.js({"error":"Invalid historic match request"},400)
+   existing=c.execute("select id from historical_match_requests where athlete_id=? and normal_name=? and status='pending'",(athlete_id,key)).fetchone()
+   with c:
+    if not existing:c.execute("insert into historical_match_requests(athlete_id,normal_name,rider_name,status,requested_at) values(?,?,?,'pending',?)",(athlete_id,key,candidate[0],datetime.now().isoformat(timespec="seconds")))
+   c.close();return self.js({"ok":True,"pending":True})
+  if not self.auth():return self.js({"error":"Unauthorized"},401)
   if path=="/api/admin/status":meta("status",p.get("status","Live"))
+  elif re.fullmatch(r"/api/admin/historical-match-requests/\d+",path):
+   request_id=int(path.rsplit("/",1)[1]);c=db();row=c.execute("select athlete_id,normal_name,rider_name from historical_match_requests where id=? and status='pending'",(request_id,)).fetchone()
+   if row:
+    with c:
+     if p.get("approve"):c.execute("insert into historical_manual_matches(athlete_id,normal_name,rider_name,approved_at) values(?,?,?,?) on conflict(athlete_id) do update set normal_name=excluded.normal_name,rider_name=excluded.rider_name,approved_at=excluded.approved_at",(row[0],row[1],row[2],datetime.now().isoformat(timespec="seconds")));c.execute("update historical_match_requests set status='approved' where id=?",(request_id,))
+     else:c.execute("update historical_match_requests set status='declined' where id=?",(request_id,))
+   c.close()
   elif path=="/api/admin/tournaments":
    c=db()
    with c:c.execute("insert into tournaments(name) values(?)",(p.get("name","").strip(),))
