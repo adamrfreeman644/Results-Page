@@ -187,3 +187,6 @@ body{background:#f1f2f3;color:#202124}.brandbar{background:#242629;border-bottom
 
 
 
+
+/* Consistent result columns and compact category setting. */
+.race-table table{width:100%;min-width:0;table-layout:fixed}.race-table col.result-pos{width:52px}.race-table col.result-time{width:150px}.race-table th:last-child,.race-table td:last-child{text-align:right}.tree-actions .highlight-control{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:.75rem;font-weight:800;white-space:nowrap}.tree-actions .highlight-control select{width:auto;min-width:46px;height:30px;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit}
