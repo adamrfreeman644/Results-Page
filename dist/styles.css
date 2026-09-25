@@ -172,11 +172,12 @@ body{background:#f1f2f3;color:#202124}.brandbar{background:#242629;border-bottom
 /* Official marks should fill the header, without logo tiles. */
 .brandbar__inner{max-width:1280px;min-height:76px;padding-top:4px;padding-bottom:4px}.brand-logo{display:block;height:62px;object-fit:contain;flex:0 0 auto}.brand-logo--owa{width:104px;filter:drop-shadow(0 1px 0 rgba(255,255,255,.35))}.brand-logo--flow{width:62px}.event-title{display:flex;align-items:center;justify-content:center;gap:12px}.event-title>div{text-align:center}.event-logo{width:78px;height:62px;object-fit:contain;background:transparent;border-radius:0;padding:0;filter:invert(1) grayscale(1) contrast(1.35)}.brand:first-child{gap:9px}.brand:last-child{gap:9px}@media(max-width:600px){.brandbar__inner{min-height:60px;padding-top:3px;padding-bottom:3px}.brand-logo{height:50px}.brand-logo--owa{width:76px}.brand-logo--flow{width:50px}.event-logo{width:58px;height:50px}.event-title{gap:6px}.event-title>div strong{font-size:.8rem}}
 
-/* A selected season shows its secondary event table beside the standing, not inside a narrow card. */
+/* A selected season expands vertically within its own card. */
 .league-standing-grid{align-items:start}
-.league-season[open]{grid-column:1/-1;display:grid;grid-template-columns:minmax(185px,220px) minmax(0,1fr);gap:12px;align-items:start}
+.league-season[open]{grid-column:auto;display:block}
 .league-season[open] .league-standing{min-height:132px}
-.league-season[open] .table-scroll{margin:0;min-width:0}
-@media(max-width:600px){.league-season[open]{grid-template-columns:1fr}.league-season[open] .table-scroll{margin-top:6px}}
+.league-season[open] .table-scroll{margin-top:8px;min-width:0}
+@media(max-width:600px){.league-season[open] .table-scroll{margin-top:6px}}
+
 
 
