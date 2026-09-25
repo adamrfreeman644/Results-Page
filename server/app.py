@@ -248,7 +248,7 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id "+("where 1=1" if show and show[0]=="true" else "where e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,count(r.athlete_id) count from events e left join results r on r.event_id=e.id where exists(select 1 from event_mappings m where m.event_id=e.id)"+("" if show and show[0]=="true" else " and e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
    if show and show[0]=="true":
     for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
    c.close();return self.js({"status":s[0] if s else "Live","events":e})
@@ -376,4 +376,5 @@ if __name__=="__main__":
  try:import_historical()
  except Exception as e:print("Bundled historic history import failed:",e,flush=True)
  threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
+
 
