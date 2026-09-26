@@ -264,7 +264,7 @@ class App(SimpleHTTPRequestHandler):
    return self.js(r)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db()
-   rows=[] if len(query)<2 else [dict(x) for x in c.execute("select id,name from athletes where lower(name) like ? order by case when lower(name) like ? then 0 else 1 end,name limit 10",("%"+query.lower()+"%",query.lower()+"%",))]
+   rows=[] if len(query)<2 else [dict(x) for x in c.execute("select distinct a.id,a.name from athletes a left join results r on r.athlete_id=a.id where lower(a.name) like ? or cast(r.bib as text) like ? order by case when cast(r.bib as text)=? then 0 when lower(a.name) like ? then 1 else 2 end,a.name limit 10",("%"+query.lower()+"%",query+"%",query,query.lower()+"%",))]
    c.close();return self.js(rows)
   if path=="/api/public/historical/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db()
