@@ -4,7 +4,7 @@
     if (!host || !window.google?.translate) return;
     new google.translate.TranslateElement({
       pageLanguage: "en",
-      includedLanguages: "en,pt,es,fr,de,it,nl,da,sv,no,fi,pl,cs,ro,hu,el,tr,uk,ar,ja,ko,zh-CN,zh-TW,hi",
+      includedLanguages: "en,pt,es,fr,de,it,nl,da,sv,no,fi,is,ga,cy,mt,ca,eu,gl,pl,cs,sk,sl,hr,sr,bs,bg,ro,hu,el,tr,uk,be,ru,et,lv,lt,sq,mk,ar,ja,ko,zh-CN,zh-TW,hi",
       autoDisplay: false,
     }, "google_translate_element");
   };
