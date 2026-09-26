@@ -263,8 +263,18 @@ class App(SimpleHTTPRequestHandler):
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
   if path=="/api/public/riders/search":
-   query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db()
-   rows=[] if len(query)<2 and not query.isdigit() else [dict(x) for x in c.execute("select distinct a.id,a.name from athletes a left join results r on r.athlete_id=a.id where lower(a.name) like ? or cast(r.bib as text) like ? order by case when cast(r.bib as text)=? then 0 when lower(a.name) like ? then 1 else 2 end,a.name limit 10",("%"+query.lower()+"%",query+"%",query,query.lower()+"%",))]
+   query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
+   if query.isdigit():
+    rows=[dict(x) for x in c.execute("select distinct a.id,a.name from athletes a join results r on r.athlete_id=a.id where cast(r.bib as text) like ? order by case when cast(r.bib as text)=? then 0 else 1 end,a.name limit 10",(query+"%",query))]
+   elif len(query)>=2:
+    key=match_name(query);ranked=[]
+    for athlete in c.execute("select id,name from athletes"):
+     name_key=match_name(athlete["name"])
+     token_score=max([difflib.SequenceMatcher(None,key,part).ratio() for part in name_key.split()] or [0])
+     score=max(difflib.SequenceMatcher(None,key,name_key).ratio(),token_score)
+     if key in name_key:score+=1
+     if score>=.58:ranked.append((score,dict(athlete)))
+    rows=[item[1] for item in sorted(ranked,key=lambda item:(-item[0],item[1]["name"]))[:10]]
    c.close();return self.js(rows)
   if path=="/api/public/historical/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db()
