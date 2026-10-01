@@ -236,7 +236,7 @@ def registration_riders():
   if val(row,0):races[val(row,0)]=val(row,1)
  for row in rows(text,"RaceEvent"):
   race_id,event_id=val(row,0),val(row,1)
-  if race_id and event_id:event_names[race_id+":"+event_id]=val(row,2,1,3) or races.get(race_id,"")
+  if race_id and event_id:event_names[race_id+":"+event_id]=" ".join(x for x in (races.get(race_id,""),val(row,1),val(row,2),val(row,3)) if x)
  registered={}
  for row in rows(text,"EventAthlete"):
   event_id,athlete_id=val(row,0)+":"+val(row,1),val(row,2)
