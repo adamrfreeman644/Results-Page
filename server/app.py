@@ -354,7 +354,7 @@ class App(SimpleHTTPRequestHandler):
      exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)='seeding'",(tournament["id"],level_id)).fetchone()
      if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,"Seeding"));created+=1
    c.close();return self.js({"ok":True,"created":created})
-    if path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
+  elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
    with c:c.execute("insert into athlete_settings(athlete_id,registered,chip_code) values(?,?,?) on conflict(athlete_id) do update set registered=excluded.registered,chip_code=excluded.chip_code",(athlete_id,1 if p.get("registered") else 0,clean(str(p.get("chipCode","")))))
