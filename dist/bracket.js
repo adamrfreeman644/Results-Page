@@ -222,7 +222,7 @@
   /** First-round gate list from TT seed zigzag (Seed N until TT times exist). */
   function seedStartRows(family, stage, num) {
     const cat = FAMILY_SEED_CAT[family];
-    if (!cat || !seedCatalog) return null;
+    if (!cat) return null;
     const board = buildCategoryHeatGrids(cat);
     const want =
       stage === "heat"
@@ -389,7 +389,7 @@
     const seenStagesByFamily = new Map();
 
     for (const item of items) {
-      const parsed = parseHeat(item.e.stage || item.e.name);
+      const parsed = parseHeat(item.e.stage) || parseHeat(item.e.name);
       if (!parsed) {
         extras.push({
           ...item,
