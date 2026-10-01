@@ -343,7 +343,18 @@ class App(SimpleHTTPRequestHandler):
     if not existing:c.execute("insert into historical_match_requests(athlete_id,normal_name,rider_name,status,requested_at) values(?,?,?,'pending',?)",(athlete_id,key,candidate[0],datetime.now().isoformat(timespec="seconds")))
    c.close();return self.js({"ok":True,"pending":True})
   if not self.auth():return self.js({"error":"Unauthorized"},401)
-  if path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
+  if path=="/api/admin/seed-setup":
+   c=db();created=0
+   with c:
+    for tournament in c.execute("select id,name from tournaments"):
+     if not re.search(r"open|women|grom",tournament["name"],re.I):continue
+     level=c.execute("select id from levels where tournament_id=? and lower(name) in ('qualifiers','qualifier') order by id limit 1",(tournament["id"],)).fetchone()
+     if not level:level_id=c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament["id"],"Qualifiers")).lastrowid
+     else:level_id=level["id"]
+     exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)='seeding'",(tournament["id"],level_id)).fetchone()
+     if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,"Seeding"));created+=1
+   c.close();return self.js({"ok":True,"created":created})
+    if path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
    with c:c.execute("insert into athlete_settings(athlete_id,registered,chip_code) values(?,?,?) on conflict(athlete_id) do update set registered=excluded.registered,chip_code=excluded.chip_code",(athlete_id,1 if p.get("registered") else 0,clean(str(p.get("chipCode","")))))
