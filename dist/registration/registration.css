@@ -18,3 +18,12 @@
 .registration-table td{padding:9px 12px}
 .registration-table .registration-bib{display:table-cell;min-height:0;padding:0;border-radius:0;background:transparent;color:#697477;font-size:.9rem;line-height:1.35;text-align:left}
 .registration-table .registration-name{display:inline-block;font-size:.98rem;line-height:1.35}
+
+
+/* Preserve the page rhythm while the live RDF registration list is loading. */
+.registration-panel{min-height:500px}
+.registration-list{min-height:360px}
+.registration-loading{display:grid;gap:0;padding-top:6px}
+.registration-loading span{display:block;height:45px;border-bottom:1px solid #edf1f1;background:linear-gradient(90deg,#f5f6f5 25%,#fbfcfb 45%,#f5f6f5 65%);background-size:220% 100%;animation:registration-shimmer 1.4s ease-in-out infinite}
+@keyframes registration-shimmer{to{background-position:-220% 0}}
+@media(max-width:600px){.registration-panel{min-height:440px}.registration-list{min-height:300px}}
