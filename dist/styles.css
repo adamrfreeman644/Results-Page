@@ -267,3 +267,11 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 .rider .name{display:flex;flex-direction:column;gap:2px}
 .rider .advancement{font-size:.72rem;line-height:1.2;font-weight:750;color:#748080}
 .pending-known .advancement{color:#8a6d00}
+
+
+/* Up-next brackets are compact grids, not result tables. */
+.race-table--pending .result-start{width:74px}.race-table--pending .result-seed{width:74px}
+.race-table--pending th,.race-table--pending td{padding:10px 12px}
+.race-table--pending .rider-placeholder{display:block}.race-table--pending .rider-placeholder .name{display:block;color:#697477;font-style:italic;font-weight:750}
+.race-table--pending .rider-link{min-height:0}.race-table--pending .rider .bib{width:30px;height:30px;min-width:30px;border-radius:7px}
+@media(max-width:600px){.race-table--pending th,.race-table--pending td{padding:9px 8px}.race-table--pending .result-start{width:60px}.race-table--pending .result-seed{width:58px}}
