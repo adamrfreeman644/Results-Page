@@ -11,3 +11,10 @@
 .registration-table .registration-bib{font-weight:850;font-variant-numeric:tabular-nums;color:#555}
 .registration-table .registration-name{font-weight:800;color:var(--ink);text-decoration:none}
 .registration-table .registration-name:hover{color:#9d151b;text-decoration:underline}
+
+
+/* Registration numbers are table data, not buttons/badges. */
+.registration-table th:first-child{width:96px}
+.registration-table td{padding:9px 12px}
+.registration-table .registration-bib{display:table-cell;min-height:0;padding:0;border-radius:0;background:transparent;color:#697477;font-size:.9rem;line-height:1.35;text-align:left}
+.registration-table .registration-name{display:inline-block;font-size:.98rem;line-height:1.35}
