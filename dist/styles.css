@@ -275,3 +275,12 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 .race-table--pending .rider-placeholder{display:block}.race-table--pending .rider-placeholder .name{display:block;color:#697477;font-style:italic;font-weight:750}
 .race-table--pending .rider-link{min-height:0}.race-table--pending .rider .bib{width:30px;height:30px;min-width:30px;border-radius:7px}
 @media(max-width:600px){.race-table--pending th,.race-table--pending td{padding:9px 8px}.race-table--pending .result-start{width:60px}.race-table--pending .result-seed{width:58px}}
+
+
+/* Compact race summaries; tap/click a card heading for its full detail sheet. */
+.race-card-header{cursor:pointer}.race-card-header:hover{filter:brightness(1.08)}
+.race-table--pending th,.race-table--pending td{padding:7px 10px;font-size:.86rem}
+.race-table--pending .rider .name{font-size:.88rem;line-height:1.15}.race-table--pending .rider .advancement{font-size:.66rem}
+#race-detail-dialog{width:min(100vw,1100px);height:min(100vh,850px);max-width:none;max-height:none;margin:auto;padding:0;border:0;background:transparent}#race-detail-dialog::backdrop{background:rgba(10,14,16,.72)}
+.race-detail{position:relative;min-height:100%;padding:44px 28px 28px;background:#f1f2f3;overflow:auto}.race-detail .race-table{max-width:980px;margin:auto}.race-detail-close{position:absolute;right:14px;top:12px;width:42px;height:42px;border:0;border-radius:50%;background:#242629;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer}.race-detail .race-table--pending th,.race-detail .race-table--pending td{padding:13px 14px;font-size:1rem}
+@media(max-width:600px){.race-table--pending th,.race-table--pending td{padding:6px 7px;font-size:.8rem}.race-detail{padding:54px 12px 12px}.race-detail-close{right:10px;top:8px;width:44px;height:44px}.race-detail .race-table--pending th,.race-detail .race-table--pending td{padding:10px 8px;font-size:.86rem}}
