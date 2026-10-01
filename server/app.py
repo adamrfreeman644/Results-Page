@@ -240,7 +240,7 @@ def registration_riders():
  registered={}
  for row in rows(text,"EventAthlete"):
   event_id,athlete_id=val(row,0)+":"+val(row,1),val(row,2)
-  if athlete_id in athletes and "registration" in event_names.get(event_id,"").casefold():
+  if athlete_id in athletes and "regist" in event_names.get(event_id,"").casefold():
    item={**athletes[athlete_id],"bib":val(row,18)}
    if athlete_id not in registered or (item["bib"] and not registered[athlete_id]["bib"]):registered[athlete_id]=item
  return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
