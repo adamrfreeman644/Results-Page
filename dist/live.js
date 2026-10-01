@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;
+let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
 
 function renderUpdateAge(){
   const el=$('#updated-status');if(!el)return;
@@ -36,34 +36,27 @@ async function get(u){
   return r.json();
 }
 
-function table(e,r,{pending=false,projectedRows=null}={}){
-  const rows=pending&&projectedRows?projectedRows:r;
-  const timeLabel=e.multi_lap?'Fastest lap':'Time';
-  const badge=pending?'Up next':'Results';
-  const countLabel=pending
-    ? `${rows.filter(x=>x.known).length}/${rows.length||4} locked in`
-    : `${rows.length} riders`;
-  const body=rows.length
-    ? rows.map((x)=>{
-        const pendingRow=pending||x.pending;
-        const finish=x.finishPos??x.position;
-        const cls=[
-          !pendingRow&&Number(finish)>0&&Number(finish)<=Number(e.highlight_count??2)?'podium':'',
-          pendingRow?'pending-row':'',
-          x.known?'pending-known':(pendingRow?'pending-unknown':''),
-        ].filter(Boolean).join(' ');
-        const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
-        const riderInner=x.athlete_id
-          ? `<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`
-          : `<span class="rider rider-placeholder"><span class="name">${esc(x.name)}</span></span>`;
-        if(pendingRow)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
-        return `<tr class="${cls}"><td class="place">${esc(finish==null||finish===''?'—':finish)}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(x.time)}</td></tr>`;
-      }).join('')
-    : pending?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
-  const columns=pending
-    ? '<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>'
-    : `<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
-  return `<article class="race-table ${pending?'race-table--pending':''}"><header><div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b></header><div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
+function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
+  const rows=pending&&projectedRows?projectedRows:r,compact=pending&&!expanded,timeLabel=e.multi_lap?'Fastest lap':'Time',badge=pending?'Up next':'Results';
+  const countLabel=pending?`${rows.filter(x=>x.known).length}/${rows.length||4} locked in`:`${rows.length} riders`,detailId=String(e.id||e.name);
+  if(!expanded)raceDetails.set(detailId,{e,r,options:{pending,projectedRows}});
+  const body=rows.length?rows.map(x=>{
+    const pendingRow=pending||x.pending,finish=x.finishPos??x.position,cls=[!pendingRow&&Number(finish)>0&&Number(finish)<=Number(e.highlight_count??2)?'podium':'',pendingRow?'pending-row':'',x.known?'pending-known':(pendingRow?'pending-unknown':'')].filter(Boolean).join(' ');
+    const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
+    const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`:`<span class="rider rider-placeholder"><span class="name">${esc(x.name)}</span></span>`;
+    if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
+    return `<tr class="${cls}"><td class="place">${esc(pendingRow?'NA':(finish==null||finish===''?'—':finish))}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(pendingRow?(x.time||'Not raced yet'):x.time)}</td></tr>`;
+  }).join(''):compact?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
+  const columns=compact?'<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>':`<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
+  const clickable=!expanded?` class="race-card-header" data-race-detail="${esc(detailId)}" tabindex="0" role="button" aria-label="Open ${esc(e.name)} details"`:'';
+  return `<article class="race-table ${pending?'race-table--pending':''}"><header${clickable}><div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b></header><div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
+}
+function openRaceDetail(id){
+  const detail=raceDetails.get(id);if(!detail)return;
+  let dialog=document.querySelector('#race-detail-dialog');
+  if(!dialog){dialog=document.createElement('dialog');dialog.id='race-detail-dialog';document.body.appendChild(dialog);dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});}
+  dialog.innerHTML=`<div class="race-detail"><button class="race-detail-close" type="button" aria-label="Close details">×</button><p class="eyebrow">Race details</p>${table(detail.e,detail.r,{...detail.options,expanded:true})}</div>`;
+  dialog.querySelector('.race-detail-close').onclick=()=>dialog.close();dialog.showModal();
 }
 
 function renderCard(item){
@@ -123,6 +116,7 @@ async function render(){
     $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
     $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">Rows are start order. Heats: better seed → earlier gate. Later rounds: both race winners take starts 1–2 (by seed), both 2nds take 3–4. <a href="/seeding/">Open seeding board</a></p>`;
+    $('#stage-results').querySelectorAll('[data-race-detail]').forEach(header=>{header.onclick=()=>openRaceDetail(header.dataset.raceDetail);header.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaceDetail(header.dataset.raceDetail)}}});
   }catch{
     $('#race-title').textContent='Waiting for timing feed';
     $('#result-count').textContent='The live results service is not connected yet.';
