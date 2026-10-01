@@ -247,3 +247,17 @@ body{background:#f1f2f3;color:#202124}.brandbar{background:#242629;border-bottom
 
 /* Seeding board CTA on live results */
 a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:4px;padding:12px 18px;border-radius:10px;background:#242629;color:#fff!important;font-size:.95rem;font-weight:850;text-decoration:none;border:2px solid #242629;box-shadow:0 6px 16px rgba(0,0,0,.12)}a.seeding-board-btn:hover,a.btn.seeding-board-btn:hover{background:#d71920;border-color:#d71920;color:#fff!important}
+
+
+/* A configured stage and its RaceTec assignment are one readable row. */
+#event-list .assignment-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:8px 4px;border-top:1px solid #e7efed}
+#event-list .assignment-row:first-child{border-top:0}
+#event-list .assignment-row>strong{min-width:74px}
+#event-list .assignment-tilde{color:#7b9490;font-weight:850}
+#event-list .assigned-race{color:#527079;font-size:.85rem}
+#event-list .unassigned-label{color:#778895;font-size:.85rem}
+#event-list .assignment-row .tree-actions{margin-left:auto}
+#event-list:not(.editing) .assignment-row .tree-actions{display:none}
+#event-list:not(.editing) .assignment-row{padding:6px 2px}
+#event-list:not(.editing) .assigned-race{font-size:.83rem}
+@media(max-width:700px){#event-list .assignment-row .tree-actions{width:100%;margin:3px 0 0;padding-left:0}}
