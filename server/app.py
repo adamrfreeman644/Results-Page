@@ -351,8 +351,10 @@ class App(SimpleHTTPRequestHandler):
      level=c.execute("select id from levels where tournament_id=? and lower(name) in ('qualifiers','qualifier') order by id limit 1",(tournament["id"],)).fetchone()
      if not level:level_id=c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament["id"],"Qualifiers")).lastrowid
      else:level_id=level["id"]
-     exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)='seeding'",(tournament["id"],level_id)).fetchone()
-     if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,"Seeding"));created+=1
+     race_names=("Seeding Q1","Seeding Q2") if re.search(r"open",tournament["name"],re.I) else ("Seeding",)
+     for race_name in race_names:
+      exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)=lower(?)",(tournament["id"],level_id,race_name)).fetchone()
+      if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,race_name));created+=1
    c.close();return self.js({"ok":True,"created":created})
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
