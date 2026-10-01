@@ -46,3 +46,17 @@
 .race-table col.result-start,.race-table col.result-seed{width:4.2rem}
 .race-table .start,.race-table .seed{font-weight:850;font-variant-numeric:tabular-nums}
 .race-table .seed{color:#8a6d00}
+
+
+/* Compact, scan-friendly seeding controls. */
+.seeding-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seeding-board-btn--secondary{background:#fff!important;color:#242629!important;border-color:#242629!important;box-shadow:none!important}
+.seed-format{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.seed-format-label{font-size:.7rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase;color:#777;margin-bottom:8px}
+.seed-format-steps{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.seed-format-steps li{grid-template-columns:1fr;gap:3px;padding:9px 10px;border-radius:9px}
+.seed-format-steps strong{font-size:.72rem}
+.seed-format-steps span{font-size:.8rem}
+.seeding-panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.seeding-panel-head p{margin:0;max-width:42rem}
+@media(max-width:600px){.seeding-panel-head{display:block}.seeding-panel-head p{margin-top:6px}}
