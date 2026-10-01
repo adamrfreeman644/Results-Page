@@ -53,9 +53,10 @@ function table(e,r,{pending=false,projectedRows=null}={}){
           pendingRow?'pending-row':'',
           x.known?'pending-known':(pendingRow?'pending-unknown':''),
         ].filter(Boolean).join(' ');
+        const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
         const riderInner=x.athlete_id
-          ? `<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}</span></a>`
-          : `<span class="rider"><span class="bib">${esc(x.bib||'—')}</span><span class="name">${esc(x.name)}</span></span>`;
+          ? `<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`
+          : `<span class="rider"><span class="bib">${esc(x.bib||'—')}</span><span class="name">${esc(x.name)}${advancement}</span></span>`;
         return `<tr class="${cls}">
           <td class="place">${esc(finishLabel)}</td>
           <td class="start">${x.startPos??'—'}</td>
