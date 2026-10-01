@@ -219,6 +219,32 @@ def import_file(raw,digest):
   c.execute("insert into meta(key,value) values('status','Live') on conflict(key) do nothing")
  relink_history(c)
  c.close();return True
+
+def registration_riders():
+ # Registration is a race inside the live RaceTec export. Read the RDF for every
+ # request so this directory is never a stale copy of the registration data.
+ if not EXPORT_FILE.exists():raise FileNotFoundError("Results RDF file not found")
+ raw=EXPORT_FILE.read_bytes()
+ if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):text=raw.decode("utf-16")
+ else:text=raw.decode("utf-8-sig","replace")
+ athletes={}
+ for row in rows(text,"Athlete"):
+  athlete_id=val(row,0);name=" ".join(x for x in (val(row,1),val(row,2)) if x)
+  if athlete_id and name:athletes[athlete_id]={"id":athlete_id,"name":name,"bib":""}
+ races={};event_names={}
+ for row in rows(text,"Race"):
+  if val(row,0):races[val(row,0)]=val(row,1)
+ for row in rows(text,"RaceEvent"):
+  race_id,event_id=val(row,0),val(row,1)
+  if race_id and event_id:event_names[race_id+":"+event_id]=val(row,2,1,3) or races.get(race_id,"")
+ registered={}
+ for row in rows(text,"EventAthlete"):
+  event_id,athlete_id=val(row,0)+":"+val(row,1),val(row,2)
+  if athlete_id in athletes and "registration" in event_names.get(event_id,"").casefold():
+   item={**athletes[athlete_id],"bib":val(row,18)}
+   if athlete_id not in registered or (item["bib"] and not registered[athlete_id]["bib"]):registered[athlete_id]=item
+ return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
+
 def fstatus():
  try:
   s=EXPORT_FILE.stat();return {"configured":str(EXPORT_FILE),"exists":True,"bytes":s.st_size,"modified":datetime.fromtimestamp(s.st_mtime,timezone.utc).isoformat()}
@@ -262,6 +288,9 @@ class App(SimpleHTTPRequestHandler):
    c.close()
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
+  if path=="/api/public/registrations":
+   try:return self.js({"riders":registration_riders()})
+   except Exception as e:return self.js({"error":"Registration list unavailable: "+str(e)[:200]},503)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
    if query.isdigit():
@@ -286,7 +315,11 @@ class App(SimpleHTTPRequestHandler):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
    rider=c.execute("select a.id,a.name,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code from athletes a left join athlete_settings s on s.athlete_id=a.id where a.id=?",(athlete_id,)).fetchone()
    if not rider:
-    c.close();return self.js({"error":"Rider not found"},404)
+    c.close()
+    try:rider=next((item for item in registration_riders() if item["id"]==athlete_id),None)
+    except Exception:rider=None
+    if not rider:return self.js({"error":"Rider not found"},404)
+    return self.js({"id":rider["id"],"name":rider["name"],"records":[],"historical":[],"registered":True,"chipCode":"","chipReturnInfo":""})
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
