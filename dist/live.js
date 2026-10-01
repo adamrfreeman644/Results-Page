@@ -38,7 +38,7 @@ async function get(u){
 
 function table(e,r,{pending=false,projectedRows=null}={}){
   const rows=pending&&projectedRows?projectedRows:r;
-  const timeLabel=pending?'Status':(e.multi_lap?'Fastest lap':'Time');
+  const timeLabel=e.multi_lap?'Fastest lap':'Time';
   const badge=pending?'Up next':'Results';
   const countLabel=pending
     ? `${rows.filter(x=>x.known).length}/${rows.length||4} locked in`
@@ -47,7 +47,6 @@ function table(e,r,{pending=false,projectedRows=null}={}){
     ? rows.map((x)=>{
         const pendingRow=pending||x.pending;
         const finish=x.finishPos??x.position;
-        const finishLabel=pendingRow||finish==null||finish===''?'NA':finish;
         const cls=[
           !pendingRow&&Number(finish)>0&&Number(finish)<=Number(e.highlight_count??2)?'podium':'',
           pendingRow?'pending-row':'',
@@ -56,17 +55,15 @@ function table(e,r,{pending=false,projectedRows=null}={}){
         const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
         const riderInner=x.athlete_id
           ? `<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`
-          : `<span class="rider"><span class="bib">${esc(x.bib||'—')}</span><span class="name">${esc(x.name)}${advancement}</span></span>`;
-        return `<tr class="${cls}">
-          <td class="place">${esc(finishLabel)}</td>
-          <td class="start">${x.startPos??'—'}</td>
-          <td class="seed">${x.seed??'—'}</td>
-          <td>${riderInner}</td>
-          <td class="time">${esc(pendingRow?(x.time||'Not raced yet'):x.time)}</td>
-        </tr>`;
+          : `<span class="rider rider-placeholder"><span class="name">${esc(x.name)}</span></span>`;
+        if(pendingRow)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
+        return `<tr class="${cls}"><td class="place">${esc(finish==null||finish===''?'—':finish)}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(x.time)}</td></tr>`;
       }).join('')
-    : `<tr class="pending-row"><td class="place">NA</td><td class="start">—</td><td class="seed">—</td><td><span class="rider"><span class="bib">—</span><span class="name">Waiting for earlier results</span></span></td><td class="time">Not raced yet</td></tr>`;
-  return `<article class="race-table ${pending?'race-table--pending':''}"><header><div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b></header><div class="table-scroll"><table><colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead><tbody>${body}</tbody></table></div></article>`;
+    : pending?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
+  const columns=pending
+    ? '<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>'
+    : `<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
+  return `<article class="race-table ${pending?'race-table--pending':''}"><header><div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b></header><div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
 }
 
 function renderCard(item){
