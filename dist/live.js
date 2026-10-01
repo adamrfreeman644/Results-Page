@@ -53,11 +53,13 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
 }
 function openRaceDetail(id){
   const detail=raceDetails.get(id);if(!detail)return;
-  let dialog=document.querySelector('#race-detail-dialog');
-  if(!dialog){dialog=document.createElement('dialog');dialog.id='race-detail-dialog';document.body.appendChild(dialog);dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});}
-  dialog.innerHTML=`<div class="race-detail"><button class="race-detail-close" type="button" aria-label="Close details">×</button><p class="eyebrow">Race details</p>${table(detail.e,detail.r,{...detail.options,expanded:true})}</div>`;
-  dialog.querySelector('.race-detail-close').onclick=()=>dialog.close();dialog.showModal();
+  let overlay=document.querySelector('#race-detail-overlay');
+  if(!overlay){overlay=document.createElement('div');overlay.id='race-detail-overlay';overlay.hidden=true;document.body.appendChild(overlay);overlay.addEventListener('click',event=>{if(event.target===overlay)closeRaceDetail()});}
+  overlay.innerHTML=`<div class="race-detail" role="dialog" aria-modal="true" aria-label="Race details"><button class="race-detail-close" type="button" aria-label="Close details">×</button><p class="eyebrow">Race details</p>${table(detail.e,detail.r,{...detail.options,expanded:true})}</div>`;
+  overlay.querySelector('.race-detail-close').onclick=closeRaceDetail;overlay.hidden=false;document.body.classList.add('race-detail-open');
 }
+function closeRaceDetail(){const overlay=document.querySelector('#race-detail-overlay');if(overlay)overlay.hidden=true;document.body.classList.remove('race-detail-open');}
+
 
 function renderCard(item){
   if(item.pending) return table(item.e,item.r,{pending:true,projectedRows:item.projectedRows||[]});
@@ -116,7 +118,7 @@ async function render(){
     $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
     $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">Rows are start order. Heats: better seed → earlier gate. Later rounds: both race winners take starts 1–2 (by seed), both 2nds take 3–4. <a href="/seeding/">Open seeding board</a></p>`;
-    $('#stage-results').querySelectorAll('[data-race-detail]').forEach(header=>{header.onclick=()=>openRaceDetail(header.dataset.raceDetail);header.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaceDetail(header.dataset.raceDetail)}}});
+    $('#stage-results').onclick=event=>{if(event.target.closest('a'))return;const header=event.target.closest('[data-race-detail]');if(header)openRaceDetail(header.dataset.raceDetail)};$('#stage-results').onkeydown=event=>{const header=event.target.closest('[data-race-detail]');if(header&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openRaceDetail(header.dataset.raceDetail)}};
   }catch{
     $('#race-title').textContent='Waiting for timing feed';
     $('#result-count').textContent='The live results service is not connected yet.';
