@@ -319,7 +319,7 @@ class App(SimpleHTTPRequestHandler):
     try:rider=next((item for item in registration_riders() if item["id"]==athlete_id),None)
     except Exception:rider=None
     if not rider:return self.js({"error":"Rider not found"},404)
-    return self.js({"id":rider["id"],"name":rider["name"],"records":[],"historical":[],"registered":True,"chipCode":"","chipReturnInfo":""})
+    return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipCode":"","chipReturnInfo":""})
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
