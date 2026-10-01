@@ -105,11 +105,17 @@ async function render(){
     const enriched=window.BracketProjection
       ? BracketProjection.enrichTournament(knockout.length?knockout:raw)
       : {bracket:raw.map(x=>({...x,pending:false})),extras:[]};
-    const seedingExtras=raw.filter(item=>window.BracketProjection?.isSeedingEvent?.(item.e)).map(item=>({
-      ...item,
-      pending:false,
-      r:(item.r||[]).map(r=>({...r,finishPos:Number(r.position)||null,startPos:null,seed:null})),
-    }));
+    const seedingExtras=raw.filter(item=>window.BracketProjection?.isSeedingEvent?.(item.e)).map(item=>{
+      const category=window.BracketProjection?.getSeedCatalog?.()?.categories||{};
+      const label=[item.e.tournament,item.e.name,item.e.stage,item.e.level].filter(Boolean).join(' ').toLowerCase();
+      const seedRows=label.includes('grom')?category.Groms||[]:label.includes('women')?category.Women||[]:category.Open||[];
+      const seedByRider=new Map(seedRows.map(row=>[String(row.athlete_id||''),row.seed]));
+      return {
+        ...item,
+        pending:false,
+        r:(item.r||[]).map(r=>({...r,finishPos:Number(r.position)||null,startPos:null,seed:seedByRider.get(String(r.athlete_id||''))??null})),
+      };
+    });
     const all=[...enriched.bracket,...enriched.extras,...seedingExtras];
     const levels=[...new Set(all.map(item=>BracketProjection?BracketProjection.stageOfItem(item):'Qualifiers'))].sort((a,b)=>levelRank(a)-levelRank(b));
     if(!selectedLevel||!levels.includes(selectedLevel))selectedLevel=levels[0];
