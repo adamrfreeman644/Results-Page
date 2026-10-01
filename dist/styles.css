@@ -261,3 +261,9 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 #event-list:not(.editing) .assignment-row{padding:6px 2px}
 #event-list:not(.editing) .assigned-race{font-size:.83rem}
 @media(max-width:700px){#event-list .assignment-row .tree-actions{width:100%;margin:3px 0 0;padding-left:0}}
+
+
+/* Bracket feeder context: explain how a projected rider reached this slot. */
+.rider .name{display:flex;flex-direction:column;gap:2px}
+.rider .advancement{font-size:.72rem;line-height:1.2;font-weight:750;color:#748080}
+.pending-known .advancement{color:#8a6d00}
