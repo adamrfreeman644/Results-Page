@@ -408,6 +408,19 @@
       seenStagesByFamily.get(parsed.family).add(parsed.stage);
     }
 
+    // A seeding session is enough to draw the first knockout round, even before
+    // RaceTec publishes an empty heat. This keeps the main board aligned with
+    // the dedicated seeding board from the first qualifying lap onward.
+    for (const item of items) {
+      if (!isSeedingEvent(item.e)) continue;
+      const family = familyFromName(item.e.tournament || item.e.name);
+      const category = FAMILY_SEED_CAT[family];
+      const count = (seedCatalog?.categories?.[category] || []).length;
+      if (!family || !category || !count || seenStagesByFamily.has(family)) continue;
+      const firstStage = family === "open-men" || count > 16 ? "heat" : count > 8 ? "quarter" : "semi";
+      seenStagesByFamily.set(family, new Set([firstStage]));
+    }
+
     const projected = [];
     for (const [family, seenStages] of seenStagesByFamily) {
       for (const node of expectedNodes(family, seenStages)) {
