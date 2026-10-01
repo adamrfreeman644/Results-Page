@@ -48,8 +48,9 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     return `<tr class="${cls}"><td class="place">${esc(pendingRow?'NA':(finish==null||finish===''?'—':finish))}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(pendingRow?(x.time||'Not raced yet'):x.time)}</td></tr>`;
   }).join(''):compact?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
   const columns=compact?'<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>':`<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
-  const clickable=!expanded?` class="race-card-header" data-race-detail="${esc(detailId)}" tabindex="0" role="button" aria-label="Open ${esc(e.name)} details"`:'';
-  return `<article class="race-table ${pending?'race-table--pending':''}"><header${clickable}><div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b></header><div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
+  const headerContent=`<div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b>`;
+  const cardHeader=expanded?`<header>${headerContent}</header>`:`<button type="button" class="race-card-header" data-race-detail="${esc(detailId)}" aria-label="Open ${esc(e.name)} details">${headerContent}</button>`;
+  return `<article class="race-table ${pending?'race-table--pending':''}">${cardHeader}<div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
 }
 function openRaceDetail(id){
   const detail=raceDetails.get(id);if(!detail)return;
@@ -118,7 +119,9 @@ async function render(){
     $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
     $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">Rows are start order. Heats: better seed → earlier gate. Later rounds: both race winners take starts 1–2 (by seed), both 2nds take 3–4. <a href="/seeding/">Open seeding board</a></p>`;
-    $('#stage-results').onclick=event=>{if(event.target.closest('a'))return;const header=event.target.closest('[data-race-detail]');if(header)openRaceDetail(header.dataset.raceDetail)};$('#stage-results').onkeydown=event=>{const header=event.target.closest('[data-race-detail]');if(header&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openRaceDetail(header.dataset.raceDetail)}};
+    $('#stage-results').querySelectorAll('.race-card-header[data-race-detail]').forEach(header=>{
+      header.addEventListener('click',()=>openRaceDetail(header.dataset.raceDetail));
+    });
   }catch{
     $('#race-title').textContent='Waiting for timing feed';
     $('#result-count').textContent='The live results service is not connected yet.';
