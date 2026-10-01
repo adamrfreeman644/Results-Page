@@ -5,7 +5,7 @@ let selected='Open';
 /** Official OWAR seeding-race format (2026). */
 const FORMAT={
   Open:{
-    lead:'Open uses F1-style qualifying: two timed sessions. Fastest single lap wins the seed — total laps do not matter.',
+    lead:'Fastest lap sets the seed. Q1 determines positions 17–32; Q2 determines 1–16.',
     sessions:[
       {label:'Q1',detail:'30 min · all riders · locks seeds 17–32 (slowest half)'},
       {label:'Break',detail:'30 min'},
@@ -15,13 +15,13 @@ const FORMAT={
     noteOpen:'Waiting for seeding-race laps on the live feed — riders stay A–Z / Seed N until Q1/Q2 lock.',
   },
   Women:{
-    lead:'Women: one 20 min seeding race. Everyone on track together; fastest single lap = seed 1, and so on.',
+    lead:'One timed seeding race. Fastest lap earns seed 1.',
     sessions:[{label:'Seeding',detail:'20 min · all riders · locks every seed'}],
     noteLocked:'Seeded live from the Women seeding session best lap.',
     noteOpen:'Waiting for the Women seeding session on the live feed.',
   },
   Groms:{
-    lead:'Groms: one 20 min seeding race. Everyone on track together; fastest single lap = seed 1, and so on.',
+    lead:'One timed seeding race. Fastest lap earns seed 1.',
     sessions:[{label:'Seeding',detail:'20 min · all riders · locks every seed'}],
     noteLocked:'Seeded live from the Groms seeding session best lap.',
     noteOpen:'Waiting for the Groms seeding session on the live feed.',
@@ -60,7 +60,7 @@ function paint(){
 
   document.querySelector('#seeding-title').textContent=`${selected} seeding`;
   document.querySelector('#seeding-lead').textContent=fmt.lead;
-  document.querySelector('#seed-format').innerHTML=`<ol class="seed-format-steps">${fmt.sessions.map(s=>`
+  document.querySelector('#seed-format').innerHTML=`<div class="seed-format-label">Race format</div><ol class="seed-format-steps">${fmt.sessions.map(s=>`
     <li><strong>${esc(s.label)}</strong><span>${esc(s.detail)}</span></li>
   `).join('')}</ol>`;
 
