@@ -352,3 +352,10 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 #paste-source textarea{width:100%;resize:vertical;min-height:170px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;font:12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}
 #paste-source .btn{width:100%;margin-top:9px}
 #paste-status{display:block;margin-top:7px;color:var(--muted);font-weight:700}
+
+/* Mobile result cards reserve room for full elapsed times. */
+@media(max-width:600px){
+ .race-table th:last-child,.race-table td:last-child{width:124px;min-width:124px;padding-right:12px}
+ .race-table .rider{overflow:hidden}
+ .race-table .time{text-align:right;overflow:visible}
+}
