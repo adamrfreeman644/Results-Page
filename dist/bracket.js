@@ -47,9 +47,9 @@
     "open-men": "Open",
     women: "Women",
     groms: "Groms",
-    "wild-men": "Wildcard",
-    "wild-women": "Women",
-    "wild-groms": "Groms",
+    "wild-men": "Wild Open",
+    "wild-women": "Wild Women",
+    "wild-groms": "Wild Groms",
   };
 
   let seedCatalog = null; // { categories: { Open: [{name,seed,timeSec}] } }
@@ -599,6 +599,9 @@
   function seedCategoryFromEvent(e) {
     const blob = [e.tournament, e.name, e.stage, e.level].filter(Boolean).join(" ");
     const n = blob.toLowerCase();
+    if (n.includes("wild") && n.includes("grom")) return "Wild Groms";
+    if (n.includes("wild") && (n.includes("women") || n.includes("womens"))) return "Wild Women";
+    if (n.includes("wild") && (/\bopen\b/.test(n) || /\bmen/.test(n))) return "Wild Open";
     if (n.includes("grom")) return "Groms";
     if (n.includes("women") || n.includes("womens")) return "Women";
     if (/\bopen\b/.test(n) || /\bmen/.test(n)) return "Open";
@@ -659,7 +662,7 @@
    * Returns null if no seeding results yet.
    */
   function buildSeedsFromLiveEvents(eventItems) {
-    const byCat = { Open: { q1: null, q2: null, single: null }, Women: { single: null }, Groms: { single: null } };
+    const byCat = { Open: { q1: null, q2: null, single: null }, Women: { single: null }, Groms: { single: null }, "Wild Open": { single: null }, "Wild Women": { single: null }, "Wild Groms": { single: null } };
     for (const item of eventItems || []) {
       const e = item.e || item;
       if (!isSeedingEvent(e)) continue;
@@ -692,7 +695,7 @@
       open.sort((a, b) => a.seed - b.seed);
       if (open.length) categories.Open = open;
     }
-    for (const cat of ["Women", "Groms"]) {
+    for (const cat of ["Women", "Groms", "Wild Open", "Wild Women", "Wild Groms"]) {
       if (byCat[cat].single?.length) categories[cat] = rowsToSeeds(byCat[cat].single, cat, 1);
     }
     if (!Object.keys(categories).length) return null;
@@ -720,7 +723,7 @@
       }
     }
     if (!seedCatalog) {
-      indexSeeds({ event: "Live seeding race", source: "waiting", categories: { Open: [], Women: [], Groms: [] } });
+      indexSeeds({ event: "Live seeding race", source: "waiting", categories: { Open: [], Women: [], Groms: [], "Wild Open": [], "Wild Women": [], "Wild Groms": [] } });
     }
     return { catalog: seedCatalog, source: "empty" };
   }
