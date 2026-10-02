@@ -87,7 +87,7 @@ def display_time(value):
   minute,second,decimal=short.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
   return minute.zfill(2)+":"+second+"."+decimal
  hour,minute,second,decimal=match.groups();decimal=(decimal or "000")[:3].ljust(3,"0")
- return (str(int(hour))+":" if int(hour) else "")+minute+":"+second+"."+decimal
+ return (str(int(hour))+":" if int(hour) else (minute+":" if int(minute) else ""))+second+"."+decimal
 def time_ms(value):
  """Convert RaceTec clock values and displayed durations to milliseconds."""
  m=re.search(r"(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?:\.(\d+))?",clean(value))
