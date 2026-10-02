@@ -203,9 +203,11 @@
     if (!seenStages.size) return [];
 
     const category = FAMILY_SEED_CAT[family];
-    const riderCount = (seedCatalog?.categories?.[category] || []).length;
-    const hasHeats = seenStages.has("heat") || family === "open-men" || riderCount > 16;
-    const hasQuarters = hasHeats || seenStages.has("quarter") || riderCount > 8;
+    // Open runs a 32-rider heat round. Women and Groms are fixed 16-rider
+    // tournaments, so their seed list starts directly at the four quarters.
+    const riderCount = (seedCatalog?.categories?.[category] || []).length || (family === "open-men" ? 32 : 16);
+    const hasHeats = family === "open-men" || riderCount > 16;
+    const hasQuarters = hasHeats || riderCount > 8;
     const nodes = [];
 
     if (hasHeats) {
@@ -730,7 +732,7 @@
     const cat = category || "Open";
     const riders = (seedCatalog?.categories?.[cat] || []).slice();
     const bySeed = new Map(riders.map((r) => [r.seed, r]));
-    const count = riders.length || (cat === "Open" ? 32 : 8);
+    const count = riders.length || (cat === "Open" ? 32 : 16);
 
     let groups;
     let titlePrefix;
