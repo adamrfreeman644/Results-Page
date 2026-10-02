@@ -124,7 +124,8 @@ def ms_display(total):
  return (str(h)+":" if h else (str(minute).zfill(2)+":" if minute else ""))+str(second).zfill(2)+"."+str(milli).zfill(3)
 def match_name(value):
  value=re.sub(r"[^a-z0-9]+"," ",clean(value).lower().replace("wild card","wild").replace("wildcard","wild").replace("heats","heat").replace("semifinal","semi").replace("quarterfinal","quarter"))
- return re.sub(r"\b(women|womens|men|mens|grom|groms|open)\b","",value).strip()
+ return re.sub(r"\b(wild|women|womens|men|mens|grom|groms|open)\b","",value).strip()
+def is_wild(value):return bool(re.search(r"\bwild(?:\s*card)?\b",clean(value),re.I))
 def match_division(value):
  value=clean(value).lower()
  if "woman" in value:return "women"
@@ -243,7 +244,7 @@ def import_file(raw,digest):
     tournament=mapping[1] or tournament;level=mapping[2] or "";stage=mapping[3] or "";name=mapping[4] or name
     race_config=prepared_by_id.get(mapping[5]) or prepared_by_name.get((tournament,stage));level=level or (race_config["level"] if race_config else "")
    else:
-    division=match_division(name);candidates=[x for x in prepared if match_name(x["race"])==match_name(name) and (not division or match_division(x["tournament"])==division)]
+    division=match_division(name);candidates=[x for x in prepared if match_name(x["race"])==match_name(name) and is_wild(x["tournament"])==is_wild(name) and (not division or match_division(x["tournament"])==division)]
     if len(candidates)==1:
      tournament,level,stage=candidates[0]["tournament"],candidates[0]["level"],candidates[0]["race"]
      race_config=candidates[0];c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?)",(eid,tournament,level,stage,name,race_config["id"]))
