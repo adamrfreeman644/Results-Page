@@ -317,3 +317,18 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 
 /* Mobile uses a physical three-column table, so every card fills its width. */
 @media(max-width:600px){.race-table col.result-pos{width:16%!important}.race-table col.result-rider{width:66%!important}.race-table col.result-time{width:18%!important}.race-table th:first-child{font-size:.68rem}.race-table th:first-child::after{content:none}.race-table th,.race-table td{overflow:hidden}.race-table .time{white-space:nowrap}}
+
+/* Detail overlay is intentionally complete: never inherit the phone glance columns. */
+@media(max-width:600px){
+ #race-detail-overlay .table-scroll{width:100%;overflow-x:auto;overflow-y:hidden}
+ #race-detail-overlay .race-table table{width:100%!important;min-width:620px!important;max-width:none;table-layout:auto}
+ #race-detail-overlay .race-table col.result-pos{display:table-column;width:4.5rem!important}
+ #race-detail-overlay .race-table col.result-start{display:table-column;width:5.8rem!important}
+ #race-detail-overlay .race-table col.result-seed{display:table-column;width:3.8rem!important}
+ #race-detail-overlay .race-table col.result-rider{display:table-column;width:auto!important}
+ #race-detail-overlay .race-table col.result-time{display:table-column;width:5.4rem!important}
+ #race-detail-overlay .race-table th,#race-detail-overlay .race-table td{display:table-cell;overflow:visible;white-space:normal}
+ #race-detail-overlay .race-table th:first-child{font-size:.68rem}
+ #race-detail-overlay .race-table th:first-child::after{content:none}
+ #race-detail-overlay .race-table .rider .name{white-space:normal;overflow:visible;text-overflow:clip}
+}
