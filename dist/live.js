@@ -79,11 +79,10 @@ async function render(){
     }else if(lastSourceStamp===null){
       renderUpdateAge();scheduleStaleLabel();
     }
-
-    // One poll of every published event → seeds + boards stay in sync with RaceTec imports.
-    const allItems=await Promise.all(
-      f.events.map(async e=>({e,r:await get('/api/public/events/'+encodeURIComponent(e.id)+'/results').catch(()=>[])}))
-    );
+    // One batched response replaces a separate request for every race card.
+    const ids=f.events.map(e=>String(e.id)).filter(id=>!id.startsWith('manual:'));
+    const resultMap=ids.length?await get('/api/public/results?ids='+encodeURIComponent(ids.join(','))).catch(()=>({})):{};
+    const allItems=f.events.map(e=>({e,r:resultMap[String(e.id)]||[]}));
     if(window.BracketProjection?.refreshSeeds){
       await BracketProjection.refreshSeeds({eventItems:allItems});
     }
