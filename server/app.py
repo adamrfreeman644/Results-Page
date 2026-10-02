@@ -341,8 +341,8 @@ def watch():
    c=db();paused=c.execute("select value from meta where key='feed_paused'").fetchone()
    with c:
     c.execute("insert into meta(key,value) values('last_feed_check',?) on conflict(key) do update set value=excluded.value",(now(),))
-   c.close()
    source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0]
+   c.close()
    if source_mode=="paste":
     candidate=None;meta("source_state","Using pasted RaceTec table")
    elif not paused or paused[0]!="true":
