@@ -285,18 +285,24 @@ def parse_pasted_results(text):
  net_col=field("Net time","Net")
  leg_col=field("Finish Leg Time","Leg time")
  position_col=field("Overall position","Position","Overall")
+ lap_cols=sorted(((int(match.group(1)),header) for key,header in headers.items() if (match:=re.fullmatch(r"lap\\s*(\\d+)\\s*leg\\s*time",key,re.I))),key=lambda item:item[0])
  if not all((event_col,first_col,last_col,bib_col)):raise ValueError("The pasted table needs EventDescr, First name, Last name, and Race number columns")
  grouped={}
  for row in reader:
   event,name=clean(row.get(event_col,""))," ".join(x for x in (clean(row.get(first_col,"")),clean(row.get(last_col,""))) if x)
   if not event or not name:continue
   status=clean(row.get(status_col,"")) if status_col else ""
+  laps=[(number,clean(row.get(header,""))) for number,header in lap_cols if clean(row.get(header,""))]
   timing=clean(row.get(finish_col,"")) if finish_col else ""
   timing=timing or (clean(row.get(net_col,"")) if net_col else "") or (clean(row.get(leg_col,"")) if leg_col else "")
+  # Multi-lap RaceTec exports often leave Finish time blank. The race result
+  # is the fastest recorded lap in those columns.
+  if not timing and laps:
+   timing=min((value for _,value in laps if time_ms(value) is not None),key=time_ms,default="")
   if re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
   try:position=int(clean(row.get(position_col,""))) if position_col and clean(row.get(position_col,"")).isdigit() else None
   except ValueError:position=None
-  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position})
+  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"laps":[(number,display_time(value)) for number,value in laps]})
  if not grouped:raise ValueError("The pasted table has no usable rider rows")
  return grouped
 def import_pasted_results(text,replace=False):
@@ -328,6 +334,10 @@ def import_pasted_results(text,replace=False):
     athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1(row["name"].casefold().encode()).hexdigest()[:16]
     c.execute("insert into athletes(id,name,category) values(?,?,?) on conflict(id) do update set name=excluded.name,category=case when excluded.category<>'' then excluded.category else athletes.category end",(athlete_id,row["name"],row["category"]))
     c.execute("insert into results(event_id,athlete_id,bib,position,time,category) values(?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"]))
+    if row.get("laps"):
+     c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,athlete_id))
+     for lap_number,lap_time in row["laps"]:
+      c.execute("insert into result_laps values(?,?,?,?)",(event_id,athlete_id,lap_number,lap_time))
     c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,event_id,athlete_id,row["bib"],row["position"],row["time"]))
   c.execute("insert into meta(key,value) values('source_mode','paste') on conflict(key) do update set value=excluded.value")
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
