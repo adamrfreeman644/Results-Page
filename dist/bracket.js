@@ -487,7 +487,9 @@
         const raced = finishers.length > 0;
 
         if (raced && existing) {
-          const rows = decorateRows(finishers, family, node.stage, node.num, byKey, false);
+          // Once a race has any result, retain every RaceTec entrant in the
+          // visible card. Blank-time riders stay listed after the finishers.
+          const rows = decorateRows(sortFinishers(existing.r), family, node.stage, node.num, byKey, false);
           projected.push({
             e: existing.e,
             r: rows,
