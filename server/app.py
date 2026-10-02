@@ -291,9 +291,8 @@ def parse_pasted_results(text):
   event,name=clean(row.get(event_col,""))," ".join(x for x in (clean(row.get(first_col,"")),clean(row.get(last_col,""))) if x)
   if not event or not name:continue
   status=clean(row.get(status_col,"")) if status_col else ""
-  # RaceTec Finish time can be the time-of-day a rider crossed the line.
-  # Prefer elapsed Net/Finish Leg time whenever supplied.
-  timing=(clean(row.get(net_col,"")) if net_col else "") or (clean(row.get(leg_col,"")) if leg_col else "") or (clean(row.get(finish_col,"")) if finish_col else "")
+  timing=clean(row.get(finish_col,"")) if finish_col else ""
+  timing=timing or (clean(row.get(net_col,"")) if net_col else "") or (clean(row.get(leg_col,"")) if leg_col else "")
   if re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
   try:position=int(clean(row.get(position_col,""))) if position_col and clean(row.get(position_col,"")).isdigit() else None
   except ValueError:position=None
