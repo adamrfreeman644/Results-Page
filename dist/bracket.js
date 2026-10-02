@@ -542,10 +542,18 @@
           const srcKey = `${family}:${slot.from.stage}:${slot.from.num}`;
           return recordedFinishers(byKey.get(srcKey)?.r).length > 0;
         });
-        // First knockout round for small fields (Women/Groms semis) uses seed slots;
-        // later rounds always project advancement placeholders from the feed rules.
-        const seededFirst = !anySource ? seedStartRows(family, node.stage, node.num) : null;
-        const pendingRows = seededFirst || rowsRaw;
+        // RaceTec may already have named entrants in an unstarted race. Show
+        // those riders first; only fall back to the seeded/progression placeholders
+        // when the race has no assigned entrants yet.
+        const enteredRows = (existing?.r || []).map((r) => ({
+          ...r,
+          position: null,
+          time: "Not raced yet",
+          pending: true,
+          known: true,
+        }));
+        const seededFirst = !enteredRows.length && !anySource ? seedStartRows(family, node.stage, node.num) : null;
+        const pendingRows = enteredRows.length ? enteredRows : seededFirst || rowsRaw;
         projected.push({
           e: existing?.e || syntheticEvent(family, key, node.stage, node.num, items),
           r: [],
