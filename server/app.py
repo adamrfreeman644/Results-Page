@@ -305,9 +305,12 @@ def import_pasted_results(text):
   iid=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(fingerprint,now(),"Pasted RaceTec table",len(parsed),sum(len(rows) for rows in parsed.values()))).lastrowid
   mappings={clean(row["event_name"]).casefold():row for row in c.execute("select event_name,tournament,level,stage,race_id from event_mappings") if clean(row["event_name"])}
   prepared=[dict(row) for row in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
-  c.execute("delete from result_laps where event_id like 'paste:%'");c.execute("delete from results where event_id like 'paste:%'");c.execute("delete from events where id like 'paste:%'")
   for order,(event_name,rows_for_event) in enumerate(parsed.items()):
-   event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16];mapping=mappings.get(event_name.casefold())
+   event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16]
+   # A paste is a per-event update: replace only this event, preserving every
+   # other pasted race already on the board.
+   c.execute("delete from result_laps where event_id=?",(event_id,));c.execute("delete from results where event_id=?",(event_id,));c.execute("delete from events where id=?",(event_id,))
+   mapping=mappings.get(event_name.casefold())
    if not mapping:
     division=match_division(event_name)
     candidates=[item for item in prepared if match_name(item["race"])==match_name(event_name) and is_wild(item["tournament"])==is_wild(event_name) and (not division or match_division(item["tournament"])==division)]
