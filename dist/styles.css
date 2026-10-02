@@ -332,3 +332,7 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
  #race-detail-overlay .race-table th:first-child::after{content:none}
  #race-detail-overlay .race-table .rider .name{white-space:normal;overflow:visible;text-overflow:clip}
 }
+
+
+/* Admin RDF reader health */
+.feed-health{display:grid;gap:3px;padding:12px 13px;border-radius:10px;border:1px solid #69ad9d;background:#e4f5ef;color:#075c4b;font-size:.84rem}.feed-health strong{font-size:.9rem}.feed-health small{color:#3b5865;font-size:.74rem}.feed-health.paused{background:#fff3c7;border-color:#d7a91f;color:#624600}.feed-health.error{background:#fff0ee;border-color:#c9472b;color:#8a2719}
