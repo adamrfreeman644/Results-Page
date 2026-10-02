@@ -131,7 +131,7 @@ async function render(){
     $('#round-nav').innerHTML=levels.map((level,i)=>`<button class="round ${level===selectedLevel?'active':''}" data-level="${esc(level)}"><span class="round-name">${esc(level)}</span><span class="round-step">${i+1}</span></button>`).join('');
     $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
-    $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">${structureOnly?'Click a heat to expand. Heats show Seed N; later rounds show Winner of H… / 2nd place of …. ':'Rows are start order. Heats: better seed → earlier gate. Later rounds: winners take starts 1–2 (by seed), 2nds take 3–4. '}<a href="/seeding/">Open seeding board</a></p>`;
+    $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">${structureOnly?'Click a heat to expand. Heats show Seed N; later rounds show Winner of H… / 2nd place of …. ':'Rows are start order. Heats: better seed → earlier gate. Later rounds: winners take starts 1–2 (by seed), 2nds take 3–4. '}</p>`;
     $('#stage-results').querySelectorAll('.race-card-header[data-race-detail]').forEach(header=>{
       header.addEventListener('click',()=>openRaceDetail(header.dataset.raceDetail));
     });
