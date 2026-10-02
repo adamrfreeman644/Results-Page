@@ -58,7 +58,7 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
 function openRaceDetail(id){
   const detail=raceDetails.get(id);if(!detail)return;
   let overlay=document.querySelector('#race-detail-overlay');
-  if(!overlay){overlay=document.createElement('div');overlay.id='race-detail-overlay';overlay.hidden=true;document.body.appendChild(overlay);overlay.addEventListener('click',event=>{if(event.target===overlay)closeRaceDetail()});}
+  if(!overlay){overlay=document.createElement('div');overlay.id='race-detail-overlay';overlay.hidden=true;document.body.appendChild(overlay);overlay.addEventListener('click',event=>{if(!event.target.closest('.race-detail'))closeRaceDetail()});}
   overlay.innerHTML=`<div class="race-detail" role="dialog" aria-modal="true" aria-label="Race details"><button class="race-detail-close" type="button" aria-label="Close details">×</button><p class="eyebrow">Race details</p>${table(detail.e,detail.r,{...detail.options,expanded:true})}</div>`;
   overlay.querySelector('.race-detail-close').onclick=closeRaceDetail;overlay.hidden=false;document.body.classList.add('race-detail-open');
 }
