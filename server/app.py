@@ -601,8 +601,6 @@ class App(SimpleHTTPRequestHandler):
   return self.js({"ok":True})
 if __name__=="__main__":
  DB_FILE.parent.mkdir(parents=True,exist_ok=True)
- created=ensure_wildcard_brackets()
- if created:print("Created",created,"Wild Card bracket races",flush=True)
  try:import_historical()
  except Exception as e:print("Bundled historic history import failed:",e,flush=True)
  threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
