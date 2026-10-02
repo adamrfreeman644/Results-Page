@@ -95,7 +95,7 @@ def time_ms(value):
  h,minute,second,fraction=m.groups();return (((int(h or 0)*3600)+int(minute)*60+int(second))*1000)+int((fraction or "0")[:3].ljust(3,"0"))
 def ms_display(total):
  h,total=divmod(total,3600000);minute,total=divmod(total,60000);second,milli=divmod(total,1000)
- return (str(h)+":" if h else "")+str(minute).zfill(2)+":"+str(second).zfill(2)+"."+str(milli).zfill(3)
+ return (str(h)+":" if h else (str(minute).zfill(2)+":" if minute else ""))+str(second).zfill(2)+"."+str(milli).zfill(3)
 def match_name(value):
  value=re.sub(r"[^a-z0-9]+"," ",clean(value).lower().replace("heats","heat").replace("semifinal","semi").replace("quarterfinal","quarter"))
  return re.sub(r"\b(women|womens|men|mens|grom|groms|open)\b","",value).strip()
