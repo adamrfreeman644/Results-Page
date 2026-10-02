@@ -234,6 +234,22 @@
     const riderCount = (seedCatalog?.categories?.[category] || []).length || (family === "open-men" ? 32 : 16);
     const hasHeats = family === "open-men" || riderCount > 16;
     const hasQuarters = hasHeats || riderCount > 8;
+
+    // Wild Card formats vary by division. Its admin-assigned RaceTec races
+    // are the source of truth: do not invent semis/finals or hide a custom
+    // placement race such as "3rds".
+    if (family.startsWith("wild-")) {
+      const nodes = [];
+      if (seenStages.has("heat")) for (let i = 1; i <= 8; i++) nodes.push({ stage: "heat", num: i });
+      if (seenStages.has("quarter")) for (let i = 1; i <= 4; i++) nodes.push({ stage: "quarter", num: i });
+      if (seenStages.has("semi")) nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
+      if (seenStages.has("third")) nodes.push({ stage: "third", num: 1 });
+      if (seenStages.has("fourth")) nodes.push({ stage: "fourth", num: 1 });
+      if (seenStages.has("final")) nodes.push({ stage: "final", num: 1 });
+      if (seenStages.has("runnerup")) nodes.push({ stage: "runnerup", num: 1 });
+      return nodes;
+    }
+
     const nodes = [];
 
     if (hasHeats) {
