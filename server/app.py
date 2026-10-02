@@ -299,9 +299,15 @@ def import_pasted_results(text):
  with c:
   iid=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(fingerprint,now(),"Pasted RaceTec table",len(parsed),sum(len(rows) for rows in parsed.values()))).lastrowid
   mappings={clean(row["event_name"]).casefold():row for row in c.execute("select event_name,tournament,level,stage,race_id from event_mappings") if clean(row["event_name"])}
+  prepared=[dict(row) for row in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
   c.execute("delete from result_laps where event_id like 'paste:%'");c.execute("delete from results where event_id like 'paste:%'");c.execute("delete from events where id like 'paste:%'")
   for order,(event_name,rows_for_event) in enumerate(parsed.items()):
    event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16];mapping=mappings.get(event_name.casefold())
+   if not mapping:
+    division=match_division(event_name)
+    candidates=[item for item in prepared if match_name(item["race"])==match_name(event_name) and is_wild(item["tournament"])==is_wild(event_name) and (not division or match_division(item["tournament"])==division)]
+    if len(candidates)==1:
+     item=candidates[0];mapping={"tournament":item["tournament"],"level":item["level"],"stage":item["race"],"race_id":item["id"]}
    tournament,level,stage=(mapping["tournament"],mapping["level"],mapping["stage"]) if mapping else ("","","")
    c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(event_id,event_name,tournament,level,stage,order))
    if mapping:c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,level=excluded.level,stage=excluded.stage,event_name=excluded.event_name,race_id=excluded.race_id",(event_id,tournament,level,stage,event_name,mapping["race_id"]))
