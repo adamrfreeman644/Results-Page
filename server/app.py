@@ -172,7 +172,9 @@ def parse(raw):
   # an assigned mass race appear on the public page while results are pending.
   try: pos=int(val(r,24,26)) if val(r,24,26) else None
   except ValueError: pos=None
-  if eid and aid and athletes.get(aid): out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,display_time(val(r,21,22,23)),rider_category(r) or athlete_categories.get(aid,"")))
+  if eid and aid and athletes.get(aid):
+   dnf=any(re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",clean(item),re.I) for item in r)
+   out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,"DNF" if dnf else display_time(val(r,21,22,23)),rider_category(r) or athlete_categories.get(aid,"")))
  parsed=[]
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
@@ -278,6 +280,7 @@ def parse_pasted_results(text):
  last_col=field("Last name","Last")
  bib_col=field("Race number","Bib","Race no")
  category_col=field("Gender","Category")
+ status_col=field("Finish status","Status")
  finish_col=field("Finish time","Finish")
  net_col=field("Net time","Net")
  leg_col=field("Finish Leg Time","Leg time")
@@ -287,8 +290,10 @@ def parse_pasted_results(text):
  for row in reader:
   event,name=clean(row.get(event_col,""))," ".join(x for x in (clean(row.get(first_col,"")),clean(row.get(last_col,""))) if x)
   if not event or not name:continue
+  status=clean(row.get(status_col,"")) if status_col else ""
   timing=clean(row.get(finish_col,"")) if finish_col else ""
   timing=timing or (clean(row.get(net_col,"")) if net_col else "") or (clean(row.get(leg_col,"")) if leg_col else "")
+  if re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
   try:position=int(clean(row.get(position_col,""))) if position_col and clean(row.get(position_col,"")).isdigit() else None
   except ValueError:position=None
   grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position})
