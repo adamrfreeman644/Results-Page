@@ -249,7 +249,7 @@ def registration_riders():
  # chip. Return state is only true when the export explicitly records it.
  for athlete_id,item in registered.items():
   item["chipAssigned"]=True
-  item["chipReturned"]=any(re.fullmatch(r"(?:returned|return|yes|true|1)",clean(value),re.I) for value in item.pop("_rdf_fields",[]))
+  item["chipReturned"]=any(re.fullmatch(r"(?:chip[ _-]*)?returned",clean(value),re.I) for value in item.pop("_rdf_fields",[]))
  return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
 
 def fstatus():
