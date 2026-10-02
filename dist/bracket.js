@@ -250,24 +250,17 @@
       return nodes;
     }
 
+    // The admin tree is authoritative for main tournaments too. This means
+    // adding/removing a round there changes the public board immediately
+    // instead of the board silently restoring a default path.
     const nodes = [];
-
-    if (hasHeats) {
-      for (let i = 1; i <= 8; i++) nodes.push({ stage: "heat", num: i });
-    }
-    if (hasQuarters) {
-      for (let i = 1; i <= 4; i++) nodes.push({ stage: "quarter", num: i });
-    }
-
-    // Wild Card tournaments run directly through semis to a final. The main
-    // Open/Women/Groms tournaments also publish their consolation races.
-    nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
-    if (!family.startsWith("wild-")) {
-      nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
-    }
-    nodes.push({ stage: "final", num: 1 });
-    if (!family.startsWith("wild-")) nodes.push({ stage: "runnerup", num: 1 });
-
+    if (seenStages.has("heat")) for (let i = 1; i <= 8; i++) nodes.push({ stage: "heat", num: i });
+    if (seenStages.has("quarter")) for (let i = 1; i <= 4; i++) nodes.push({ stage: "quarter", num: i });
+    if (seenStages.has("semi")) nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
+    if (seenStages.has("third")) nodes.push({ stage: "third", num: 1 });
+    if (seenStages.has("fourth")) nodes.push({ stage: "fourth", num: 1 });
+    if (seenStages.has("final")) nodes.push({ stage: "final", num: 1 });
+    if (seenStages.has("runnerup")) nodes.push({ stage: "runnerup", num: 1 });
     return nodes;
   }
 
