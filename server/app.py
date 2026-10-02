@@ -482,7 +482,10 @@ class App(SimpleHTTPRequestHandler):
     if not rider:return self.js({"error":"Rider not found"},404)
     return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipReturned":bool(rider.get("chipReturned")),"chipCode":"","chipReturnInfo":""})
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? and e.id "+source_op+" ? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,source_like))]
-   for record in records:record["time"]=display_time(record["time"])
+   for record in records:
+    record["time"]=display_time(record["time"])
+    record["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(record["event_id"],athlete_id))]
+    for lap in record["laps"]:lap["time"]=display_time(lap["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
    notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"id":rider["id"],"name":rider["name"],"category":rider["category"],"records":records,"historical":historical,"registered":True,"chipReturned":bool(rider["chip_returned"]),"chipCode":rider["chip_code"],"chipReturnInfo":notice})
   if path=="/api/admin/riders":
