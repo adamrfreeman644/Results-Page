@@ -165,10 +165,10 @@
     }));
   }
 
-  // Consolation paths are fed from the two semi-finals: the two 3rd-place
-  // finishers race each other, as do the two 4th-place finishers.
+  // The 3rd- and 4th-place races each take one rider from all four
+  // quarter-finals, so each race has a full four-rider grid.
   function placementSlots(role) {
-    return [1, 2].map((num) => ({ from: { stage: "semi", num }, role }));
+    return [1, 2, 3, 4].map((num) => ({ from: { stage: "quarter", num }, role }));
   }
 
   function runnerUpSlots() {
