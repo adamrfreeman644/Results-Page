@@ -554,18 +554,20 @@ class App(SimpleHTTPRequestHandler):
    try:seed_num=int(seed_val) if seed_val not in (None,"") else None
    except (TypeError,ValueError):seed_num=None
    if not bib and not athlete_id and not name and seed_num is None:return self.js({"error":"Provide a chip/bib, rider name, athlete id, or seed number"},400)
-   # Resolve identity from current results when possible
-   if (bib or name or seed_num is not None) and not athlete_id:
+   # Resolve identity from current results when possible (include DNF / untimed rows).
+   if (bib or name) and not athlete_id:
     c=db()
     if bib:
-     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where cast(r.bib as text)=? order by r.position is null,r.position limit 1",(bib,)).fetchone()
-     if hit:athlete_id,name,bib=hit[0],hit[1] or name,str(hit[2] or bib)
-    elif name:
-     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where lower(a.name)=lower(?) order by r.position is null,r.position limit 1",(name,)).fetchone()
-     if hit:athlete_id,name,bib=hit[0],hit[1] or name,str(hit[2] or bib)
+     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where trim(cast(r.bib as text))=? order by case when upper(coalesce(r.time,''))='DNF' then 1 else 0 end,r.position is null,r.position limit 1",(bib,)).fetchone()
+     if hit:athlete_id,name,bib=str(hit[0]),hit[1] or name,str(hit[2] or bib)
+    if not athlete_id and name:
+     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where lower(a.name)=lower(?) or lower(a.name) like ? order by r.position is null,r.position limit 1",(name,"%"+name.lower()+"%")).fetchone()
+     if hit:athlete_id,name,bib=str(hit[0]),hit[1] or name,str(hit[2] or bib or "")
     c.close()
+   if not athlete_id and not name and bib:
+    return self.js({"error":"No rider found for chip/bib "+bib+" — check the number or pick them from the seed list"},404)
    entry={"id":hashlib.sha1((category+"|"+athlete_id+"|"+bib+"|"+name+"|"+str(seed_num or "")).encode()).hexdigest()[:12],"category":category,"athlete_id":athlete_id,"bib":bib,"name":name,"seed":seed_num,"note":note,"at":now()}
-   items=[x for x in items if not (str(x.get("category",""))==category and ((athlete_id and x.get("athlete_id")==athlete_id) or (bib and str(x.get("bib",""))==bib) or (name and history_name(x.get("name",""))==history_name(name))))]
+   items=[x for x in items if not (str(x.get("category",""))==category and ((athlete_id and str(x.get("athlete_id",""))==str(athlete_id)) or (bib and str(x.get("bib",""))==bib) or (name and history_name(x.get("name",""))==history_name(name))))]
    items.append(entry);save_seed_withdrawals(items);return self.js({"ok":True,"withdrawal":entry,"withdrawals":items})
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif path=="/api/admin/chip-return-mode":meta("chip_return_mode","true" if p.get("enabled") else "false")

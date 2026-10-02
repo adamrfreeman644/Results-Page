@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Results Admin · OWAR 2026</title>
-  <link rel="stylesheet" href="/styles.css?v=tree-6">
+  <link rel="stylesheet" href="/styles.css?v=tree-7">
 </head>
 <body>
 <main class="admin-shell">
@@ -68,7 +68,7 @@
   <section class="panel seed-outs-panel">
     <h2>Out of race · seed bump-up</h2>
     <div class="seed-outs">
-      <p class="seed-outs-help">Mark a rider out after seeding. They drop out of the seed list and everyone below bumps up one place (seed 32 opens for a manual fill later).</p>
+      <p class="seed-outs-help">Toggle riders out of the seed list. Everyone below bumps up; seed 32 opens for a manual fill later. DNF / missing riders from seeding races appear at the bottom.</p>
       <div class="seed-outs-form">
         <div class="field">
           <label for="out-category">Category</label>
@@ -82,30 +82,23 @@
           </select>
         </div>
         <div class="field">
-          <label for="out-query">Chip / bib, seed #, or name</label>
-          <input id="out-query" placeholder="e.g. 189 · 16 · Dan Turner" autocomplete="off">
+          <label for="out-query">Jump to chip / name</label>
+          <input id="out-query" type="text" inputmode="search" placeholder="e.g. 189 or Dan Turner" autocomplete="off" spellcheck="false">
         </div>
-        <div class="field">
-          <label for="out-note">Note (optional)</label>
-          <input id="out-note" placeholder="crashed / DNS / injury">
-        </div>
-        <button class="btn yellow" id="out-add" type="button">Mark out of race</button>
+        <button class="btn" id="out-find" type="button">Find in list</button>
+        <button class="btn" id="out-clear" type="button">Clear all outs</button>
       </div>
-      <p id="out-status" class="seed-outs-status"></p>
-      <div class="seed-outs-cols">
+      <p id="out-status" class="seed-outs-status" role="status"></p>
+      <div class="seed-outs-cols seed-outs-cols--single">
         <div>
-          <h3>Withdrawn</h3>
-          <div id="out-list" class="seed-outs-list"></div>
-        </div>
-        <div>
-          <h3>Seed list after bump <span id="out-seed-count"></span></h3>
+          <h3>Seed list <span id="out-seed-count"></span></h3>
           <div id="out-preview" class="seed-outs-preview"></div>
         </div>
       </div>
     </div>
   </section>
 </main>
-<script src="/bracket.js?v=20261002.44"></script>
-<script src="/admin/admin.js?v=20261002.40"></script>
+<script src="/bracket.js?v=20261002.45"></script>
+<script src="/admin/admin.js?v=20261002.45"></script>
 </body>
 </html>
