@@ -49,6 +49,8 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table events add column publish_mode text not null default 'populated'")
  except sqlite3.OperationalError:pass
+ try:c.execute("alter table athlete_settings add column chip_returned integer not null default 0")
+ except sqlite3.OperationalError:pass
  # Older installations used an INTEGER primary key for events. RaceTec event IDs
  # are compound text values (for example, "14:43"), so migrate without losing
  # the existing published rows before the next import.
@@ -243,6 +245,15 @@ def registration_riders():
   if athlete_id in athletes and "regist" in event_names.get(event_id,"").casefold():
    item={**athletes[athlete_id],"bib":val(row,18)}
    if athlete_id not in registered or (item["bib"] and not registered[athlete_id]["bib"]):registered[athlete_id]=item
+ # Chip checkout is race-control data, while riders and numbers above remain
+ # read directly from the registration race in the RDF on every request.
+ c=db()
+ settings={row["athlete_id"]:dict(row) for row in c.execute("select athlete_id,chip_code,chip_returned from athlete_settings")}
+ c.close()
+ for athlete_id,item in registered.items():
+  setting=settings.get(athlete_id,{})
+  item["chipAssigned"]=bool(clean(setting.get("chip_code","")))
+  item["chipReturned"]=bool(setting.get("chip_returned",0))
  return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
 
 def fstatus():
@@ -326,7 +337,7 @@ class App(SimpleHTTPRequestHandler):
    notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"id":rider["id"],"name":rider["name"],"records":records,"historical":historical,"registered":bool(rider["registered"]),"chipCode":rider["chip_code"],"chipReturnInfo":notice})
   if path=="/api/admin/riders":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
-   c=db();riders=[dict(x) for x in c.execute("select a.id,a.name,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code from athletes a left join athlete_settings s on s.athlete_id=a.id where exists(select 1 from results r where r.athlete_id=a.id) order by a.name")];notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"returnInfo":notice,"riders":riders})
+   c=db();riders=[dict(x) for x in c.execute("select a.id,a.name,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code,coalesce(s.chip_returned,0) chip_returned from athletes a left join athlete_settings s on s.athlete_id=a.id where exists(select 1 from results r where r.athlete_id=a.id) order by a.name")];notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"returnInfo":notice,"riders":riders})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];requests=[dict(x) for x in c.execute("select q.id,q.athlete_id,a.name athlete_name,q.rider_name,q.status,q.requested_at from historical_match_requests q left join athletes a on a.id=q.athlete_id where q.status='pending' order by q.id")];c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests})
@@ -359,7 +370,7 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
-   with c:c.execute("insert into athlete_settings(athlete_id,registered,chip_code) values(?,?,?) on conflict(athlete_id) do update set registered=excluded.registered,chip_code=excluded.chip_code",(athlete_id,1 if p.get("registered") else 0,clean(str(p.get("chipCode","")))))
+   with c:c.execute("insert into athlete_settings(athlete_id,registered,chip_code,chip_returned) values(?,?,?,?) on conflict(athlete_id) do update set registered=excluded.registered,chip_code=excluded.chip_code,chip_returned=excluded.chip_returned",(athlete_id,1 if p.get("registered") else 0,clean(str(p.get("chipCode",""))),1 if p.get("chipReturned") else 0))
    c.close()
   elif path=="/api/admin/status":meta("status",p.get("status","Live"))
   elif re.fullmatch(r"/api/admin/historical-match-requests/\d+",path):
