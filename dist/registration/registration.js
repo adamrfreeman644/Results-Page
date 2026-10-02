@@ -4,14 +4,14 @@ let riders=[],returnMode=false;
 
 function chipStatus(r){
   if(returnMode)return r.chipReturned
-    ? '<span class="chip-status returned" title="Chip returned">✓</span>'
-    : '<span class="chip-status due" title="Chip still to return">!</span>';
+    ? '<span class="chip-status returned" title="Chip returned">☑</span>'
+    : '<span class="chip-status due" title="Chip still to return">☐</span>';
   return '<span class="chip-status assigned" title="Chip assigned">✓</span>';
 }
 function render(){
   const query=$('#registration-search').value.trim().toLocaleLowerCase();
   const visible=riders.filter(r=>!query||r.name.toLocaleLowerCase().includes(query)||String(r.bib||'').toLocaleLowerCase().includes(query));
-  $('#registration-list').innerHTML=visible.length?`<div class="table-scroll"><table class="registration-table"><thead><tr><th>Race #</th><th>Rider</th><th aria-label="${returnMode?'Chip return status':'Chip assigned'}">${returnMode?'Return':'Chip'}</th></tr></thead><tbody>${visible.map(r=>`<tr><td class="registration-bib">${esc(r.bib||'—')}</td><td><a class="registration-name" href="/rider/?id=${encodeURIComponent(r.id)}">${esc(r.name)}</a></td><td>${chipStatus(r)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No registered rider matches that search.</p>';
+  $('#registration-list').innerHTML=visible.length?`<div class="table-scroll"><table class="registration-table"><thead><tr><th>Race #</th><th>Rider</th><th aria-label="${returnMode?'Chip return status':'Chip assigned'}">${returnMode?'Returned':'Chip'}</th></tr></thead><tbody>${visible.map(r=>`<tr><td class="registration-bib">${esc(r.bib||'—')}</td><td><a class="registration-name" href="/rider/?id=${encodeURIComponent(r.id)}">${esc(r.name)}</a></td><td>${chipStatus(r)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No registered rider matches that search.</p>';
   $('#registration-status').textContent=query?`${visible.length} matching rider${visible.length===1?'':'s'}`:`${riders.length} riders shown · chips confirmed from registration`;
 }
 async function refresh(){
