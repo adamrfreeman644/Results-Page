@@ -12,6 +12,8 @@ VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_F
 POLL_SECONDS=30; ADMIN_TOKEN=os.getenv("ADMIN_TOKEN","")
 EXPORT_DIR=Path(os.getenv("RACE_EXPORT_DIR","/race-export")); EXPORT_FILENAME=os.getenv("RACE_EXPORT_FILENAME","results.rdf"); EXPORT_FILE=EXPORT_DIR/EXPORT_FILENAME
 EXPORT_HOST_DIR=os.getenv("RACE_EXPORT_HOST_DIR",str(EXPORT_DIR))
+REGISTRATION_CACHE={"stamp":None,"cached_at":0.0,"riders":[]}
+REGISTRATION_CACHE_LOCK=threading.Lock()
 def now(): return datetime.now(timezone.utc).isoformat()
 def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
@@ -223,9 +225,12 @@ def import_file(raw,digest):
  c.close();return True
 
 def registration_riders():
- # Registration is a race inside the live RaceTec export. Read the RDF for every
- # request so this directory is never a stale copy of the registration data.
+ # The export stays authoritative, while parsing is reused until the file changes
+ # (or for at most one reader interval).
  if not EXPORT_FILE.exists():raise FileNotFoundError("Results RDF file not found")
+ stat=EXPORT_FILE.stat();stamp=(stat.st_mtime_ns,stat.st_size)
+ with REGISTRATION_CACHE_LOCK:
+  if REGISTRATION_CACHE["stamp"]==stamp and time.monotonic()-REGISTRATION_CACHE["cached_at"]<POLL_SECONDS:return REGISTRATION_CACHE["riders"]
  raw=EXPORT_FILE.read_bytes()
  if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):text=raw.decode("utf-16")
  else:text=raw.decode("utf-8-sig","replace")
@@ -250,7 +255,10 @@ def registration_riders():
  for athlete_id,item in registered.items():
   item["chipAssigned"]=True
   item["chipReturned"]=any(re.fullmatch(r"(?:chip[ _-]*)?returned",clean(value),re.I) for value in item.pop("_rdf_fields",[]))
- return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
+ result=sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
+ with REGISTRATION_CACHE_LOCK:
+  REGISTRATION_CACHE.update({"stamp":stamp,"cached_at":time.monotonic(),"riders":result})
+ return result
 
 def fstatus():
  try:
@@ -281,7 +289,10 @@ class App(SimpleHTTPRequestHandler):
  def js(self,b,code=200):
   data=json.dumps(b).encode();self.send_response(code);self.send_header("Content-Type","application/json");self.end_headers();self.wfile.write(data)
  def end_headers(self):
-  self.send_header("Cache-Control","no-store, max-age=0")
+  route=urlparse(self.path).path
+  if route.startswith("/api/") or route.endswith(".html") or route=="/":self.send_header("Cache-Control","no-store, max-age=0")
+  elif re.search(r"\.(?:css|js|png|svg|jpg|jpeg|webp|ico)$",route,re.I):self.send_header("Cache-Control","public, max-age=604800, immutable")
+  else:self.send_header("Cache-Control","no-store, max-age=0")
   super().end_headers()
  def auth(self):return bool(ADMIN_TOKEN) and self.headers.get("Authorization")=="Bearer "+ADMIN_TOKEN
  def do_GET(self):
@@ -291,6 +302,15 @@ class App(SimpleHTTPRequestHandler):
    if show and show[0]=="true":
     for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name) order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
    c.close();return self.js({"status":s[0] if s else "Live","updatedAt":updated[0] if updated else None,"events":e})
+  if path=="/api/public/results":
+   ids=[item for item in parse_qs(urlparse(self.path).query).get("ids",[""])[0].split(",") if item and not item.startswith("manual:")]
+   if len(ids)>120:return self.js({"error":"Too many races requested"},400)
+   c=db();out={item:[] for item in ids}
+   if ids:
+    marks=",".join("?" for _ in ids)
+    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position,a.name",ids):
+     row=dict(item);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
+   c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(event_id,))]
    for item in r:
