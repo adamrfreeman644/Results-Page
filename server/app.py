@@ -243,17 +243,13 @@ def registration_riders():
  for row in rows(text,"EventAthlete"):
   event_id,athlete_id=val(row,0)+":"+val(row,1),val(row,2)
   if athlete_id in athletes and "regist" in event_names.get(event_id,"").casefold():
-   item={**athletes[athlete_id],"bib":val(row,18)}
+   item={**athletes[athlete_id],"bib":val(row,18),"_rdf_fields":row}
    if athlete_id not in registered or (item["bib"] and not registered[athlete_id]["bib"]):registered[athlete_id]=item
- # Chip checkout is race-control data, while riders and numbers above remain
- # read directly from the registration race in the RDF on every request.
- c=db()
- settings={row["athlete_id"]:dict(row) for row in c.execute("select athlete_id,chip_code,chip_returned from athlete_settings")}
- c.close()
+ # The registration race is the source of truth: every listed rider has a
+ # chip. Return state is only true when the export explicitly records it.
  for athlete_id,item in registered.items():
-  setting=settings.get(athlete_id,{})
-  item["chipAssigned"]=bool(clean(setting.get("chip_code","")))
-  item["chipReturned"]=bool(setting.get("chip_returned",0))
+  item["chipAssigned"]=True
+  item["chipReturned"]=any(re.fullmatch(r"(?:returned|return|yes|true|1)",clean(value),re.I) for value in item.pop("_rdf_fields",[]))
  return sorted(registered.values(),key=lambda item:(item["name"].casefold(),item["id"]))
 
 def fstatus():
