@@ -293,3 +293,13 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 
 /* Race detail triggers are real buttons so taps work reliably on every browser. */
 .race-table>.race-card-header{appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0;padding:15px 16px;border:0;border-bottom:3px solid var(--yellow);border-radius:0;background:#073b59;color:#fff;font:inherit;text-align:left;text-transform:none;letter-spacing:normal;box-shadow:none;cursor:pointer}.race-card-header:focus-visible{outline:3px solid var(--yellow);outline-offset:-3px}.race-card-header:hover{filter:brightness(1.08)}.race-table--pending>.race-card-header{background:#3a3a3a}.race-card-header span{display:block;color:#d6ebef;text-transform:uppercase;letter-spacing:.11em;font-size:.68rem;font-weight:850}.race-card-header h3{margin:2px 0 0;font-size:1.05rem}.race-card-header b{font-size:.75rem;color:#d6ebef;white-space:nowrap}@media(max-width:600px){.race-table>.race-card-header{padding:11px 12px;border-bottom-width:2px}.race-card-header h3{font-size:1rem}.race-card-header span,.race-card-header b{font-size:.66rem}}
+
+/* Phone glance view: finish, rider number/name, and time only. */
+@media(max-width:600px){
+ .race-table:not(.race-table--pending) table,.race-table--pending table{table-layout:fixed}
+ .race-table th:nth-child(2),.race-table td:nth-child(2),.race-table th:nth-child(3),.race-table td:nth-child(3){display:none}
+ .race-table col.result-pos{width:4.3rem}.race-table col.result-rider{width:auto}.race-table col.result-time{width:5rem}
+ .race-table th:first-child,.race-table td:first-child{width:4.3rem;text-align:left}
+ .race-table th:last-child,.race-table td:last-child{width:5rem;text-align:right}
+ .race-table .rider-placeholder .name{white-space:normal;overflow:visible;text-overflow:clip;color:#697477;font-style:italic}
+}
