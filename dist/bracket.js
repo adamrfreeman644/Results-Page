@@ -78,6 +78,7 @@
 
   let seedCatalog = null; // { categories: { Open: [{name,seed,timeSec}] } }
   let seedIndex = new Map(); // normName -> {seed,timeSec,name,category}
+  let seedWithdrawals = []; // admin "out of race" list → remove + bump seeds up
 
   function normName(value) {
     return String(value || "")
@@ -303,9 +304,9 @@
     if (!heat) return null;
     return heat.slots.map((s) => ({
       position: null,
-      athlete_id: "",
+      athlete_id: s.athlete_id || "",
       name: s.known ? s.name : `Seed ${s.seed}`,
-      bib: "—",
+      bib: s.bib || "—",
       time: "Not raced yet",
       pending: true,
       known: s.known,
@@ -596,6 +597,59 @@
     "radim klaska": "radom klaska",
   };
 
+  function matchesWithdrawal(rider, withdrawal) {
+    if (!rider || !withdrawal) return false;
+    if (withdrawal.athlete_id && rider.athlete_id && String(withdrawal.athlete_id) === String(rider.athlete_id)) {
+      return true;
+    }
+    if (withdrawal.bib && rider.bib && String(withdrawal.bib) === String(rider.bib)) return true;
+    if (withdrawal.name && normName(withdrawal.name) === normName(rider.name)) return true;
+    // Seed match only when no rider identity was stored (gap / position-only outs).
+    const hasIdentity = !!(withdrawal.athlete_id || withdrawal.bib || withdrawal.name);
+    if (!hasIdentity && withdrawal.seed != null && Number(withdrawal.seed) === Number(rider.seed)) return true;
+    return false;
+  }
+
+  /** Remove withdrawn riders and renumber seeds 1..n (fills DNF holes / frees last seed). */
+  function applySeedWithdrawals(catalog, withdrawals) {
+    const list = Array.isArray(withdrawals) ? withdrawals : seedWithdrawals;
+    if (!catalog?.categories) return catalog;
+    const byCat = {};
+    for (const w of list) {
+      const cat = w.category || "Open";
+      (byCat[cat] || (byCat[cat] = [])).push(w);
+    }
+    if (!Object.keys(byCat).length) return catalog;
+    const categories = {};
+    for (const [cat, rows] of Object.entries(catalog.categories)) {
+      const outs = byCat[cat] || [];
+      let next = (rows || []).slice();
+      if (outs.length) {
+        next = next.filter((r) => !outs.some((w) => matchesWithdrawal(r, w)));
+        next.sort((a, b) => (a.seed || 0) - (b.seed || 0));
+        next = next.map((r, i) => ({ ...r, seed: i + 1 }));
+      }
+      categories[cat] = next;
+    }
+    return { ...catalog, categories, withdrawalsApplied: list.length };
+  }
+
+  function setSeedWithdrawals(list) {
+    seedWithdrawals = Array.isArray(list) ? list : [];
+  }
+
+  async function loadSeedWithdrawals() {
+    try {
+      const res = await fetch("/api/public/seed-withdrawals", { cache: "no-store" });
+      if (!res.ok) return seedWithdrawals;
+      const data = await res.json();
+      setSeedWithdrawals(data.withdrawals || []);
+    } catch (_) {
+      /* offline / no admin API */
+    }
+    return seedWithdrawals;
+  }
+
   function indexSeeds(catalog) {
     seedCatalog = catalog;
     seedIndex = new Map();
@@ -666,8 +720,10 @@
 
   function seedingSessionKind(e) {
     const n = [e.name, e.stage].filter(Boolean).join(" ").toLowerCase();
-    if (/\bq\s*2\b|qual(?:ifying)?\s*2|session\s*2/.test(n)) return "q2";
-    if (/\bq\s*1\b|qual(?:ifying)?\s*1|session\s*1/.test(n)) return "q1";
+    // RaceTec / admin labels seen in the wild:
+    // "Seeding Q2", "Open Seeding 2", "Seeding 2", "qualifying 2"
+    if (/\bq\s*2\b|qual(?:ifying)?\s*2|session\s*2|seed(?:ing)?\s*2\b/.test(n)) return "q2";
+    if (/\bq\s*1\b|qual(?:ifying)?\s*1|session\s*1|seed(?:ing)?\s*1\b/.test(n)) return "q1";
     return "single";
   }
 
@@ -753,15 +809,18 @@
   }
 
   /** Prefer live RaceTec seeding results; optional static /data/seeds.json fallback. */
-  async function refreshSeeds({ eventItems, staticUrl } = {}) {
+  async function refreshSeeds({ eventItems, staticUrl, withdrawals } = {}) {
+    await loadSeedWithdrawals();
+    if (withdrawals) setSeedWithdrawals(withdrawals);
     const live = buildSeedsFromLiveEvents(eventItems);
     if (live) {
-      indexSeeds(live);
+      indexSeeds(applySeedWithdrawals(live));
       return { catalog: seedCatalog, source: "live" };
     }
     if (staticUrl !== false) {
       try {
         await loadSeeds(staticUrl || "/data/seeds.json");
+        indexSeeds(applySeedWithdrawals(seedCatalog));
         return { catalog: seedCatalog, source: "static" };
       } catch (_) {
         /* no static seeds yet */
@@ -825,6 +884,8 @@
             name: locked ? rider.name : `Seed ${seed}`,
             time: locked ? rider.time || "" : "",
             known: locked,
+            athlete_id: locked ? rider.athlete_id || "" : "",
+            bib: locked ? rider.bib || "" : "",
           };
         }),
       })),
@@ -879,6 +940,9 @@
     loadSeedsData,
     refreshSeeds,
     buildSeedsFromLiveEvents,
+    applySeedWithdrawals,
+    setSeedWithdrawals,
+    loadSeedWithdrawals,
     isSeedingEvent,
     buildOpenHeatGrids,
     buildCategoryHeatGrids,
@@ -889,5 +953,6 @@
     SF_FROM_QUARTERS,
     FINAL_FROM_SEMIS,
     getSeedCatalog: () => seedCatalog,
+    getSeedWithdrawals: () => seedWithdrawals.slice(),
   };
 })(window);

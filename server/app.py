@@ -229,6 +229,14 @@ def meta(key,value):
  c=db()
  with c:c.execute("insert into meta(key,value) values(?,?) on conflict(key) do update set value=excluded.value",(key,value))
  c.close()
+def seed_withdrawals():
+ c=db();row=c.execute("select value from meta where key='seed_withdrawals'").fetchone();c.close()
+ if not row or not row[0]:return []
+ try:
+  data=json.loads(row[0]);return data if isinstance(data,list) else []
+ except (TypeError,json.JSONDecodeError):return []
+def save_seed_withdrawals(items):
+ meta("seed_withdrawals",json.dumps(items,ensure_ascii=False))
 def import_file(raw,digest):
  parsed=parse(raw);c=db()
  if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone():
@@ -441,6 +449,8 @@ class App(SimpleHTTPRequestHandler):
    c.close()
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
+  if path=="/api/public/seed-withdrawals":
+   return self.js({"withdrawals":seed_withdrawals()})
   if path=="/api/public/registrations":
    try:
     c=db();return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
@@ -491,6 +501,9 @@ class App(SimpleHTTPRequestHandler):
   if path=="/api/admin/riders":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();riders=[dict(x) for x in c.execute("select a.id,a.name,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code,coalesce(s.chip_returned,0) chip_returned from athletes a left join athlete_settings s on s.athlete_id=a.id where exists(select 1 from results r where r.athlete_id=a.id) order by a.name")];notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"returnInfo":notice,"riders":riders})
+  if path=="/api/admin/seed-withdrawals":
+   if not self.auth():return self.js({"error":"Unauthorized"},401)
+   return self.js({"withdrawals":seed_withdrawals()})
   if path=="/api/admin/status":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];requests=[dict(x) for x in c.execute("select q.id,q.athlete_id,a.name athlete_name,q.rider_name,q.status,q.requested_at from historical_match_requests q left join athletes a on a.id=q.athlete_id where q.status='pending' order by q.id")];bibs={};
@@ -499,7 +512,7 @@ class App(SimpleHTTPRequestHandler):
    results_by_event={};
    for row in c.execute("select event_id,bib,position from results where nullif(trim(bib),'') is not null order by event_id,position is null,position,bib"):
     results_by_event.setdefault(row[0],[]).append({"bib":str(row[1]),"position":row[2]})
-   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests})
+   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests,"seedWithdrawals":seed_withdrawals()})
   return super().do_GET()
  def do_POST(self):
   path=urlparse(self.path).path
@@ -526,6 +539,34 @@ class App(SimpleHTTPRequestHandler):
       exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)=lower(?)",(tournament["id"],level_id,race_name)).fetchone()
       if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,race_name));created+=1
    c.close();return self.js({"ok":True,"created":created})
+  elif path=="/api/admin/seed-withdrawals":
+   items=seed_withdrawals();action=clean(str(p.get("action","add"))).lower()
+   if action=="clear":
+    save_seed_withdrawals([]);return self.js({"ok":True,"withdrawals":[]})
+   if action=="remove":
+    wid=clean(str(p.get("id","")));bib=clean(str(p.get("bib","")));cat=clean(str(p.get("category","")))
+    kept=[x for x in items if not ((wid and x.get("id")==wid) or (bib and cat and str(x.get("bib",""))==bib and str(x.get("category",""))==cat))]
+    save_seed_withdrawals(kept);return self.js({"ok":True,"withdrawals":kept})
+   # add / upsert by category+bib or category+athlete
+   category=clean(str(p.get("category","Open"))) or "Open"
+   bib=clean(str(p.get("bib","")));athlete_id=clean(str(p.get("athleteId",p.get("athlete_id",""))));name=clean(str(p.get("name","")));note=clean(str(p.get("note","")))
+   seed_val=p.get("seed",None)
+   try:seed_num=int(seed_val) if seed_val not in (None,"") else None
+   except (TypeError,ValueError):seed_num=None
+   if not bib and not athlete_id and not name and seed_num is None:return self.js({"error":"Provide a chip/bib, rider name, athlete id, or seed number"},400)
+   # Resolve identity from current results when possible
+   if (bib or name or seed_num is not None) and not athlete_id:
+    c=db()
+    if bib:
+     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where cast(r.bib as text)=? order by r.position is null,r.position limit 1",(bib,)).fetchone()
+     if hit:athlete_id,name,bib=hit[0],hit[1] or name,str(hit[2] or bib)
+    elif name:
+     hit=c.execute("select a.id,a.name,r.bib from results r join athletes a on a.id=r.athlete_id where lower(a.name)=lower(?) order by r.position is null,r.position limit 1",(name,)).fetchone()
+     if hit:athlete_id,name,bib=hit[0],hit[1] or name,str(hit[2] or bib)
+    c.close()
+   entry={"id":hashlib.sha1((category+"|"+athlete_id+"|"+bib+"|"+name+"|"+str(seed_num or "")).encode()).hexdigest()[:12],"category":category,"athlete_id":athlete_id,"bib":bib,"name":name,"seed":seed_num,"note":note,"at":now()}
+   items=[x for x in items if not (str(x.get("category",""))==category and ((athlete_id and x.get("athlete_id")==athlete_id) or (bib and str(x.get("bib",""))==bib) or (name and history_name(x.get("name",""))==history_name(name))))]
+   items.append(entry);save_seed_withdrawals(items);return self.js({"ok":True,"withdrawal":entry,"withdrawals":items})
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif path=="/api/admin/chip-return-mode":meta("chip_return_mode","true" if p.get("enabled") else "false")
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
