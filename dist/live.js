@@ -104,7 +104,7 @@ async function render(){
     const seedingExtras=raw.filter(item=>window.BracketProjection?.isSeedingEvent?.(item.e)).map(item=>{
       const category=window.BracketProjection?.getSeedCatalog?.()?.categories||{};
       const label=[item.e.tournament,item.e.name,item.e.stage,item.e.level].filter(Boolean).join(' ').toLowerCase();
-      const seedRows=label.includes('grom')?category.Groms||[]:label.includes('women')?category.Women||[]:category.Open||[];
+      const seedRows=label.includes('wild')&&label.includes('grom')?category['Wild Groms']||[]:label.includes('wild')&&label.includes('women')?category['Wild Women']||[]:label.includes('wild')?category['Wild Open']||[]:label.includes('grom')?category.Groms||[]:label.includes('women')?category.Women||[]:category.Open||[];
       const seedByRider=new Map(seedRows.map(row=>[String(row.athlete_id||''),row.seed]));
       return {
         ...item,
