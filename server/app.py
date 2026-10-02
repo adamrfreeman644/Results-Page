@@ -419,17 +419,17 @@ class App(SimpleHTTPRequestHandler):
    key=parse_qs(urlparse(self.path).query).get("key",[""])[0];c=db();rows=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points from historical_results where normal_name=? order by season desc,event_name",(key,))];c.close();return self.js(rows)
   if path.startswith("/api/public/riders/"):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
-   rider=c.execute("select a.id,a.name,a.category,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code from athletes a left join athlete_settings s on s.athlete_id=a.id where a.id=?",(athlete_id,)).fetchone()
+   rider=c.execute("select a.id,a.name,a.category,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code,coalesce(s.chip_returned,0) chip_returned from athletes a left join athlete_settings s on s.athlete_id=a.id where a.id=?",(athlete_id,)).fetchone()
    if not rider:
     c.close()
     try:rider=next((item for item in registration_riders() if item["id"]==athlete_id),None)
     except Exception:rider=None
     if not rider:return self.js({"error":"Rider not found"},404)
-    return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipCode":"","chipReturnInfo":""})
+    return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipReturned":bool(rider.get("chipReturned")),"chipCode":"","chipReturnInfo":""})
    records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
    for record in records:record["time"]=display_time(record["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
-   notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"id":rider["id"],"name":rider["name"],"category":rider["category"],"records":records,"historical":historical,"registered":bool(rider["registered"]),"chipCode":rider["chip_code"],"chipReturnInfo":notice})
+   notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"id":rider["id"],"name":rider["name"],"category":rider["category"],"records":records,"historical":historical,"registered":True,"chipReturned":bool(rider["chip_returned"]),"chipCode":rider["chip_code"],"chipReturnInfo":notice})
   if path=="/api/admin/riders":
    if not self.auth():return self.js({"error":"Unauthorized"},401)
    c=db();riders=[dict(x) for x in c.execute("select a.id,a.name,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code,coalesce(s.chip_returned,0) chip_returned from athletes a left join athlete_settings s on s.athlete_id=a.id where exists(select 1 from results r where r.athlete_id=a.id) order by a.name")];notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"returnInfo":notice,"riders":riders})
