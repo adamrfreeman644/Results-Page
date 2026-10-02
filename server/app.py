@@ -299,7 +299,7 @@ def parse_pasted_results(text):
   grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position})
  if not grouped:raise ValueError("The pasted table has no usable rider rows")
  return grouped
-def import_pasted_results(text):
+def import_pasted_results(text,replace=False):
  parsed=parse_pasted_results(text);c=db();fingerprint=hashlib.sha256(text.encode("utf-8")).hexdigest()+"-pasted-"+str(time.time_ns())
  with c:
   iid=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(fingerprint,now(),"Pasted RaceTec table",len(parsed),sum(len(rows) for rows in parsed.values()))).lastrowid
@@ -307,9 +307,10 @@ def import_pasted_results(text):
   prepared=[dict(row) for row in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
   for order,(event_name,rows_for_event) in enumerate(parsed.items()):
    event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16]
-   # A paste is a per-event update: replace only this event, preserving every
-   # other pasted race already on the board.
-   c.execute("delete from result_laps where event_id=?",(event_id,));c.execute("delete from results where event_id=?",(event_id,));c.execute("delete from events where id=?",(event_id,))
+   # Normal pastes merge into this event. Explicit replacement is available
+   # when an operator deliberately wants to remove riders absent from the paste.
+   if replace:
+    c.execute("delete from result_laps where event_id=?",(event_id,));c.execute("delete from results where event_id=?",(event_id,));c.execute("delete from events where id=?",(event_id,))
    mapping=mappings.get(event_name.casefold())
    if not mapping:
     division=match_division(event_name)
@@ -317,7 +318,7 @@ def import_pasted_results(text):
     if len(candidates)==1:
      item=candidates[0];mapping={"tournament":item["tournament"],"level":item["level"],"stage":item["race"],"race_id":item["id"]}
    tournament,level,stage=(mapping["tournament"],mapping["level"],mapping["stage"]) if mapping else ("","","")
-   c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(event_id,event_name,tournament,level,stage,order))
+   c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?) on conflict(id) do update set name=excluded.name,tournament=excluded.tournament,level=excluded.level,stage=excluded.stage,sort_order=excluded.sort_order",(event_id,event_name,tournament,level,stage,order))
    if mapping:c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,level=excluded.level,stage=excluded.stage,event_name=excluded.event_name,race_id=excluded.race_id",(event_id,tournament,level,stage,event_name,mapping["race_id"]))
    timed=sorted((row for row in rows_for_event if time_ms(row["time"]) is not None),key=lambda row:(time_ms(row["time"]),row["name"].casefold()))
    if not any(row["position"] is not None for row in rows_for_event):
@@ -326,7 +327,7 @@ def import_pasted_results(text):
     athlete=c.execute("select id from athletes where lower(name)=lower(?) order by id limit 1",(row["name"],)).fetchone()
     athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1(row["name"].casefold().encode()).hexdigest()[:16]
     c.execute("insert into athletes(id,name,category) values(?,?,?) on conflict(id) do update set name=excluded.name,category=case when excluded.category<>'' then excluded.category else athletes.category end",(athlete_id,row["name"],row["category"]))
-    c.execute("insert into results(event_id,athlete_id,bib,position,time,category) values(?,?,?,?,?,?)",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"]))
+    c.execute("insert into results(event_id,athlete_id,bib,position,time,category) values(?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"]))
     c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,event_id,athlete_id,row["bib"],row["position"],row["time"]))
   c.execute("insert into meta(key,value) values('source_mode','paste') on conflict(key) do update set value=excluded.value")
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
@@ -588,7 +589,7 @@ class App(SimpleHTTPRequestHandler):
    if not EXPORT_FILE.exists():return self.js({"error":"RDF file not found"},404)
    raw=EXPORT_FILE.read_bytes();import_file(raw,hashlib.sha256(raw).hexdigest()+"-manual-"+str(time.time_ns()));meta("source_mode","rdf");meta("source_state","Manually imported current RDF file")
   elif path=="/api/admin/import-text":
-   result=import_pasted_results(str(p.get("text","")));meta("source_state","Imported pasted RaceTec table");return self.js({"ok":True,**result})
+   result=import_pasted_results(str(p.get("text","")),bool(p.get("replace")));meta("source_state","Imported pasted RaceTec table");return self.js({"ok":True,**result})
   elif path=="/api/admin/source-mode":
    mode="paste" if p.get("mode")=="paste" else "rdf";meta("source_mode",mode);meta("source_state","Using pasted RaceTec table" if mode=="paste" else "Waiting for RDF import")
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
