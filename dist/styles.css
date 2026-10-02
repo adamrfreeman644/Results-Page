@@ -336,3 +336,6 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 
 /* Admin RDF reader health */
 .feed-health{display:grid;gap:3px;padding:12px 13px;border-radius:10px;border:1px solid #69ad9d;background:#e4f5ef;color:#075c4b;font-size:.84rem}.feed-health strong{font-size:.9rem}.feed-health small{color:#3b5865;font-size:.74rem}.feed-health.paused{background:#fff3c7;border-color:#d7a91f;color:#624600}.feed-health.error{background:#fff0ee;border-color:#c9472b;color:#8a2719}
+
+/* At-a-glance timing mode for a RaceTec assignment. */
+#event-list .race-mode-tag{display:inline-flex;align-items:center;gap:4px;margin-left:5px;padding:3px 7px;border-radius:999px;background:#dff2ef;color:#064f58;font-size:.72rem;font-weight:900;letter-spacing:.02em;white-space:nowrap}
