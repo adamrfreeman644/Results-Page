@@ -297,7 +297,6 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 /* Phone glance view: finish, rider number/name, and time only. */
 @media(max-width:600px){
  .race-table:not(.race-table--pending) table,.race-table--pending table{table-layout:fixed}
- .race-table th:nth-child(2),.race-table td:nth-child(2),.race-table th:nth-child(3),.race-table td:nth-child(3){display:none}
  .race-table col.result-pos{width:4.3rem}.race-table col.result-rider{width:auto}.race-table col.result-time{width:5rem}
  .race-table th:first-child,.race-table td:first-child{width:4.3rem;text-align:left}
  .race-table th:last-child,.race-table td:last-child{width:5rem;text-align:right}
@@ -315,3 +314,6 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
  .race-table th:first-child{font-size:0}.race-table th:first-child::after{content:'Finish';font-size:.68rem;letter-spacing:.07em}
  .race-table .rider{width:100%;min-width:0}.race-table .rider .name{min-width:0}
 }
+
+/* Mobile uses a physical three-column table, so every card fills its width. */
+@media(max-width:600px){.race-table col.result-pos{width:16%!important}.race-table col.result-rider{width:66%!important}.race-table col.result-time{width:18%!important}.race-table th:first-child{font-size:.68rem}.race-table th:first-child::after{content:none}.race-table th,.race-table td{overflow:hidden}.race-table .time{white-space:nowrap}}
