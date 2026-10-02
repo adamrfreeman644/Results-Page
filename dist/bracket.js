@@ -2,23 +2,47 @@
 (function (global) {
   const ROLE = { W: 0, RU: 1, "3rd": 2, "4th": 3 };
 
-  /** EOL zigzag: seed lists per eighth-final heat (gate order = array order). */
+  /** Official EOL 32-rider poster heat packs (gate order = array order). */
   const EOL_EIGHTH_FINALS_32 = [
-    [1, 16, 17, 32],
-    [2, 15, 18, 31],
-    [3, 14, 19, 30],
-    [4, 13, 20, 29],
-    [5, 12, 21, 28],
-    [6, 11, 22, 27],
-    [7, 10, 23, 26],
-    [8, 9, 24, 25],
+    [1, 16, 17, 25],
+    [2, 15, 18, 26],
+    [3, 14, 19, 27],
+    [4, 13, 20, 28],
+    [5, 12, 21, 29],
+    [6, 11, 22, 30],
+    [7, 10, 23, 31],
+    [8, 9, 24, 32],
   ];
 
+  /**
+   * Quarter slots from heats — poster mix so a heat's W and RU never share a QF.
+   * Each entry: [heatNum 1-based, place 0=W / 1=RU]
+   */
   const QF_FROM_HEATS = [
-    [1, 3],
-    [2, 4],
-    [6, 8],
-    [5, 7],
+    [
+      [1, 0],
+      [5, 1],
+      [8, 0],
+      [4, 1],
+    ], // QF1
+    [
+      [2, 0],
+      [6, 1],
+      [7, 0],
+      [3, 1],
+    ], // QF2
+    [
+      [6, 0],
+      [2, 1],
+      [3, 0],
+      [7, 1],
+    ], // QF3
+    [
+      [5, 0],
+      [1, 1],
+      [4, 0],
+      [8, 1],
+    ], // QF4
   ];
 
   const SF_FROM_QUARTERS = [
@@ -123,7 +147,8 @@
   }
 
   function roleLabel(stage, num, role) {
-    const place = ["1st place", "2nd place", "3rd place", "4th place"][ROLE[role]];
+    const place =
+      role === "W" ? "Winner" : role === "RU" ? "2nd place" : role === "3rd" ? "3rd place" : "4th place";
     const round =
       stage === "heat"
         ? `H${num}`
@@ -132,7 +157,7 @@
           : stage === "semi"
             ? `SF${num}`
             : "Final";
-    return `${place} ${round}`;
+    return `${place} of ${round}`;
   }
 
   function riderHasTime(rider) {
@@ -145,13 +170,11 @@
     return (seedCatalog?.categories?.[category] || []).some(riderHasTime);
   }
 
-  function slotsFromHeats(heatA, heatB) {
-    return [
-      { from: { stage: "heat", num: heatA }, role: "W" },
-      { from: { stage: "heat", num: heatA }, role: "RU" },
-      { from: { stage: "heat", num: heatB }, role: "W" },
-      { from: { stage: "heat", num: heatB }, role: "RU" },
-    ];
+  function slotsFromHeatResults(spec) {
+    return spec.map(([h, place]) => ({
+      from: { stage: "heat", num: h },
+      role: place === 0 ? "W" : "RU",
+    }));
   }
 
   function slotsFromQuarters(spec) {
@@ -185,8 +208,8 @@
 
   function feedSlots(stage, num) {
     if (stage === "quarter") {
-      const pair = QF_FROM_HEATS[num - 1];
-      return pair ? slotsFromHeats(pair[0], pair[1]) : [];
+      const spec = QF_FROM_HEATS[num - 1];
+      return spec ? slotsFromHeatResults(spec) : [];
     }
     if (stage === "semi") {
       const spec = SF_FROM_QUARTERS[num - 1];
@@ -790,8 +813,43 @@
     return buildCategoryHeatGrids("Open").heats;
   }
 
+  /** Full bracket skeleton with Seed N / Winner-of placeholders (no RaceTec data needed). */
+  function previewTournament(category) {
+    const cat = category || "Open";
+    if (!seedCatalog) {
+      indexSeeds({
+        event: "Structure preview",
+        source: "rules",
+        categories: { Open: [], Women: [], Groms: [] },
+      });
+    }
+    const family =
+      cat === "Women" ? "women" : cat === "Groms" ? "groms" : cat === "Wildcard" ? "wild-men" : "open-men";
+    const riderCount = (seedCatalog?.categories?.[FAMILY_SEED_CAT[family]] || []).length || (family === "open-men" ? 32 : 16);
+    const firstStage = family === "open-men" || riderCount > 16 ? "heat" : "quarter";
+    const count = firstStage === "heat" ? 8 : 4;
+    const items = [];
+    for (let i = 1; i <= count; i++) {
+      items.push({
+        e: {
+          id: `preview:${family}:${firstStage}:${i}`,
+          name: displayName(family, firstStage, i),
+          stage: displayName(family, firstStage, i),
+          tournament: cat === "Open" || cat === "Open Men" ? "Open" : cat,
+          level: "Bracket",
+          highlight_count: 2,
+          multi_lap: 0,
+          count: 0,
+        },
+        r: [],
+      });
+    }
+    return enrichTournament(items);
+  }
+
   global.BracketProjection = {
     enrichTournament,
+    previewTournament,
     stageOfItem,
     parseHeat,
     navigationStage,

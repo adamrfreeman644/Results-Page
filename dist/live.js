@@ -73,34 +73,41 @@ function renderCard(item){
 
 async function render(){
   try{
-    const f=await get('/api/public/events');
+    let f={events:[],updatedAt:null};
+    try{f=await get('/api/public/events');}catch(_){/* structure preview still works offline */}
     const received=Date.parse(f.updatedAt||'');
     if(Number.isFinite(received)&&f.updatedAt!==lastSourceStamp){
       lastSourceStamp=f.updatedAt;lastUpdateAt=received;renderUpdateAge();scheduleStaleLabel();
     }else if(lastSourceStamp===null){
       renderUpdateAge();scheduleStaleLabel();
     }
-    // One batched response replaces a separate request for every race card.
-    const ids=f.events.map(e=>String(e.id)).filter(id=>!id.startsWith('manual:'));
+    const ids=(f.events||[]).map(e=>String(e.id)).filter(id=>!id.startsWith('manual:')&&!id.startsWith('preview:'));
     const resultMap=ids.length?await get('/api/public/results?ids='+encodeURIComponent(ids.join(','))).catch(()=>({})):{};
-    const allItems=f.events.map(e=>({e,r:resultMap[String(e.id)]||[]}));
+    const allItems=(f.events||[]).map(e=>({e,r:resultMap[String(e.id)]||[]}));
     if(window.BracketProjection?.refreshSeeds){
       await BracketProjection.refreshSeeds({eventItems:allItems});
     }
 
-    const rawTs=[...new Set(f.events.map(e=>e.tournament||'Tournament'))];
-    const ts=[...new Set(rawTs.map(displayTournament))].sort((a,b)=>tournamentRank(a)-tournamentRank(b)||a.localeCompare(b));
+    const rawTs=[...new Set((f.events||[]).map(e=>e.tournament||'Tournament'))];
+    const liveTabs=[...new Set(rawTs.map(displayTournament))];
+    const ts=(liveTabs.length?liveTabs:['Open','Women','Groms']).sort((a,b)=>tournamentRank(a)-tournamentRank(b)||a.localeCompare(b));
     if(!selected||!ts.includes(selected))selected=ts[0];
     $('#event-tabs').innerHTML=ts.map(t=>`<button class="tab ${t===selected?'active':''}" data-t="${esc(t)}">${esc(t)}</button>`).join('');
     $('#event-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.t;selectedLevel=null;render()});
 
     const raw=allItems.filter(item=>displayTournament(item.e.tournament||'Tournament')===selected);
-    if(!raw.length){$('#race-title').textContent='No published results';$('#result-count').textContent='';$('#round-nav').innerHTML='';$('#stage-results').innerHTML='';return}
-
     const knockout=raw.filter(item=>!(window.BracketProjection?.isSeedingEvent?.(item.e)));
-    const enriched=window.BracketProjection
-      ? BracketProjection.enrichTournament(knockout)
-      : {bracket:knockout.map(x=>({...x,pending:false})),extras:[]};
+    let enriched;
+    let structureOnly=false;
+    if(knockout.length&&window.BracketProjection){
+      enriched=BracketProjection.enrichTournament(knockout);
+    }else if(window.BracketProjection?.previewTournament){
+      enriched=BracketProjection.previewTournament(selected);
+      structureOnly=true;
+    }else{
+      enriched={bracket:knockout.map(x=>({...x,pending:false})),extras:[]};
+    }
+
     const seedingExtras=raw.filter(item=>window.BracketProjection?.isSeedingEvent?.(item.e)).map(item=>{
       const category=window.BracketProjection?.getSeedCatalog?.()?.categories||{};
       const label=[item.e.tournament,item.e.name,item.e.stage,item.e.level].filter(Boolean).join(' ').toLowerCase();
@@ -113,19 +120,22 @@ async function render(){
       };
     });
     const all=[...enriched.bracket,...enriched.extras,...seedingExtras];
+    if(!all.length){$('#race-title').textContent='No published results';$('#result-count').textContent='';$('#round-nav').innerHTML='';$('#stage-results').innerHTML='';return}
     const levels=[...new Set(all.map(item=>BracketProjection?BracketProjection.stageOfItem(item):'Qualifiers'))].sort((a,b)=>levelRank(a)-levelRank(b));
     if(!selectedLevel||!levels.includes(selectedLevel))selectedLevel=levels[0];
     const pendingCount=all.filter(x=>x.pending).length;
     $('#race-title').textContent=selected;
-    $('#result-count').textContent=`${raw.length} published${pendingCount?` · ${pendingCount} up next`:''}`;
+    $('#result-count').textContent=structureOnly
+      ?`Bracket structure · who faces who (no race data yet)`
+      :`${raw.length} published${pendingCount?` · ${pendingCount} up next`:''}`;
     $('#round-nav').innerHTML=levels.map((level,i)=>`<button class="round ${level===selectedLevel?'active':''}" data-level="${esc(level)}"><span class="round-name">${esc(level)}</span><span class="round-step">${i+1}</span></button>`).join('');
     $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
-    $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">Rows are start order. Heats: better seed → earlier gate. Later rounds: both race winners take starts 1–2 (by seed), both 2nds take 3–4. <a href="/seeding/">Open seeding board</a></p>`;
+    $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">${structureOnly?'Click a heat to expand. Heats show Seed N; later rounds show Winner of H… / 2nd place of …. ':'Rows are start order. Heats: better seed → earlier gate. Later rounds: winners take starts 1–2 (by seed), 2nds take 3–4. '}<a href="/seeding/">Open seeding board</a></p>`;
     $('#stage-results').querySelectorAll('.race-card-header[data-race-detail]').forEach(header=>{
       header.addEventListener('click',()=>openRaceDetail(header.dataset.raceDetail));
     });
-  }catch{
+  }catch(err){
     $('#race-title').textContent='Waiting for timing feed';
     $('#result-count').textContent='The live results service is not connected yet.';
   }
