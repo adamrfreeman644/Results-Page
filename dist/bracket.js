@@ -165,8 +165,10 @@
     }));
   }
 
+  // Consolation paths are fed from the two semi-finals: the two 3rd-place
+  // finishers race each other, as do the two 4th-place finishers.
   function placementSlots(role) {
-    return [1, 2, 3, 4].map((num) => ({ from: { stage: "quarter", num }, role }));
+    return [1, 2].map((num) => ({ from: { stage: "semi", num }, role }));
   }
 
   function runnerUpSlots() {
@@ -195,37 +197,31 @@
   }
 
   function expectedNodes(family, seenStages) {
-    const has = (s) => seenStages.has(s);
+    // Build every downstream path as soon as a tournament has a configured
+    // first round (or a seeding session). This makes the whole route visible
+    // before RaceTec has published a result in any individual race.
+    if (!seenStages.size) return [];
+
+    const category = FAMILY_SEED_CAT[family];
+    const riderCount = (seedCatalog?.categories?.[category] || []).length;
+    const hasHeats = seenStages.has("heat") || family === "open-men" || riderCount > 16;
+    const hasQuarters = hasHeats || seenStages.has("quarter") || riderCount > 8;
     const nodes = [];
-    if (has("heat") || (family === "open-men" && (has("quarter") || has("semi") || has("final")))) {
-      if (has("heat") || family === "open-men") {
-        for (let i = 1; i <= 8; i++) nodes.push({ stage: "heat", num: i });
-      }
+
+    if (hasHeats) {
+      for (let i = 1; i <= 8; i++) nodes.push({ stage: "heat", num: i });
     }
-    if (has("heat") || has("quarter")) {
+    if (hasQuarters) {
       for (let i = 1; i <= 4; i++) nodes.push({ stage: "quarter", num: i });
     }
-    if (has("semi") || has("quarter") || has("heat") || has("final")) {
-      nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
-    }
-    if (has("quarter") || has("third") || has("fourth") || has("runnerup")) {
-      nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
-    }
-    if (has("final") || has("semi") || has("quarter") || has("heat")) {
-      nodes.push({ stage: "final", num: 1 });
-    }
-    if (has("runnerup") || has("third") || has("fourth") || has("quarter")) {
-      nodes.push({ stage: "runnerup", num: 1 });
-    }
-    const out = [];
-    const used = new Set();
-    for (const n of nodes) {
-      const k = `${n.stage}:${n.num}`;
-      if (used.has(k)) continue;
-      used.add(k);
-      out.push(n);
-    }
-    return out;
+
+    // Every tournament converges at two semis, then exposes the main final
+    // and all consolation paths sourced from those same semis.
+    nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
+    nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
+    nodes.push({ stage: "final", num: 1 }, { stage: "runnerup", num: 1 });
+
+    return nodes;
   }
 
   function sortFinishers(rows) {
