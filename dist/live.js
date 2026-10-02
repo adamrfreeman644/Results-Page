@@ -99,8 +99,8 @@ async function render(){
 
     const knockout=raw.filter(item=>!(window.BracketProjection?.isSeedingEvent?.(item.e)));
     const enriched=window.BracketProjection
-      ? BracketProjection.enrichTournament(knockout.length?knockout:raw)
-      : {bracket:raw.map(x=>({...x,pending:false})),extras:[]};
+      ? BracketProjection.enrichTournament(knockout)
+      : {bracket:knockout.map(x=>({...x,pending:false})),extras:[]};
     const seedingExtras=raw.filter(item=>window.BracketProjection?.isSeedingEvent?.(item.e)).map(item=>{
       const category=window.BracketProjection?.getSeedCatalog?.()?.categories||{};
       const label=[item.e.tournament,item.e.name,item.e.stage,item.e.level].filter(Boolean).join(' ').toLowerCase();
