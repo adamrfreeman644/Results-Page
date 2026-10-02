@@ -510,8 +510,8 @@ class App(SimpleHTTPRequestHandler):
    for row in c.execute("select r.event_id,r.bib from results r where nullif(trim(r.bib),'') is not null order by r.event_id,r.position is null,r.position,r.bib"):
     bibs.setdefault(row[0],[]).append(str(row[1]))
    results_by_event={};
-   for row in c.execute("select event_id,bib,position from results where nullif(trim(bib),'') is not null order by event_id,position is null,position,bib"):
-    results_by_event.setdefault(row[0],[]).append({"bib":str(row[1]),"position":row[2]})
+   for row in c.execute("select event_id,bib,position,time from results where nullif(trim(bib),'') is not null order by event_id,position is null,position,bib"):
+    results_by_event.setdefault(row[0],[]).append({"bib":str(row[1]),"position":row[2],"time":display_time(row[3])})
    c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests,"seedWithdrawals":seed_withdrawals()})
   return super().do_GET()
  def do_POST(self):
