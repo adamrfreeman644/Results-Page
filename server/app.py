@@ -281,6 +281,7 @@ def import_pasted_results(text):
    event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16];mapping=mappings.get(event_name.casefold())
    tournament,level,stage=(mapping["tournament"],mapping["level"],mapping["stage"]) if mapping else ("","","")
    c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(event_id,event_name,tournament,level,stage,order))
+   if mapping:c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?) on conflict(event_id) do update set tournament=excluded.tournament,level=excluded.level,stage=excluded.stage,event_name=excluded.event_name,race_id=excluded.race_id",(event_id,tournament,level,stage,event_name,mapping["race_id"]))
    timed=sorted((row for row in rows_for_event if time_ms(row["time"]) is not None),key=lambda row:(time_ms(row["time"]),row["name"].casefold()))
    if not any(row["position"] is not None for row in rows_for_event):
     for position,row in enumerate(timed,1):row["position"]=position
