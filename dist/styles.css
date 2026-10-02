@@ -339,3 +339,11 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 
 /* At-a-glance timing mode for a RaceTec assignment. */
 #event-list .race-mode-tag{display:inline-flex;align-items:center;gap:4px;margin-left:5px;padding:3px 7px;border-radius:999px;background:#dff2ef;color:#064f58;font-size:.72rem;font-weight:900;letter-spacing:.02em;white-space:nowrap}
+
+/* Rider category is shown consistently across every result table. */
+.rider-link .name{min-width:0}
+.rider-category{display:inline-flex;align-items:center;flex:0 0 auto;padding:3px 6px;border-radius:999px;font-size:.65rem;font-weight:900;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.rider-category--open{background:#dbeafe;color:#1e3a8a}.bib--open{background:#2563eb;color:#fff}
+.rider-category--female{background:#fce7f3;color:#9d174d}.bib--female{background:#db2777;color:#fff}
+.rider-category--grom{background:#dcfce7;color:#166534}.bib--grom{background:#16a34a;color:#fff}
+@media(max-width:600px){.rider-category{padding:3px 5px;font-size:.58rem}.race-table .rider-link>span:last-child{min-width:auto}.race-table .rider-link .name{min-width:0}}
