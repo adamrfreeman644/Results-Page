@@ -19,7 +19,7 @@ def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
  c.executescript("""create table if not exists events(id text primary key,name text not null,visible integer not null default 1,sort_order integer not null default 0);
  create table if not exists athletes(id text primary key,name text not null);
- create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,primary key(event_id,athlete_id));
+ create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,category text not null default '',primary key(event_id,athlete_id));
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
  create table if not exists result_laps(event_id text,athlete_id text,lap_number integer,time text,primary key(event_id,athlete_id,lap_number));
@@ -52,6 +52,8 @@ def db():
  try:c.execute("alter table events add column publish_mode text not null default 'populated'")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table athlete_settings add column chip_returned integer not null default 0")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table results add column category text not null default ''")
  except sqlite3.OperationalError:pass
  # Older installations used an INTEGER primary key for events. RaceTec event IDs
  # are compound text values (for example, "14:43"), so migrate without losing
@@ -105,6 +107,12 @@ def match_division(value):
  if "grom" in value:return "groms"
  if "men" in value or "open" in value:return "open"
  return ""
+def rider_category(values):
+ text=" ".join(clean(value).casefold() for value in values)
+ if re.search(r"\\bgroms?\\b",text):return "Grom"
+ if re.search(r"\\b(female|women|womens)\\b",text):return "Female"
+ if re.search(r"\\b(open|men|mens)\\b",text):return "Open"
+ return ""
 def rows(text,table):
  p="[DATA].["+table+"]:"
  for line in text.splitlines():
@@ -115,9 +123,11 @@ def parse(raw):
  elif raw.startswith(b"\xfe\xff"): text=raw.decode("utf-16")
  else: text=raw.decode("utf-8-sig","replace")
  if "[DATA].[EventAthlete]:" not in text: raise ValueError("Not a RaceTec RDF export: EventAthlete data is missing")
- athletes={};races={};events={};out={};splits={};athlete_splits={};guns={}
+ athletes={};athlete_categories={};races={};events={};out={};splits={};athlete_splits={};guns={}
  for r in rows(text,"Athlete"):
-  if val(r,0): athletes[val(r,0)]=" ".join(x for x in (val(r,1),val(r,2)) if x)
+  if val(r,0):
+   athletes[val(r,0)]=" ".join(x for x in (val(r,1),val(r,2)) if x)
+   athlete_categories[val(r,0)]=rider_category(r)
  for r in rows(text,"Race"):
   if val(r,0): races[val(r,0)]=val(r,1)
  for r in rows(text,"RaceEvent"):
@@ -137,14 +147,14 @@ def parse(raw):
   # an assigned mass race appear on the public page while results are pending.
   try: pos=int(val(r,24,26)) if val(r,24,26) else None
   except ValueError: pos=None
-  if eid and aid and athletes.get(aid): out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,display_time(val(r,21,22,23))))
+  if eid and aid and athletes.get(aid): out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,display_time(val(r,21,22,23)),rider_category(r) or athlete_categories.get(aid,"")))
  parsed=[]
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
   normal=sorted(standing,key=lambda x:(x[3] is None,x[3] if x[3] is not None else 0,x[1].casefold()))
   lap_splits=sorted(splits.get(eid,[]));fast=[];gun=guns.get(eid);lap_details={}
   if lap_splits and gun is not None:
-   for aid,rider,bib,_,_ in standing:
+   for aid,rider,bib,_,_,_ in standing:
     marks=athlete_splits.get((eid,aid),{});previous=gun;laps=[]
     for lap_number,split_id in lap_splits:
      mark=marks.get(split_id)
@@ -154,8 +164,8 @@ def parse(raw):
       previous=mark
     if laps:
      lap_details[aid]=[(number,ms_display(lap)) for number,lap in laps]
-     fast.append((aid,rider,bib,0,ms_display(min(lap for _,lap in laps))))
-  fastest=[(aid,rider,bib,index,timing) for index,(aid,rider,bib,_,timing) in enumerate(sorted(fast,key=lambda x:(time_ms(x[4]) or 0,x[1].casefold())),1)]
+     fast.append((aid,rider,bib,0,ms_display(min(lap for _,lap in laps)),athlete_categories.get(aid,"")))
+  fastest=[(aid,rider,bib,index,timing,category) for index,(aid,rider,bib,_,timing,category) in enumerate(sorted(fast,key=lambda x:(time_ms(x[4]) or 0,x[1].casefold())),1)]
   parsed.append((eid,name,tournament,order,normal,fastest,lap_details))
  if not parsed: raise ValueError("The RDF export contains no RaceEvent definitions")
  return parsed
@@ -217,9 +227,9 @@ def import_file(raw,digest):
    multi_lap=(race_config and race_config["fastest_lap"]) or clean(tournament).casefold()=="multi lap"
    if multi_lap and fastest: standing=fastest
    c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(eid,name,tournament,level,stage,order))
-   for aid,rider,bib,pos,timing in standing:
+   for aid,rider,bib,pos,timing,category in standing:
     c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(aid,rider))
-    c.execute("insert into results values(?,?,?,?,?)",(eid,aid,bib,pos,timing));c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,eid,aid,bib,pos,timing))
+    c.execute("insert into results(event_id,athlete_id,bib,position,time,category) values(?,?,?,?,?,?)",(eid,aid,bib,pos,timing,category));c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,eid,aid,bib,pos,timing))
     for lap_number,lap_time in lap_details.get(aid,[]):c.execute("insert into result_laps values(?,?,?,?)",(eid,aid,lap_number,lap_time))
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),));c.execute("insert into meta(key,value) values('last_error','') on conflict(key) do update set value=excluded.value")
   c.execute("insert into meta(key,value) values('status','Live') on conflict(key) do nothing")
@@ -310,11 +320,11 @@ class App(SimpleHTTPRequestHandler):
    c=db();out={item:[] for item in ids}
    if ids:
     marks=",".join("?" for _ in ids)
-    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
+    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time,r.category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
+   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time,r.category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
     item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
    c.close()
