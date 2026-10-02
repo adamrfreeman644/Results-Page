@@ -37,7 +37,7 @@ async function get(u){
 }
 
 function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
-  const rows=pending&&projectedRows?projectedRows:r,mobileGlance=!expanded,compact=pending&&!expanded&&!mobileGlance,timeLabel=e.multi_lap?'Fastest lap':'Time',badge=pending?'Up next':'Results';
+  const rows=pending&&projectedRows?projectedRows:r,mobileGlance=true,compact=pending&&!expanded&&!mobileGlance,timeLabel=e.multi_lap?'Fastest lap':'Time',badge=pending?'Up next':'Results';
   const countLabel=pending?`${rows.filter(x=>x.known).length}/${rows.length||4} locked in`:`${rows.length} riders`,detailId=String(e.id||e.name);
   if(!expanded)raceDetails.set(detailId,{e,r,options:{pending,projectedRows}});
   const body=rows.length?rows.map(x=>{
