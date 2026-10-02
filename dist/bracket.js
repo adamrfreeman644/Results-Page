@@ -171,10 +171,10 @@
 
   function runnerUpSlots() {
     return [
-      { from: { stage: "third", num: 1 }, role: "W" },
-      { from: { stage: "third", num: 1 }, role: "RU" },
-      { from: { stage: "fourth", num: 1 }, role: "W" },
-      { from: { stage: "fourth", num: 1 }, role: "RU" },
+      { from: { stage: "semi", num: 1 }, role: "3rd" },
+      { from: { stage: "semi", num: 1 }, role: "4th" },
+      { from: { stage: "semi", num: 2 }, role: "3rd" },
+      { from: { stage: "semi", num: 2 }, role: "4th" },
     ];
   }
 
