@@ -37,7 +37,7 @@ async function get(u){
 }
 
 function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
-  const rows=pending&&projectedRows?projectedRows:r,compact=pending&&!expanded&&!window.matchMedia('(max-width: 600px)').matches,timeLabel=e.multi_lap?'Fastest lap':'Time',badge=pending?'Up next':'Results';
+  const rows=pending&&projectedRows?projectedRows:r,mobileGlance=!expanded&&window.matchMedia('(max-width: 600px)').matches,compact=pending&&!expanded&&!mobileGlance,timeLabel=e.multi_lap?'Fastest lap':'Time',badge=pending?'Up next':'Results';
   const countLabel=pending?`${rows.filter(x=>x.known).length}/${rows.length||4} locked in`:`${rows.length} riders`,detailId=String(e.id||e.name);
   if(!expanded)raceDetails.set(detailId,{e,r,options:{pending,projectedRows}});
   const body=rows.length?rows.map(x=>{
@@ -45,10 +45,12 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
     const pathLabel=x.fromLabel||x.placeholder||x.name||(x.seed?`Seed ${x.seed}`:'Awaiting qualification');
     const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`:`<span class="rider rider-placeholder"><span class="name">${esc(pathLabel)}</span></span>`;
+    const finishLabel=pendingRow?'N/A':(finish==null||finish===''?'N/A':finish),timeValue=pendingRow&&(x.time==='Not raced yet'||!x.time)?'N/A':x.time;
     if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
-    return `<tr class="${cls}"><td class="place">${esc(pendingRow?'N/A':(finish==null||finish===''?'N/A':finish))}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(pendingRow&&(x.time==='Not raced yet'||!x.time)?'N/A':x.time)}</td></tr>`;
-  }).join(''):compact?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
-  const columns=compact?'<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>':`<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
+    if(mobileGlance)return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}</td></tr>`;
+    return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed??'—'}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}</td></tr>`;
+  }).join(''):compact?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':mobileGlance?'<tr><td colspan="3">No results yet.</td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
+  const columns=compact?'<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>':mobileGlance?`<colgroup><col class="result-pos"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`:`<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${esc(timeLabel)}</th></tr></thead>`;
   const headerContent=`<div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b>`;
   const cardHeader=expanded?`<header>${headerContent}</header>`:`<button type="button" class="race-card-header" data-race-detail="${esc(detailId)}" aria-label="Open ${esc(e.name)} details">${headerContent}</button>`;
   return `<article class="race-table ${pending?'race-table--pending':''}">${cardHeader}<div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
