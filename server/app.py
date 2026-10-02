@@ -285,7 +285,7 @@ def parse_pasted_results(text):
  net_col=field("Net time","Net")
  leg_col=field("Finish Leg Time","Leg time")
  position_col=field("Overall position","Position","Overall")
- lap_cols=sorted(((int(match.group(1)),header) for key,header in headers.items() if (match:=re.fullmatch(r"lap\\s*(\\d+)\\s*leg\\s*time",key,re.I))),key=lambda item:item[0])
+ lap_cols=sorted(((int(match.group(1)),header) for key,header in headers.items() if (match:=re.fullmatch(r"lap(\d+)legtime",key,re.I))),key=lambda item:item[0])
  if not all((event_col,first_col,last_col,bib_col)):raise ValueError("The pasted table needs EventDescr, First name, Last name, and Race number columns")
  grouped={}
  for row in reader:
