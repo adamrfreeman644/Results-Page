@@ -243,11 +243,14 @@
       for (let i = 1; i <= 4; i++) nodes.push({ stage: "quarter", num: i });
     }
 
-    // Every tournament converges at two semis, then exposes the main final
-    // and all consolation paths sourced from those same semis.
+    // Wild Card tournaments run directly through semis to a final. The main
+    // Open/Women/Groms tournaments also publish their consolation races.
     nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
-    nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
-    nodes.push({ stage: "final", num: 1 }, { stage: "runnerup", num: 1 });
+    if (!family.startsWith("wild-")) {
+      nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
+    }
+    nodes.push({ stage: "final", num: 1 });
+    if (!family.startsWith("wild-")) nodes.push({ stage: "runnerup", num: 1 });
 
     return nodes;
   }
