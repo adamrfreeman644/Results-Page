@@ -413,7 +413,9 @@
     const seenStagesByFamily = new Map();
 
     for (const item of items) {
-      const parsed =\n        parseHeat([item.e.tournament, item.e.stage].filter(Boolean).join(" ")) ||\n        parseHeat([item.e.tournament, item.e.name].filter(Boolean).join(" "));
+      const parsed =
+        parseHeat([item.e.tournament, item.e.stage].filter(Boolean).join(" ")) ||
+        parseHeat([item.e.tournament, item.e.name].filter(Boolean).join(" "));
       if (!parsed) {
         extras.push({
           ...item,
