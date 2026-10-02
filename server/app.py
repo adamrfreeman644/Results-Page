@@ -123,7 +123,7 @@ def ms_display(total):
  h,total=divmod(total,3600000);minute,total=divmod(total,60000);second,milli=divmod(total,1000)
  return (str(h)+":" if h else (str(minute).zfill(2)+":" if minute else ""))+str(second).zfill(2)+"."+str(milli).zfill(3)
 def match_name(value):
- value=re.sub(r"[^a-z0-9]+"," ",clean(value).lower().replace("heats","heat").replace("semifinal","semi").replace("quarterfinal","quarter"))
+ value=re.sub(r"[^a-z0-9]+"," ",clean(value).lower().replace("wild card","wild").replace("wildcard","wild").replace("heats","heat").replace("semifinal","semi").replace("quarterfinal","quarter"))
  return re.sub(r"\b(women|womens|men|mens|grom|groms|open)\b","",value).strip()
 def match_division(value):
  value=clean(value).lower()
