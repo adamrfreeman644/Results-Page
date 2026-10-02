@@ -303,3 +303,15 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
  .race-table th:last-child,.race-table td:last-child{width:5rem;text-align:right}
  .race-table .rider-placeholder .name{white-space:normal;overflow:visible;text-overflow:clip;color:#697477;font-style:italic}
 }
+
+/* Final mobile summary geometry: no hidden column space, no clipped table. */
+@media(max-width:600px){
+ .race-table .table-scroll{width:100%;overflow:hidden}
+ .race-table table{width:100%!important;min-width:0!important;max-width:100%;table-layout:fixed}
+ .race-table col.result-start,.race-table col.result-seed{display:none}
+ .race-table col.result-pos{width:16%}.race-table col.result-rider{width:66%}.race-table col.result-time{width:18%}
+ .race-table th:first-child,.race-table td:first-child{width:auto}
+ .race-table th:last-child,.race-table td:last-child{width:auto}
+ .race-table th:first-child{font-size:0}.race-table th:first-child::after{content:'Finish';font-size:.68rem;letter-spacing:.07em}
+ .race-table .rider{width:100%;min-width:0}.race-table .rider .name{min-width:0}
+}
