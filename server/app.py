@@ -76,6 +76,28 @@ def db():
   row=c.execute("select id from levels where tournament_id=? and name='General'",(tournament_id,)).fetchone();level_id=row[0] if row else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament_id,"General")).lastrowid
   c.execute("update races set level_id=? where tournament_id=? and level_id is null",(level_id,tournament_id))
  return c
+
+def ensure_wildcard_brackets():
+ c=db();created=0
+ with c:
+  tournaments=list(c.execute("select id,name from tournaments"))
+  for tournament in tournaments:
+   # Wild Card - Open, Wild Card - Women and Wild Card - Groms are all
+   # 16-rider brackets: quarter-finals, semis, then the finals routes.
+   name=clean(tournament["name"])
+   if "wild" not in name.casefold() or not re.search(r"open|women|grom",name,re.I):continue
+   for level_name,race_names in (
+    ("Quarters",("Quarter 1","Quarter 2","Quarter 3","Quarter 4")),
+    ("Semi",("Semi 1","Semi 2","3rd's","4th's")),
+    ("Finals",("Final","Runner Up's")),
+   ):
+    level=c.execute("select id from levels where tournament_id=? and lower(name)=lower(?) order by id limit 1",(tournament["id"],level_name)).fetchone()
+    level_id=level["id"] if level else c.execute("insert into levels(tournament_id,name) values(?,?)",(tournament["id"],level_name)).lastrowid
+    for race_name in race_names:
+     exists=c.execute("select 1 from races where tournament_id=? and level_id=? and lower(name)=lower(?)",(tournament["id"],level_id,race_name)).fetchone()
+     if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,race_name));created+=1
+ c.close();return created
+
 def clean(x):
  x=(x or "").strip();return "" if x.upper() in ("NULL","NONE","-") else x
 def val(row,*ix):
@@ -579,6 +601,8 @@ class App(SimpleHTTPRequestHandler):
   return self.js({"ok":True})
 if __name__=="__main__":
  DB_FILE.parent.mkdir(parents=True,exist_ok=True)
+ created=ensure_wildcard_brackets()
+ if created:print("Created",created,"Wild Card bracket races",flush=True)
  try:import_historical()
  except Exception as e:print("Bundled historic history import failed:",e,flush=True)
  threading.Thread(target=watch,daemon=True).start();ThreadingHTTPServer(("0.0.0.0",int(os.getenv("PORT","6543"))),App).serve_forever()
