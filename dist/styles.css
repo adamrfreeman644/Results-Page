@@ -362,3 +362,14 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
 
 /* Keep the stage selector visible even when a tournament currently has one stage. */
 body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
+
+
+/* On phones, elapsed time is never truncated: reserve a fixed final column. */
+@media(max-width:600px){
+ body[data-page="public"] .race-table col.result-pos{width:52px!important}
+ body[data-page="public"] .race-table col.result-rider{width:auto!important}
+ body[data-page="public"] .race-table col.result-time{width:120px!important}
+ body[data-page="public"] .race-table th:last-child,
+ body[data-page="public"] .race-table td:last-child{width:120px!important;min-width:120px!important;padding-right:8px;padding-left:6px}
+ body[data-page="public"] .race-table .rider{min-width:0}
+}
