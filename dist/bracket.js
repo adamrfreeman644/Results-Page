@@ -49,6 +49,7 @@
     groms: "Groms",
     "wild-men": "Wildcard",
     "wild-women": "Women",
+    "wild-groms": "Groms",
   };
 
   let seedCatalog = null; // { categories: { Open: [{name,seed,timeSec}] } }
@@ -67,6 +68,7 @@
   function familyFromName(name) {
     const n = String(name || "").toLowerCase();
     if (n.includes("wild") && n.includes("women")) return "wild-women";
+    if (n.includes("wild") && n.includes("grom")) return "wild-groms";
     if (n.includes("wild")) return "wild-men";
     if (n.includes("grom")) return "groms";
     if (n.includes("women")) return "women";
@@ -105,6 +107,7 @@
       groms: "Groms",
       "wild-men": "Wild - Mens",
       "wild-women": "Wild - Womens",
+      "wild-groms": "Wild - Groms",
     }[family] || "Race";
     if (stage === "heat") return `${prefix} Heats ${num}`;
     if (stage === "quarter") return `${prefix} Quarter ${num}`;
