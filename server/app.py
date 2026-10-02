@@ -438,11 +438,14 @@ class App(SimpleHTTPRequestHandler):
    except Exception as e:return self.js({"error":"Registration list unavailable: "+str(e)[:200]},503)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
+   source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0]
+   source_like="paste:%" if source_mode=="paste" else "paste:%"
+   source_op="like" if source_mode=="paste" else "not like"
    if query.isdigit():
-    rows=[dict(x) for x in c.execute("select distinct a.id,a.name from athletes a join results r on r.athlete_id=a.id where cast(r.bib as text) like ? order by case when cast(r.bib as text)=? then 0 else 1 end,a.name limit 10",(query+"%",query))]
+    rows=[dict(x) for x in c.execute("select distinct a.id,a.name from athletes a join results r on r.athlete_id=a.id join events e on e.id=r.event_id where e.id "+source_op+" ? and cast(r.bib as text) like ? order by case when cast(r.bib as text)=? then 0 else 1 end,a.name limit 10",(source_like,query+"%",query))]
    elif len(query)>=2:
     key=match_name(query);ranked=[]
-    for athlete in c.execute("select id,name from athletes"):
+    for athlete in c.execute("select id,name from athletes a where exists(select 1 from results r join events e on e.id=r.event_id where r.athlete_id=a.id and e.id "+source_op+" ?)",(source_like,)):
      name_key=match_name(athlete["name"])
      token_score=max([difflib.SequenceMatcher(None,key,part).ratio() for part in name_key.split()] or [0])
      score=max(difflib.SequenceMatcher(None,key,name_key).ratio(),token_score)
@@ -458,6 +461,9 @@ class App(SimpleHTTPRequestHandler):
    key=parse_qs(urlparse(self.path).query).get("key",[""])[0];c=db();rows=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points from historical_results where normal_name=? order by season desc,event_name",(key,))];c.close();return self.js(rows)
   if path.startswith("/api/public/riders/"):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
+   source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0]
+   source_like="paste:%" if source_mode=="paste" else "paste:%"
+   source_op="like" if source_mode=="paste" else "not like"
    rider=c.execute("select a.id,a.name,a.category,coalesce(s.registered,0) registered,coalesce(s.chip_code,'') chip_code,coalesce(s.chip_returned,0) chip_returned from athletes a left join athlete_settings s on s.athlete_id=a.id where a.id=?",(athlete_id,)).fetchone()
    if not rider:
     c.close()
@@ -465,7 +471,7 @@ class App(SimpleHTTPRequestHandler):
     except Exception:rider=None
     if not rider:return self.js({"error":"Rider not found"},404)
     return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipReturned":bool(rider.get("chipReturned")),"chipCode":"","chipReturnInfo":""})
-   records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,))]
+   records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? and e.id "+source_op+" ? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,source_like))]
    for record in records:record["time"]=display_time(record["time"])
    historical=[dict(x) for x in c.execute("select season,division,event_name,rider_name,position,points,match_score from historical_results where athlete_id=? and match_score>=0.999999 order by season desc,event_name",(athlete_id,))]
    notice=(c.execute("select value from meta where key='chip_return_info'").fetchone() or [""])[0];c.close();return self.js({"id":rider["id"],"name":rider["name"],"category":rider["category"],"records":records,"historical":historical,"registered":True,"chipReturned":bool(rider["chip_returned"]),"chipCode":rider["chip_code"],"chipReturnInfo":notice})
