@@ -456,6 +456,28 @@ function qualifiedBibs(target, events, results) {
   });
   return bibs.every(Boolean) ? bibs.join(",") : "";
 }
+const EOL_HEAT_SEEDS=[[1,16,17,25],[2,15,18,26],[3,14,19,27],[4,13,20,28],[5,12,21,29],[6,11,22,30],[7,10,23,31],[8,9,24,32]];
+function seedTime(value){const parts=String(value||"").trim().split(":").map(Number);if(parts.length<2||parts.some(x=>!Number.isFinite(x)))return null;return parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:parts[0]*60+parts[1]}
+function seededHeatBibs(target,events,results){
+  const key=bracketKey(target);if(!key||key.family!=="open"||key.stage!=="heat")return "";
+  const pools={q1:null,q2:null,single:null};
+  for(const event of events){
+    const text=[event.tournament,event.level,event.stage,event.name].filter(Boolean).join(" ").toLowerCase();
+    if(!/(seed|qualif|time\s*trial|\btt\b)/.test(text)||/wild|women|grom/.test(text)||!/(open|men)/.test(text))continue;
+    const rows=(results?.[event.id]||[]).filter(row=>seedTime(row.time)!=null).sort((a,b)=>seedTime(a.time)-seedTime(b.time));
+    if(!rows.length)continue;
+    if(/(?:\bq\s*2\b|(?:seed|qualif)[^0-9]*2\b)/.test(text))pools.q2=rows;
+    else if(/(?:\bq\s*1\b|(?:seed|qualif)[^0-9]*1\b)/.test(text))pools.q1=rows;
+    else pools.single=rows;
+  }
+  const bySeed=new Map();
+  if(pools.q1||pools.q2){
+    (pools.q1||[]).slice(16).forEach((row,index)=>bySeed.set(index+17,row.bib));
+    (pools.q2||[]).slice(0,16).forEach((row,index)=>bySeed.set(index+1,row.bib));
+  }else (pools.single||[]).forEach((row,index)=>bySeed.set(index+1,row.bib));
+  const bibs=(EOL_HEAT_SEEDS[key.num-1]||[]).map(seed=>bySeed.get(seed)||"");
+  return bibs.every(Boolean)?bibs.join(","):"";
+}
 function keyString(k) {
   return k.family + ":" + k.stage + ":" + k.num;
 }
@@ -524,6 +546,8 @@ async function render() {
                     e.level === l.name &&
                     e.stage === r.name,
                 );
+                const seedBibs = seededHeatBibs({ tournament: t.name, stage: r.name, name: r.name }, d.events, d.eventResults);
+                const seedBox = seedBibs ? `<span class="assigned-bibs"><label>Ready to paste</label><input class="race-bibs" value="${esc(seedBibs)}" readonly aria-label="Seeded race numbers for ${esc(r.name)}"><button class="icon copy-bibs" type="button" data-bibs="${esc(seedBibs)}" title="Copy seeded race numbers">⧉</button></span>` : "";
                 const assigned = events.length
                   ? events
                       .map((e) => {
@@ -532,7 +556,7 @@ async function render() {
                       })
                       .join('<span class="assigned-separator"> · </span>')
                   : '<span class="unassigned-label">No RaceTec race assigned</span>';
-                return `<div class="assignment-row"><strong>${esc(r.name)}</strong><span class="assignment-tilde">~</span>${assigned}${controls("races", r.id, r.name, `<button class="visibility lap-toggle" data-r="${r.id}">${r.fastest_lap ? "Multi lap: True" : "Multi lap: False"}</button>`)}</div>`;
+                return `<div class="assignment-row"><strong>${esc(r.name)}</strong>${seedBox}<span class="assignment-tilde">~</span>${assigned}${controls("races", r.id, r.name, `<button class="visibility lap-toggle" data-r="${r.id}">${r.fastest_lap ? "Multi lap: True" : "Multi lap: False"}</button>`)}</div>`;
               })
               .join("");
             return branch(
