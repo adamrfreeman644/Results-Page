@@ -260,7 +260,10 @@ def watch():
  candidate=None
  while True:
   try:
-   c=db();paused=c.execute("select value from meta where key='feed_paused'").fetchone();c.close()
+   c=db();paused=c.execute("select value from meta where key='feed_paused'").fetchone()
+   with c:
+    c.execute("insert into meta(key,value) values('last_feed_check',?) on conflict(key) do update set value=excluded.value",(now(),))
+   c.close()
    if not paused or paused[0]!="true":
     if not EXPORT_FILE.exists(): candidate=None;meta("last_error","Waiting for "+EXPORT_FILENAME)
     else:
