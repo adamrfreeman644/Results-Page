@@ -376,3 +376,6 @@ body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
 
 /* Admin: ready-to-copy RaceTec numbers for an assigned race. */
 .assigned-bibs{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:3px 5px;border:1px solid #bcc3ca;border-radius:5px;background:#fff}.assigned-bibs label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5d6670}.assigned-bibs .race-bibs{width:13rem;max-width:28vw;padding:3px 5px;border:0;background:transparent;font:inherit;font-size:.82rem}.assigned-bibs .copy-bibs{min-width:28px;padding:3px 6px}
+
+/* Rider profiles retain every timed lap; public race cards remain fastest-lap only. */
+.rider-times .time strong{display:block}.rider-laps{display:block;margin-top:4px;color:#5f6873;font-weight:600;line-height:1.45;white-space:normal}
