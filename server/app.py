@@ -133,13 +133,15 @@ def parse(raw):
  out={event_id:[] for event_id in events}
  for r in rows(text,"EventAthlete"):
   eid,aid=val(r,0)+":"+val(r,1),val(r,2)
-  try: pos=int(val(r,24,26))
-  except ValueError: continue
-  if eid and aid: out.setdefault(eid,[]).append((aid,athletes.get(aid,"Rider "+aid),val(r,18),pos,display_time(val(r,21,22,23))))
+  # Keep named entrants even before RaceTec publishes a numeric placing. This lets
+  # an assigned mass race appear on the public page while results are pending.
+  try: pos=int(val(r,24,26)) if val(r,24,26) else None
+  except ValueError: pos=None
+  if eid and aid and athletes.get(aid): out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,display_time(val(r,21,22,23))))
  parsed=[]
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
-  normal=sorted(standing,key=lambda x:(x[3],x[1].casefold()))
+  normal=sorted(standing,key=lambda x:(x[3] is None,x[3] if x[3] is not None else 0,x[1].casefold()))
   lap_splits=sorted(splits.get(eid,[]));fast=[];gun=guns.get(eid);lap_details={}
   if lap_splits and gun is not None:
    for aid,rider,bib,_,_ in standing:
@@ -308,11 +310,11 @@ class App(SimpleHTTPRequestHandler):
    c=db();out={item:[] for item in ids}
    if ids:
     marks=",".join("?" for _ in ids)
-    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position,a.name",ids):
+    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position,a.name",(event_id,))]
+   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
     item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
    c.close()
