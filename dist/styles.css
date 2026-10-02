@@ -359,3 +359,6 @@ a.seeding-board-btn,a.btn.seeding-board-btn{display:inline-flex;align-items:cent
  .race-table .rider{overflow:hidden}
  .race-table .time{text-align:right;overflow:visible}
 }
+
+/* Keep the stage selector visible even when a tournament currently has one stage. */
+body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
