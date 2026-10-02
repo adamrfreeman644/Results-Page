@@ -44,7 +44,8 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     const pendingRow=pending||x.pending,finish=x.finishPos??x.position,cls=[!pendingRow&&Number(finish)>0&&Number(finish)<=Number(e.highlight_count??2)?'podium':'',pendingRow?'pending-row':'',x.known?'pending-known':(pendingRow?'pending-unknown':'')].filter(Boolean).join(' ');
     const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
     const pathLabel=x.fromLabel||x.placeholder||x.name||(x.seed?`Seed ${x.seed}`:'Awaiting qualification');
-    const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span></a>`:`<span class="rider rider-placeholder"><span class="name">${esc(pathLabel)}</span></span>`;
+    const category=x.category?String(x.category):'',categoryClass=category.toLowerCase().replace(/[^a-z]+/g,'');
+    const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib bib--${categoryClass}">${esc(x.bib)}</span><span class="name">${esc(x.name)}${advancement}</span>${category?`<span class="rider-category rider-category--${categoryClass}">${esc(category)}</span>`:''}</a>`:`<span class="rider rider-placeholder"><span class="name">${esc(pathLabel)}</span></span>`;
     const finishLabel=pendingRow?'N/A':(finish==null||finish===''?'N/A':finish),timeValue=pendingRow&&(x.time==='Not raced yet'||!x.time)?'N/A':x.time;
     if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
     if(mobileGlance)return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}</td></tr>`;
