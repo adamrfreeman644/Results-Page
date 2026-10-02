@@ -78,11 +78,14 @@
     const n = String(name || "")
       .toLowerCase()
       .replace(/['’]/g, "");
-    if (/runner\s*ups?|3rd|4th|32nd|placment|placement|regist|infinity|surf|legend|chair/.test(n)) {
+    if (/32nd|placment|placement|regist|infinity|surf|legend|chair/.test(n)) {
       return null;
     }
     const family = familyFromName(n);
     if (!family) return null;
+    if (/runner\s*ups?/.test(n)) return { family, stage: "runnerup", num: 1, key: `${family}:runnerup:1` };
+    if (/3rd[s]?/.test(n)) return { family, stage: "third", num: 1, key: `${family}:third:1` };
+    if (/4th[s]?/.test(n)) return { family, stage: "fourth", num: 1, key: `${family}:fourth:1` };
     let m = n.match(/heat[s]?\s*(\d+)/);
     if (m) return { family, stage: "heat", num: +m[1], key: `${family}:heat:${m[1]}` };
     m = n.match(/quarter[s]?\s*(\d+)/);
@@ -106,11 +109,14 @@
     if (stage === "heat") return `${prefix} Heats ${num}`;
     if (stage === "quarter") return `${prefix} Quarter ${num}`;
     if (stage === "semi") return `${prefix} Semi ${num}`;
+    if (stage === "third") return `${prefix} 3rd\'s`;
+    if (stage === "fourth") return `${prefix} 4th\'s`;
+    if (stage === "runnerup") return `${prefix} Runner Up\'s`;
     return `${prefix} Final`;
   }
 
   function navigationStage(stage) {
-    return { heat: "Heats", quarter: "Quarters", semi: "Semi", final: "Finals" }[stage];
+    return { heat: "Heats", quarter: "Quarters", semi: "Semi", third: "Semi", fourth: "Semi", final: "Finals", runnerup: "Finals" }[stage];
   }
 
   function roleLabel(stage, num, role) {
@@ -159,6 +165,19 @@
     }));
   }
 
+  function placementSlots(role) {
+    return [1, 2, 3, 4].map((num) => ({ from: { stage: "quarter", num }, role }));
+  }
+
+  function runnerUpSlots() {
+    return [
+      { from: { stage: "third", num: 1 }, role: "W" },
+      { from: { stage: "third", num: 1 }, role: "RU" },
+      { from: { stage: "fourth", num: 1 }, role: "W" },
+      { from: { stage: "fourth", num: 1 }, role: "RU" },
+    ];
+  }
+
   function feedSlots(stage, num) {
     if (stage === "quarter") {
       const pair = QF_FROM_HEATS[num - 1];
@@ -168,7 +187,10 @@
       const spec = SF_FROM_QUARTERS[num - 1];
       return spec ? slotsFromQuarters(spec) : [];
     }
+    if (stage === "third") return placementSlots("3rd");
+    if (stage === "fourth") return placementSlots("4th");
     if (stage === "final") return slotsFromSemis();
+    if (stage === "runnerup") return runnerUpSlots();
     return [];
   }
 
@@ -186,8 +208,14 @@
     if (has("semi") || has("quarter") || has("heat") || has("final")) {
       nodes.push({ stage: "semi", num: 1 }, { stage: "semi", num: 2 });
     }
+    if (has("quarter") || has("third") || has("fourth") || has("runnerup")) {
+      nodes.push({ stage: "third", num: 1 }, { stage: "fourth", num: 1 });
+    }
     if (has("final") || has("semi") || has("quarter") || has("heat")) {
       nodes.push({ stage: "final", num: 1 });
+    }
+    if (has("runnerup") || has("third") || has("fourth") || has("quarter")) {
+      nodes.push({ stage: "runnerup", num: 1 });
     }
     const out = [];
     const used = new Set();
