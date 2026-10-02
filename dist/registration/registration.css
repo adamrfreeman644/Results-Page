@@ -36,3 +36,7 @@
 
 /* RDF-owned chip state: compact, read-only tick. */
 .registration-table th:last-child{width:56px;text-align:center}.registration-table td:last-child{text-align:center}.chip-status{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:.77rem;font-weight:950}.chip-status.assigned{background:#e4f5ef;color:#075c4b;border:1px solid #69ad9d}.chip-status.returned{background:#073b59;color:#fff;border:1px solid #073b59}@media(max-width:600px){.registration-table th:last-child{width:45px}.chip-status{width:20px;height:20px;font-size:.68rem}}
+
+
+/* The registration directory has only three short columns: never scroll it sideways. */
+.registration-panel .table-scroll{overflow-x:visible}.registration-table{min-width:0!important;max-width:100%;table-layout:fixed}.registration-table th:nth-child(1),.registration-table td:nth-child(1){width:76px}.registration-table th:nth-child(3),.registration-table td:nth-child(3){width:56px}.registration-table td:nth-child(2){overflow:hidden}.registration-table .registration-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:600px){.registration-table th:nth-child(1),.registration-table td:nth-child(1){width:54px}.registration-table th:nth-child(3),.registration-table td:nth-child(3){width:45px}}
