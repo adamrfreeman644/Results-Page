@@ -296,7 +296,9 @@ class App(SimpleHTTPRequestHandler):
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
   if path=="/api/public/registrations":
-   try:return self.js({"riders":registration_riders()})
+   try:
+    c=db();return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
+    return self.js({"riders":registration_riders(),"chipReturnMode":return_mode})
    except Exception as e:return self.js({"error":"Registration list unavailable: "+str(e)[:200]},503)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
@@ -364,6 +366,7 @@ class App(SimpleHTTPRequestHandler):
       if not exists:c.execute("insert into races(tournament_id,level_id,name) values(?,?,?)",(tournament["id"],level_id,race_name));created+=1
    c.close();return self.js({"ok":True,"created":created})
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
+  elif path=="/api/admin/chip-return-mode":meta("chip_return_mode","true" if p.get("enabled") else "false")
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):
    athlete_id=unquote(path.rsplit("/",1)[1]);c=db()
    with c:c.execute("insert into athlete_settings(athlete_id,registered,chip_code,chip_returned) values(?,?,?,?) on conflict(athlete_id) do update set registered=excluded.registered,chip_code=excluded.chip_code,chip_returned=excluded.chip_returned",(athlete_id,1 if p.get("registered") else 0,clean(str(p.get("chipCode",""))),1 if p.get("chipReturned") else 0))
