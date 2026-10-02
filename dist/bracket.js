@@ -538,14 +538,16 @@
 
         if (node.stage === "heat") {
           const seeded = seedStartRows(family, node.stage, node.num);
-          const baseRows =
-            seeded ||
-            (existing?.r || []).map((r) => ({
-              ...r,
-              pending: true,
-              known: true,
-              time: "Not raced yet",
-            }));
+          // Once RaceTec has an actual entry list for a heat, show those
+          // pasted entrants. The seed grid is only the fallback before that
+          // event exists in the feed.
+          const enteredRows = (existing?.r || []).map((r) => ({
+            ...r,
+            pending: true,
+            known: true,
+            time: "Not raced yet",
+          }));
+          const baseRows = enteredRows.length ? enteredRows : seeded;
           if (!existing && !seeded) continue;
           projected.push({
             e: existing?.e || syntheticEvent(family, key, node.stage, node.num, items),
