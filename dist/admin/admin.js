@@ -59,7 +59,7 @@ function findWithdrawal(withdrawals, rider, category) {
       withdrawalMatch(w, rider),
   );
 }
-async function loadSeedPreview(withdrawals) {
+async function loadSeedPreview(withdrawals, fills) {
   if (!window.BracketProjection?.buildSeedsFromLiveEvents) return null;
   const feed = await publicGet("/api/public/events");
   const ids = (feed.events || [])
@@ -75,9 +75,13 @@ async function loadSeedPreview(withdrawals) {
     r: resultMap[String(e.id)] || [],
   }));
   const raw = BracketProjection.buildSeedsFromLiveEvents(items);
-  if (!raw) return { before: null, after: null, items };
-  const after = BracketProjection.applySeedWithdrawals(raw, withdrawals || []);
-  return { before: raw, after, items };
+  if (!raw) return { before: null, after: null, items, slotMeta: {} };
+  const after = BracketProjection.applySeedAdjustments(
+    raw,
+    withdrawals || [],
+    fills || {},
+  );
+  return { before: raw, after, items, slotMeta: after.slotMeta || {} };
 }
 /** Seeding-race riders for a category, including DNF / no-time (not in seed catalog). */
 function seedingPoolRiders(items, category) {
@@ -155,7 +159,7 @@ function wireSeedToggleButtons(root, category, status) {
           });
           status.textContent = `Marked out: ${d.withdrawal?.name || d.withdrawal?.bib || "rider"}. Seeds bumped up.`;
         }
-        await paintSeedOuts(d.withdrawals);
+        await paintSeedOuts(d.withdrawals, d.fills);
       } catch (e) {
         status.textContent = e.message;
         btn.disabled = false;
@@ -163,23 +167,94 @@ function wireSeedToggleButtons(root, category, status) {
     };
   });
 }
-function renderSeedOuts(withdrawals) {
+function readFillsFromEditor(category) {
+  const box = $("#out-fills");
+  if (!box) return [];
+  return [...box.querySelectorAll(".seed-fill-row")]
+    .map((row) => ({
+      id: row.dataset.id || "",
+      name: (row.querySelector(".fill-name")?.value || "").trim(),
+      bib: (row.querySelector(".fill-bib")?.value || "").trim(),
+      note: (row.querySelector(".fill-note")?.value || "").trim(),
+    }))
+    .filter((r) => r.name || r.bib);
+}
+function renderFillsEditor(category, fills, empty, target, afterLen) {
+  const box = $("#out-fills");
+  const emptyEl = $("#out-empty-count");
+  if (!box) return;
+  const list = (fills[category] || []).slice();
+  // Always show at least `empty` rows so they can type into open slots,
+  // plus any saved extras (standby). Cap bare empty rows at empty count.
+  while (list.length < empty) list.push({ name: "", bib: "", note: "", id: "" });
+  if (!list.length && empty === 0) {
+    box.innerHTML =
+      '<div class="empty-tree">No empty slots right now. Add a standby name anyway if you expect one later.</div>';
+  } else {
+    box.innerHTML = list
+      .map((f, i) => {
+        const active = i < empty;
+        const preFillLen = target - empty;
+        const label = active ? `→ seed ${preFillLen + i + 1}` : "standby";
+        return `<div class="seed-fill-row ${active ? "is-active" : "is-standby"}" data-id="${esc(f.id || "")}">
+          <span class="fill-slot">${esc(label)}</span>
+          <input class="fill-name" type="text" placeholder="Rider name" value="${esc(f.name || "")}" autocomplete="off">
+          <input class="fill-bib" type="text" inputmode="numeric" placeholder="Chip" value="${esc(f.bib || "")}" autocomplete="off">
+          <input class="fill-note" type="text" placeholder="Note" value="${esc(f.note || "")}" autocomplete="off">
+          <button type="button" class="icon danger fill-remove" title="Remove row">×</button>
+        </div>`;
+      })
+      .join("");
+    box.querySelectorAll(".fill-remove").forEach((btn) => {
+      btn.onclick = () => {
+        btn.closest(".seed-fill-row")?.remove();
+      };
+    });
+  }
+  if (emptyEl) {
+    const named = list.filter((f) => (f.name || "").trim()).length;
+    emptyEl.textContent =
+      empty > 0
+        ? `· ${empty} empty of ${target} · ${Math.min(named, empty)} in use · ${Math.max(0, named - empty)} standby`
+        : `· field full (${target}) · extras kept as standby`;
+  }
+}
+function renderSeedOuts(withdrawals, fills) {
   const preview = $("#out-preview"),
     count = $("#out-seed-count"),
     status = $("#out-status");
   if (!preview) return;
   const rows = withdrawals || [];
+  const fillMap = fills || {};
   const cat = $("#out-category")?.value || "Open";
-  loadSeedPreview(rows)
+  loadSeedPreview(rows, fillMap)
     .then((view) => {
       if (!view?.before) {
         preview.innerHTML =
           '<div class="empty-tree">No seeding results to preview yet.</div>';
         count.textContent = "";
+        renderFillsEditor(cat, fillMap, 0, 32, 0);
         return;
       }
       const before = view.before.categories?.[cat] || [];
       const after = view.after?.categories?.[cat] || [];
+      const slot = view.slotMeta?.[cat] || {
+        target: BracketProjection.fieldSize?.(cat) || 32,
+        empty: 0,
+        filled: 0,
+        standby: 0,
+        racing: after.length,
+      };
+      // Empty slots relative to field size AFTER outs/compact, BEFORE counting
+      // already-applied fills in `after`. Recompute from a no-fill pass for the editor.
+      const withoutFills = BracketProjection.applySeedAdjustments(
+        view.before,
+        rows,
+        {},
+      );
+      const racingOnly = withoutFills.categories?.[cat] || [];
+      const target = slot.target || BracketProjection.fieldSize(cat);
+      const empty = Math.max(0, target - racingOnly.length);
       const pool = seedingPoolRiders(view.items, cat);
       const seededIds = new Set(
         before.map((r) => String(r.athlete_id || "")).filter(Boolean),
@@ -192,7 +267,6 @@ function renderSeedOuts(withdrawals) {
         if (r.bib && seededBibs.has(String(r.bib))) return false;
         return true;
       });
-      // Withdrawals that don't match anyone still listed (cleanup)
       const matched = new Set();
       const seedRows = before
         .slice()
@@ -219,8 +293,7 @@ function renderSeedOuts(withdrawals) {
         );
       });
       const stray = rows.filter(
-        (w) =>
-          String(w.category || "Open") === cat && !matched.has(w.id),
+        (w) => String(w.category || "Open") === cat && !matched.has(w.id),
       );
       const strayRows = stray.map((w) =>
         riderRowHtml(
@@ -237,28 +310,41 @@ function renderSeedOuts(withdrawals) {
           },
         ),
       );
+      const manualRows = after
+        .filter((r) => r.manual)
+        .map(
+          (r) =>
+            `<li class="seed-toggle-row is-manual"><span class="seed-num">s${esc(r.seed)}</span><span class="seed-bib">${r.bib ? esc(r.bib) : "—"}</span><span class="seed-rider">${esc(r.name)} <span class="manual-badge">manual</span></span></li>`,
+        );
       const outCount = rows.filter(
         (w) => String(w.category || "Open") === cat,
       ).length;
-      count.textContent = `· ${after.length} racing after bump · ${outCount} out · ${before.length} from seeding`;
+      count.textContent = `· ${after.length}/${target} racing · ${empty} empty · ${outCount} out`;
       preview.innerHTML = `
         <p class="muted seed-outs-legend">Original seeding order below. <strong>OUT</strong> riders are removed and everyone below bumps up on the live board.</p>
         <ol class="seed-preview-list seed-toggle-list">${seedRows.join("") || '<li class="empty-tree">No seeds for this category.</li>'}</ol>
         ${orphanRows.length ? `<h4 class="seed-outs-sub">In seeding races but not in seed list</h4><ol class="seed-preview-list seed-toggle-list">${orphanRows.join("")}</ol>` : ""}
         ${strayRows.length ? `<h4 class="seed-outs-sub">Other outs (cleanup)</h4><ol class="seed-preview-list seed-toggle-list">${strayRows.join("")}</ol>` : ""}
-        <p class="muted">Live seed list after bump: ${after.length} riders. Last slot (${cat === "Open" ? 32 : 16}) free for a manual fill if needed.</p>`;
+        ${manualRows.length ? `<h4 class="seed-outs-sub">Manual fills in use</h4><ol class="seed-preview-list seed-toggle-list">${manualRows.join("")}</ol>` : ""}
+        <p class="muted">Live board: ${after.length} of ${target} seeds. ${empty} empty slot${empty === 1 ? "" : "s"} for manual fill.</p>`;
       wireSeedToggleButtons(preview, cat, status);
+      renderFillsEditor(cat, fillMap, empty, target, racingOnly.length);
     })
     .catch((e) => {
       preview.innerHTML = `<div class="empty-tree">${esc(e.message)}</div>`;
       count.textContent = "";
     });
 }
-async function paintSeedOuts(withdrawals) {
-  const rows =
-    withdrawals || (await req("/api/admin/seed-withdrawals")).withdrawals || [];
-  renderSeedOuts(rows);
-  return rows;
+async function paintSeedOuts(withdrawals, fills) {
+  let rows = withdrawals;
+  let fillMap = fills;
+  if (rows == null || fillMap == null) {
+    const d = await req("/api/admin/status");
+    rows = rows ?? d.seedWithdrawals ?? [];
+    fillMap = fillMap ?? d.seedFills ?? {};
+  }
+  renderSeedOuts(rows, fillMap);
+  return { withdrawals: rows, fills: fillMap };
 }
 function wireSeedOuts() {
   const find = $("#out-find"),
@@ -266,7 +352,9 @@ function wireSeedOuts() {
     query = $("#out-query"),
     cat = $("#out-category"),
     status = $("#out-status"),
-    preview = $("#out-preview");
+    preview = $("#out-preview"),
+    addFill = $("#out-fill-add"),
+    saveFill = $("#out-fill-save");
   if (!preview || preview.dataset.wired) return;
   preview.dataset.wired = "1";
   cat?.addEventListener("change", () => paintSeedOuts());
@@ -303,9 +391,41 @@ function wireSeedOuts() {
       try {
         const d = await req("/api/admin/seed-withdrawals", { action: "clear" });
         status.textContent = "Cleared all outs.";
-        await paintSeedOuts(d.withdrawals);
+        await paintSeedOuts(d.withdrawals, d.fills);
       } catch (e) {
         status.textContent = e.message;
+      }
+    });
+  addFill &&
+    (addFill.onclick = () => {
+      const box = $("#out-fills");
+      if (!box) return;
+      if (box.querySelector(".empty-tree")) box.innerHTML = "";
+      const row = document.createElement("div");
+      row.className = "seed-fill-row is-standby";
+      row.innerHTML = `<span class="fill-slot">standby</span>
+        <input class="fill-name" type="text" placeholder="Rider name" value="" autocomplete="off">
+        <input class="fill-bib" type="text" inputmode="numeric" placeholder="Chip" value="" autocomplete="off">
+        <input class="fill-note" type="text" placeholder="Note" value="" autocomplete="off">
+        <button type="button" class="icon danger fill-remove" title="Remove row">×</button>`;
+      row.querySelector(".fill-remove").onclick = () => row.remove();
+      box.appendChild(row);
+      row.querySelector(".fill-name")?.focus();
+    });
+  saveFill &&
+    (saveFill.onclick = async () => {
+      const category = cat?.value || "Open";
+      const fills = readFillsFromEditor(category);
+      saveFill.disabled = true;
+      status.textContent = "Saving fills…";
+      try {
+        const d = await req("/api/admin/seed-fills", { category, fills });
+        status.textContent = `Saved ${fills.length} manual name${fills.length === 1 ? "" : "s"} for ${category}.`;
+        await paintSeedOuts(d.withdrawals, d.fills);
+      } catch (e) {
+        status.textContent = e.message;
+      } finally {
+        saveFill.disabled = false;
       }
     });
   query?.addEventListener("keydown", (e) => {
@@ -612,7 +732,7 @@ async function render() {
     $("#event-list").classList.toggle("editing", editMode);
     wire(d);
     wireSeedOuts();
-    paintSeedOuts(d.seedWithdrawals || []);
+    paintSeedOuts(d.seedWithdrawals || [], d.seedFills || {});
   } catch (e) {
     $("#event-list").textContent = e.message;
   }

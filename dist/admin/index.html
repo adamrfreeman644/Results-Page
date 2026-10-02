@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Results Admin · OWAR 2026</title>
-  <link rel="stylesheet" href="/styles.css?v=tree-7">
+  <link rel="stylesheet" href="/styles.css?v=tree-8">
 </head>
 <body>
 <main class="admin-shell">
@@ -95,10 +95,19 @@
           <div id="out-preview" class="seed-outs-preview"></div>
         </div>
       </div>
+      <div class="seed-fills-box">
+        <h3>Empty slots · manual fills <span id="out-empty-count"></span></h3>
+        <p class="muted seed-outs-legend">Write names for open slots. All names are saved permanently — if empty slots shrink later, extras stay stored but only the first N are used.</p>
+        <div id="out-fills" class="seed-fills-editor"></div>
+        <div class="seed-fills-actions">
+          <button class="btn" id="out-fill-add" type="button">+ Add name</button>
+          <button class="btn yellow" id="out-fill-save" type="button">Save fills</button>
+        </div>
+      </div>
     </div>
   </section>
 </main>
-<script src="/bracket.js?v=20261002.45"></script>
-<script src="/admin/admin.js?v=20261002.40"></script>
+<script src="/bracket.js?v=20261002.46"></script>
+<script src="/admin/admin.js?v=20261002.46"></script>
 </body>
 </html>

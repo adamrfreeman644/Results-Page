@@ -237,6 +237,39 @@ def seed_withdrawals():
  except (TypeError,json.JSONDecodeError):return []
 def save_seed_withdrawals(items):
  meta("seed_withdrawals",json.dumps(items,ensure_ascii=False))
+def seed_fills():
+ c=db();row=c.execute("select value from meta where key='seed_fills'").fetchone();c.close()
+ if not row or not row[0]:return {}
+ try:
+  data=json.loads(row[0]);return data if isinstance(data,dict) else {}
+ except (TypeError,json.JSONDecodeError):return {}
+def save_seed_fills(data):
+ meta("seed_fills",json.dumps(data if isinstance(data,dict) else {},ensure_ascii=False))
+def normalize_seed_fills(payload,category=None):
+ """Accept {Category:[...]} or a list for one category; keep ordered name/bib rows (including extras)."""
+ current=seed_fills()
+ if category is not None:
+  rows=payload if isinstance(payload,list) else []
+  cleaned=[]
+  for row in rows:
+   if not isinstance(row,dict):continue
+   name=clean(str(row.get("name","")));bib=clean(str(row.get("bib","")))
+   if not name and not bib:continue
+   cleaned.append({"id":clean(str(row.get("id",""))) or hashlib.sha1((category+"|"+name+"|"+bib+"|"+str(len(cleaned))).encode()).hexdigest()[:10],"name":name,"bib":bib,"note":clean(str(row.get("note","")))})
+  current[category]=cleaned;return current
+ if isinstance(payload,dict):
+  out={}
+  for cat,rows in payload.items():
+   cat=clean(str(cat)) or "Open"
+   cleaned=[]
+   for row in rows if isinstance(rows,list) else []:
+    if not isinstance(row,dict):continue
+    name=clean(str(row.get("name","")));bib=clean(str(row.get("bib","")))
+    if not name and not bib:continue
+    cleaned.append({"id":clean(str(row.get("id",""))) or hashlib.sha1((cat+"|"+name+"|"+bib+"|"+str(len(cleaned))).encode()).hexdigest()[:10],"name":name,"bib":bib,"note":clean(str(row.get("note","")))})
+   out[cat]=cleaned
+  return out
+ return current
 def import_file(raw,digest):
  parsed=parse(raw);c=db()
  if c.execute("select 1 from imports where fingerprint=?",(digest,)).fetchone():
@@ -450,7 +483,10 @@ class App(SimpleHTTPRequestHandler):
    for item in r:item["time"]=display_time(item["time"])
    return self.js(r)
   if path=="/api/public/seed-withdrawals":
-   return self.js({"withdrawals":seed_withdrawals()})
+   return self.js({"withdrawals":seed_withdrawals(),"fills":seed_fills()})
+  if path=="/api/admin/seed-fills":
+   if not self.auth():return self.js({"error":"Unauthorized"},401)
+   return self.js({"fills":seed_fills()})
   if path=="/api/public/registrations":
    try:
     c=db();return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
@@ -512,7 +548,7 @@ class App(SimpleHTTPRequestHandler):
    results_by_event={};
    for row in c.execute("select event_id,bib,position,time from results where nullif(trim(bib),'') is not null order by event_id,position is null,position,bib"):
     results_by_event.setdefault(row[0],[]).append({"bib":str(row[1]),"position":row[2],"time":display_time(row[3])})
-   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests,"seedWithdrawals":seed_withdrawals()})
+   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests,"seedWithdrawals":seed_withdrawals(),"seedFills":seed_fills()})
   return super().do_GET()
  def do_POST(self):
   path=urlparse(self.path).path
@@ -542,11 +578,11 @@ class App(SimpleHTTPRequestHandler):
   elif path=="/api/admin/seed-withdrawals":
    items=seed_withdrawals();action=clean(str(p.get("action","add"))).lower()
    if action=="clear":
-    save_seed_withdrawals([]);return self.js({"ok":True,"withdrawals":[]})
+    save_seed_withdrawals([]);return self.js({"ok":True,"withdrawals":[],"fills":seed_fills()})
    if action=="remove":
     wid=clean(str(p.get("id","")));bib=clean(str(p.get("bib","")));cat=clean(str(p.get("category","")))
     kept=[x for x in items if not ((wid and x.get("id")==wid) or (bib and cat and str(x.get("bib",""))==bib and str(x.get("category",""))==cat))]
-    save_seed_withdrawals(kept);return self.js({"ok":True,"withdrawals":kept})
+    save_seed_withdrawals(kept);return self.js({"ok":True,"withdrawals":kept,"fills":seed_fills()})
    # add / upsert by category+bib or category+athlete
    category=clean(str(p.get("category","Open"))) or "Open"
    bib=clean(str(p.get("bib","")));athlete_id=clean(str(p.get("athleteId",p.get("athlete_id",""))));name=clean(str(p.get("name","")));note=clean(str(p.get("note","")))
@@ -568,7 +604,12 @@ class App(SimpleHTTPRequestHandler):
     return self.js({"error":"No rider found for chip/bib "+bib+" — check the number or pick them from the seed list"},404)
    entry={"id":hashlib.sha1((category+"|"+athlete_id+"|"+bib+"|"+name+"|"+str(seed_num or "")).encode()).hexdigest()[:12],"category":category,"athlete_id":athlete_id,"bib":bib,"name":name,"seed":seed_num,"note":note,"at":now()}
    items=[x for x in items if not (str(x.get("category",""))==category and ((athlete_id and str(x.get("athlete_id",""))==str(athlete_id)) or (bib and str(x.get("bib",""))==bib) or (name and history_name(x.get("name",""))==history_name(name))))]
-   items.append(entry);save_seed_withdrawals(items);return self.js({"ok":True,"withdrawal":entry,"withdrawals":items})
+   items.append(entry);save_seed_withdrawals(items);return self.js({"ok":True,"withdrawal":entry,"withdrawals":items,"fills":seed_fills()})
+  elif path=="/api/admin/seed-fills":
+   category=clean(str(p.get("category","")))
+   if category:data=normalize_seed_fills(p.get("fills",[]),category)
+   else:data=normalize_seed_fills(p.get("fills",{}))
+   save_seed_fills(data);return self.js({"ok":True,"fills":data,"withdrawals":seed_withdrawals()})
   elif path=="/api/admin/chip-return-info":meta("chip_return_info",str(p.get("returnInfo","")).strip())
   elif path=="/api/admin/chip-return-mode":meta("chip_return_mode","true" if p.get("enabled") else "false")
   elif re.fullmatch(r"/api/admin/riders/[^/]+",path):

@@ -79,6 +79,13 @@
   let seedCatalog = null; // { categories: { Open: [{name,seed,timeSec}] } }
   let seedIndex = new Map(); // normName -> {seed,timeSec,name,category}
   let seedWithdrawals = []; // admin "out of race" list → remove + bump seeds up
+  let seedFills = {}; // { Open: [{name,bib}], ... } extras kept; only first N empty slots used
+
+  function fieldSize(category) {
+    const cat = String(category || "");
+    if (cat === "Open" || /^open(\s+men)?$/i.test(cat)) return 32;
+    return 16;
+  }
 
   function normName(value) {
     return String(value || "")
@@ -610,32 +617,78 @@
     return false;
   }
 
-  /** Remove withdrawn riders and renumber seeds 1..n (fills DNF holes / frees last seed). */
-  function applySeedWithdrawals(catalog, withdrawals) {
-    const list = Array.isArray(withdrawals) ? withdrawals : seedWithdrawals;
+  /** Remove withdrawn riders, compact 1..n, then fill trailing empty slots from manual list. */
+  function applySeedWithdrawals(catalog, withdrawals, fillsByCat) {
+    return applySeedAdjustments(catalog, withdrawals, fillsByCat);
+  }
+
+  function applySeedAdjustments(catalog, withdrawals, fillsByCat) {
     if (!catalog?.categories) return catalog;
+    const list = Array.isArray(withdrawals) ? withdrawals : seedWithdrawals;
+    const fills =
+      fillsByCat && typeof fillsByCat === "object" && !Array.isArray(fillsByCat)
+        ? fillsByCat
+        : seedFills;
     const byCat = {};
     for (const w of list) {
       const cat = w.category || "Open";
       (byCat[cat] || (byCat[cat] = [])).push(w);
     }
-    if (!Object.keys(byCat).length) return catalog;
     const categories = {};
-    for (const [cat, rows] of Object.entries(catalog.categories)) {
+    const meta = {};
+    const cats = new Set([
+      ...Object.keys(catalog.categories || {}),
+      ...Object.keys(fills || {}),
+    ]);
+    for (const cat of cats) {
       const outs = byCat[cat] || [];
-      let next = (rows || []).slice();
+      let next = (catalog.categories[cat] || []).slice();
       if (outs.length) {
         next = next.filter((r) => !outs.some((w) => matchesWithdrawal(r, w)));
-        next.sort((a, b) => (a.seed || 0) - (b.seed || 0));
-        next = next.map((r, i) => ({ ...r, seed: i + 1 }));
       }
+      // Always compact so DNF holes / outs free trailing slots.
+      next.sort((a, b) => (a.seed || 0) - (b.seed || 0));
+      next = next.map((r, i) => ({ ...r, seed: i + 1, manual: !!r.manual }));
+      const target = fieldSize(cat);
+      const empty = Math.max(0, target - next.length);
+      const pool = (fills[cat] || []).filter((f) => String(f?.name || "").trim());
+      const used = pool.slice(0, empty);
+      const standby = pool.slice(empty);
+      used.forEach((f) => {
+        next.push({
+          name: String(f.name).trim(),
+          bib: f.bib != null && String(f.bib).trim() ? String(f.bib).trim() : "",
+          athlete_id: f.athlete_id || "",
+          time: "",
+          timeSec: null,
+          seed: next.length + 1,
+          category: cat,
+          manual: true,
+        });
+      });
       categories[cat] = next;
+      meta[cat] = {
+        target,
+        empty,
+        filled: used.length,
+        standby: standby.length,
+        racing: next.length,
+      };
     }
-    return { ...catalog, categories, withdrawalsApplied: list.length };
+    return {
+      ...catalog,
+      categories,
+      withdrawalsApplied: list.length,
+      slotMeta: meta,
+    };
   }
 
   function setSeedWithdrawals(list) {
     seedWithdrawals = Array.isArray(list) ? list : [];
+  }
+
+  function setSeedFills(map) {
+    seedFills = map && typeof map === "object" && !Array.isArray(map) ? map : {};
   }
 
   async function loadSeedWithdrawals() {
@@ -644,6 +697,7 @@
       if (!res.ok) return seedWithdrawals;
       const data = await res.json();
       setSeedWithdrawals(data.withdrawals || []);
+      setSeedFills(data.fills || {});
     } catch (_) {
       /* offline / no admin API */
     }
@@ -809,18 +863,19 @@
   }
 
   /** Prefer live RaceTec seeding results; optional static /data/seeds.json fallback. */
-  async function refreshSeeds({ eventItems, staticUrl, withdrawals } = {}) {
+  async function refreshSeeds({ eventItems, staticUrl, withdrawals, fills } = {}) {
     await loadSeedWithdrawals();
     if (withdrawals) setSeedWithdrawals(withdrawals);
+    if (fills) setSeedFills(fills);
     const live = buildSeedsFromLiveEvents(eventItems);
     if (live) {
-      indexSeeds(applySeedWithdrawals(live));
+      indexSeeds(applySeedAdjustments(live));
       return { catalog: seedCatalog, source: "live" };
     }
     if (staticUrl !== false) {
       try {
         await loadSeeds(staticUrl || "/data/seeds.json");
-        indexSeeds(applySeedWithdrawals(seedCatalog));
+        indexSeeds(applySeedAdjustments(seedCatalog));
         return { catalog: seedCatalog, source: "static" };
       } catch (_) {
         /* no static seeds yet */
@@ -941,7 +996,10 @@
     refreshSeeds,
     buildSeedsFromLiveEvents,
     applySeedWithdrawals,
+    applySeedAdjustments,
+    fieldSize,
     setSeedWithdrawals,
+    setSeedFills,
     loadSeedWithdrawals,
     isSeedingEvent,
     buildOpenHeatGrids,
@@ -954,5 +1012,6 @@
     FINAL_FROM_SEMIS,
     getSeedCatalog: () => seedCatalog,
     getSeedWithdrawals: () => seedWithdrawals.slice(),
+    getSeedFills: () => JSON.parse(JSON.stringify(seedFills)),
   };
 })(window);
