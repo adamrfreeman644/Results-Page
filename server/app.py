@@ -477,7 +477,10 @@ class App(SimpleHTTPRequestHandler):
    c=db();m={x[0]:x[1] for x in c.execute("select key,value from meta")};e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,e.visible,e.publish_mode,count(r.athlete_id) count from events e left join results r on r.event_id=e.id group by e.id order by e.sort_order,e.name")];ts=[dict(x) for x in c.execute("select * from tournaments order by sort_order,id")];ls=[dict(x) for x in c.execute("select * from levels order by sort_order,id")];rs=[dict(x) for x in c.execute("select * from races order by sort_order,id")];requests=[dict(x) for x in c.execute("select q.id,q.athlete_id,a.name athlete_name,q.rider_name,q.status,q.requested_at from historical_match_requests q left join athletes a on a.id=q.athlete_id where q.status='pending' order by q.id")];bibs={};
    for row in c.execute("select r.event_id,r.bib from results r where nullif(trim(r.bib),'') is not null order by r.event_id,r.position is null,r.position,r.bib"):
     bibs.setdefault(row[0],[]).append(str(row[1]))
-   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests})
+   results_by_event={};
+   for row in c.execute("select event_id,bib,position from results where nullif(trim(bib),'') is not null order by event_id,position is null,position,bib"):
+    results_by_event.setdefault(row[0],[]).append({"bib":str(row[1]),"position":row[2]})
+   c.close();return self.js({"version":VERSION,"pollSeconds":POLL_SECONDS,"file":fstatus(),"sourceConfig":{"hostDirectory":EXPORT_HOST_DIR,"filename":EXPORT_FILENAME},"meta":m,"events":e,"eventBibs":bibs,"eventResults":results_by_event,"tournaments":ts,"levels":ls,"races":rs,"matchRequests":requests})
   return super().do_GET()
  def do_POST(self):
   path=urlparse(self.path).path
