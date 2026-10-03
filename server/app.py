@@ -633,6 +633,8 @@ class App(SimpleHTTPRequestHandler):
    for row in c.execute("select r.position,a.name team,r.bib official_laps,r.time elapsed,r.penalty from results r join athletes a on a.id=r.athlete_id where r.event_id=? and exists(select 1 from team_laps tl where tl.event_id=r.event_id and tl.team=a.name) order by r.position,a.name",(event_id,)):
     team=dict(row);team["laps"]=[]
     for lap in c.execute("select lap_number,rider_bib,rider_name,time,is_start from team_laps where event_id=? and team=? order by lap_number",(event_id,team["team"])):team["laps"].append(dict(lap))
+    completed=[lap["time"] for lap in team["laps"] if not lap["is_start"] and time_ms(lap["time"]) is not None]
+    team["fastest_lap"]=min(completed,key=time_ms) if completed else ""
     teams.append(team)
    c.close();return self.js({"teams":teams})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
