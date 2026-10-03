@@ -509,7 +509,10 @@ class App(SimpleHTTPRequestHandler):
  def end_headers(self):
   route=urlparse(self.path).path
   if route.startswith("/api/") or route.endswith(".html") or route=="/":self.send_header("Cache-Control","no-store, max-age=0")
-  elif re.search(r"\.(?:css|js|png|svg|jpg|jpeg|webp|ico)$",route,re.I):self.send_header("Cache-Control","public, max-age=604800, immutable")
+  # Results scripts change during live race control. Do not let a browser
+  # retain an older bracket renderer after an operator deploys a correction.
+  elif re.search(r"\.(?:css|js)$",route,re.I):self.send_header("Cache-Control","no-store, max-age=0")
+  elif re.search(r"\.(?:png|svg|jpg|jpeg|webp|ico)$",route,re.I):self.send_header("Cache-Control","public, max-age=604800, immutable")
   else:self.send_header("Cache-Control","no-store, max-age=0")
   super().end_headers()
  def auth(self):return bool(ADMIN_TOKEN) and self.headers.get("Authorization")=="Bearer "+ADMIN_TOKEN
