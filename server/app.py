@@ -513,7 +513,9 @@ def import_team_pasted_results(text):
   c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name) values(?,?,?,?,?)",(event_id,"Team Race","Results","Team Race","Team Race"))
   rider_rows={}
   for team in teams:
-   team_id="team:"+hashlib.sha1(team["team"].casefold().encode()).hexdigest()[:16]
+   # Legacy live databases may still require numeric athlete IDs. Negative IDs
+   # are reserved for internal team records and cannot collide with RaceTec.
+   team_id=str(-700000000-team["position"])
    c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(team_id,team["team"]))
    c.execute("insert into results(event_id,athlete_id,bib,position,time,penalty) values(?,?,?,?,?,?)",(event_id,team_id,str(team["official_laps"]),team["position"],team["elapsed"],team["penalty"]))
    c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,event_id,team_id,str(team["official_laps"]),team["position"],team["elapsed"]))
@@ -522,7 +524,7 @@ def import_team_pasted_results(text):
     if lap["start"]:continue
     key=(lap["bib"],lap["name"]);rider_rows.setdefault(key,[]).append(lap)
   for (bib,name),laps in rider_rows.items():
-   athlete=c.execute("select id from athletes where lower(name)=lower(?) limit 1",(name,)).fetchone() or c.execute("select athlete_id from results where cast(bib as text)=? limit 1",(bib,)).fetchone();athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1((bib+name).casefold().encode()).hexdigest()[:16]
+   athlete=c.execute("select id from athletes where lower(name)=lower(?) limit 1",(name,)).fetchone() or c.execute("select athlete_id from results where cast(bib as text)=? limit 1",(bib,)).fetchone();athlete_id=athlete[0] if athlete else str(-800000000-(int(hashlib.sha1((bib+name).casefold().encode()).hexdigest()[:8],16)%100000000))
    c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(athlete_id,name))
    fastest=min((lap["time"] for lap in laps),key=lambda value:time_ms(value) or 10**15)
    c.execute("insert into results(event_id,athlete_id,bib,position,time) values(?,?,?,?,?)",(event_id,athlete_id,bib,None,fastest))
