@@ -384,4 +384,5 @@ body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
 
 .penalty-label{display:block;margin-top:3px;color:#ba1d26;font-size:.72rem;font-weight:800;white-space:nowrap}
 .short-track-mark{color:#ba1d26;font-size:.85em;font-weight:900}.short-track-note{margin:0;padding:10px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.78rem;font-weight:700}
+.short-track-note{font-size:0}.short-track-note:after{content:'*shorter track - excluded from fastest time';font-size:.78rem}
 .race-table col.result-laps{width:180px}.race-table .lap-breakdown{text-align:left}.lap-breakdown span{display:inline-flex;gap:6px;align-items:baseline;margin-right:12px;white-space:nowrap;color:var(--muted);font-size:.78rem}.lap-breakdown b{color:var(--ink);font-variant-numeric:tabular-nums}
