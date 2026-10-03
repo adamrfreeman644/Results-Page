@@ -120,6 +120,10 @@
     if (/runner\s*ups?/.test(n)) return { family, stage: "runnerup", num: 1, key: `${family}:runnerup:1` };
     if (/3rd[s]?/.test(n)) return { family, stage: "third", num: 1, key: `${family}:third:1` };
     if (/4th[s]?/.test(n)) return { family, stage: "fourth", num: 1, key: `${family}:fourth:1` };
+    // A versioned re-run (for example "Open Heat 4 V2") is a separate,
+    // additional heat. Keep it outside the numbered knockout feed so it
+    // cannot replace the original Heat 4 card.
+    if (/heat[s]?\s*\d+\s*(?:v|version)\s*\d+\b/.test(n)) return null;
     let m = n.match(/heat[s]?\s*(\d+)/);
     if (m) return { family, stage: "heat", num: +m[1], key: `${family}:heat:${m[1]}` };
     m = n.match(/quarter[s]?\s*(\d+)/);
