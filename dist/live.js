@@ -105,7 +105,18 @@ async function render(){
     const registrations=await get('/api/public/registrations').catch(()=>({riders:[]}));
     const registeredNames=new Map((registrations.riders||[]).filter(r=>r.bib&&r.name).map(r=>[String(r.bib).trim(),r.name]));
     const placeholderName=value=>/^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(value||'').trim());
-    const authoritativeRows=rows=>(rows||[]).map(row=>placeholderName(row.name)&&registeredNames.has(String(row.bib||'').trim())?{...row,name:registeredNames.get(String(row.bib).trim())}:row);
+    // The pasted heats already contain the actual rider names. Reuse them by
+    // bib for later-round placeholders before falling back to registrations.
+    const pastedNames=new Map();
+    for(const rows of Object.values(resultMap))for(const row of rows||[]){
+      const bib=String(row.bib||'').trim();
+      if(bib&&row.name&&!placeholderName(row.name))pastedNames.set(bib,row.name);
+    }
+    const authoritativeRows=rows=>(rows||[]).map(row=>{
+      const bib=String(row.bib||'').trim();
+      const name=placeholderName(row.name)?(pastedNames.get(bib)||registeredNames.get(bib)||row.name):row.name;
+      return name===row.name?row:{...row,name};
+    });
     const allItems=(f.events||[]).map(e=>({e,r:normaliseTiedPositions(authoritativeRows(resultMap[String(e.id)]||[]))}));
     if(window.BracketProjection?.refreshSeeds){
       await BracketProjection.refreshSeeds({eventItems:allItems});
