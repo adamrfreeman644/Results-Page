@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
+let selected=null,selectedLevel=null,selectedTeam=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
 
 function displayPenalty(value){const raw=String(value||'').trim().replace(/^\+/,'');const parts=raw.split(':').map(Number);if(parts.length===3&&parts.every(Number.isFinite)){const seconds=parts[0]*3600+parts[1]*60+parts[2];return '+'+(Number.isInteger(seconds)?seconds:String(seconds.toFixed(3)).replace(/0+$/,'').replace(/\.$/,''));}return raw?('+'+raw):''}
 function normaliseTiedPositions(rows){
@@ -33,7 +33,7 @@ function scheduleStaleLabel(){
 
 const tournamentRank=t=>{
   const n=String(t).toLowerCase().replace(/\s+/g,' ').trim();
-  const order=['open','open men','women','groms','wild men','wild women','infinity race','surf & dirt','surf and durt','specials','legends','chair race','2 hour relay race'];
+  const order=['open','open men','women','groms','wild men','wild women','infinity race','surf & dirt','surf and durt','specials','legends','chair race','team race','2 hour relay race'];
   const i=order.indexOf(n);
   return i<0?100:i;
 };
@@ -92,6 +92,25 @@ function renderCard(item){
   return table(item.e,item.r);
 }
 
+function renderTeamRace(feed){
+  const teams=feed.teams||[];
+  if(!selectedTeam||!teams.some(team=>team.team===selectedTeam))selectedTeam='Standings';
+  $('#race-title').textContent='Team Race';
+  $('#result-count').textContent=`${teams.length} teams · every confirmed circuit is credited to its rider`;
+  $('#round-nav').hidden=true;$('#round-nav').innerHTML='';
+  const teamTabs=['Standings',...teams.map(team=>team.team)];
+  const tabs=`<div class="team-tabs" role="tablist" aria-label="Team race view">${teamTabs.map(name=>`<button class="tab ${name===selectedTeam?'active':''}" data-team="${esc(name)}">${esc(name)}</button>`).join('')}</div>`;
+  if(selectedTeam==='Standings'){
+    const rows=teams.map(team=>`<tr class="${team.position<=3?'podium':''}"><td>${team.position}</td><td>${esc(team.team)}</td><td>${team.official_laps}</td><td>${esc(team.last_time||'—')}</td><td>${team.penalty?esc(team.penalty):'—'}</td></tr>`).join('');
+    $('#stage-results').innerHTML=`${tabs}<article class="race-table team-standings"><header><div><span>Live standings</span><h3>Team totals</h3></div><b>${teams.length} teams</b></header><div class="table-scroll"><table><thead><tr><th>Pos</th><th>Team</th><th>Laps</th><th>Last timing</th><th>Adjustment</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No team laps yet.</td></tr>'}</tbody></table></div></article><p class="stage-note">A lap is credited only after a full circuit. Team position is total credited laps, then the last recorded timing.</p>`;
+  }else{
+    const team=teams.find(item=>item.team===selectedTeam);
+    const rows=team.riders.map(rider=>`<tr><td><a class="rider rider-link" href="/rider/?id=${encodeURIComponent(rider.athlete_id)}"><span class="bib">${esc(rider.bib)}</span><span class="name">${esc(rider.name)}</span></a></td><td>${rider.laps}</td><td>${esc(rider.fastest_lap||'—')}</td></tr>`).join('');
+    $('#stage-results').innerHTML=`${tabs}<article class="race-table"><header><div><span>Team detail</span><h3>${esc(team.team)}</h3></div><b>${team.official_laps} laps</b></header><div class="table-scroll"><table><thead><tr><th>Rider</th><th>Personal laps</th><th>Fastest confirmed</th></tr></thead><tbody>${rows||'<tr><td colspan="3">No rider laps yet.</td></tr>'}</tbody></table></div></article>`;
+  }
+  $('#stage-results').querySelectorAll('[data-team]').forEach(button=>button.onclick=()=>{selectedTeam=button.dataset.team;renderTeamRace(feed)});
+}
+
 async function render(){
   try{
     let f={events:[],updatedAt:null};
@@ -132,6 +151,12 @@ async function render(){
     $('#event-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.t;selectedLevel=null;render()});
 
     const raw=allItems.filter(item=>displayTournament(item.e.tournament||'Tournament')===selected);
+    if(/^team race$/i.test(selected)){
+      const source=raw[0];
+      if(!source){$('#race-title').textContent='Team Race';$('#result-count').textContent='Waiting for the Team Race timing event.';$('#round-nav').hidden=true;$('#stage-results').innerHTML='';return;}
+      const feed=await get('/api/public/team-race?event='+encodeURIComponent(source.e.id));
+      renderTeamRace(feed);return;
+    }
     const knockout=raw.filter(item=>!(window.BracketProjection?.isSeedingEvent?.(item.e)));
     let enriched;
     let structureOnly=false;

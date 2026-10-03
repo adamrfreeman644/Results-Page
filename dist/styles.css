@@ -383,3 +383,7 @@ body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
 .rider-times .time strong{font-weight:800}.rider-lap-label{display:block;margin-top:2px;color:#65707b;font-weight:600}.rider-times tr:not(.rider-lap--fastest) .time{font-weight:400;color:#59636d}
 
 .penalty-label{display:block;margin-top:3px;color:#ba1d26;font-size:.72rem;font-weight:800;white-space:nowrap}
+
+/* Team Race is a single live event with standings and roster drill-down. */
+.team-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.team-tabs .tab{font-size:.82rem}.team-standings{margin-top:0}
+@media(max-width:600px){.team-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.team-tabs .tab{white-space:nowrap}.team-standings th:nth-child(4),.team-standings td:nth-child(4){display:none}}

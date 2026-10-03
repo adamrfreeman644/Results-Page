@@ -15,6 +15,24 @@ EXPORT_HOST_DIR=os.getenv("RACE_EXPORT_HOST_DIR",str(EXPORT_DIR))
 REGISTRATION_CACHE={"stamp":None,"cached_at":0.0,"riders":[]}
 REGISTRATION_CACHE_LOCK=threading.Lock()
 RDF_BIB_NAME_CACHE={"stamp":None,"names":{}}
+# Team Race is timed as individual riders contributing laps to a shared team
+# total. RaceTec exports the rider results, not the team membership, so keep the
+# approved 2026 roster alongside the results service.
+TEAM_RACE_TEAMS={
+ '129':'The Floating Jabronis','136':'The Floating Jabronis','159':'The Floating Jabronis','174':'The Floating Jabronis','169':'The Floating Jabronis','172':'The Floating Jabronis',
+ '132':'Boeufoeuf','160':'Boeufoeuf','139':'Boeufoeuf','140':'Boeufoeuf','147':'Boeufoeuf','179':'Boeufoeuf',
+ '133':'Pigeon and Tonic','134':'Pigeon and Tonic','121':'Pigeon and Tonic','173':'Pigeon and Tonic','153':'Pigeon and Tonic','163':'Pigeon and Tonic',
+ '146':"Flying OWAT's",'137':"Flying OWAT's",'156':"Flying OWAT's",'168':"Flying OWAT's",'157':"Flying OWAT's",
+ '143':'Flyboi','161':'Flyboi','184':'Flyboi','193':'Flyboi',
+ '148':"Keeping up with the Jones's",'149':"Keeping up with the Jones's",'150':"Keeping up with the Jones's",'151':"Keeping up with the Jones's",'250':"Keeping up with the Jones's",'127':"Keeping up with the Jones's",'138':"Keeping up with the Jones's",
+ '152':'Stoke Seekers','164':'Stoke Seekers','167':'Stoke Seekers','170':'Stoke Seekers','188':'Stoke Seekers',
+ '171':'Double Slow Sevens','177':'Double Slow Sevens','178':'Double Slow Sevens','192':'Double Slow Sevens',
+ '154':'Poland','155':'Poland','182':'Poland','181':'Poland',
+}
+# Adjustments are deliberately separate from timing data: an official can make
+# the ruling without deleting a rider's legitimately recorded laps.
+TEAM_RACE_LAP_ADJUSTMENTS={'Flyboi':-1}
+TEAM_RACE_MIN_LAP_MS=int(os.getenv('TEAM_RACE_MIN_LAP_MS','60000'))
 def now(): return datetime.now(timezone.utc).isoformat()
 def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
@@ -328,6 +346,10 @@ def import_file(raw,digest):
      tournament,level,stage=candidates[0]["tournament"],candidates[0]["level"],candidates[0]["race"]
      race_config=candidates[0];c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name,race_id) values(?,?,?,?,?,?)",(eid,tournament,level,stage,name,race_config["id"]))
     else: stage=""
+   # Group Teams exports are individual rider records, so there is no normal
+   # bracket race to map. Recognise the dedicated timing event directly.
+   if "team race" in (clean(tournament)+" "+clean(name)).casefold():
+    tournament,level,stage="Team Race","Results","Team standings"
    multi_lap=(race_config and race_config["fastest_lap"]) or clean(tournament).casefold()=="multi lap"
    if multi_lap and fastest: standing=fastest
    c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(eid,name,tournament,level,stage,order))
@@ -483,6 +505,33 @@ def fstatus():
  try:
   s=EXPORT_FILE.stat();return {"configured":str(EXPORT_FILE),"exists":True,"bytes":s.st_size,"modified":datetime.fromtimestamp(s.st_mtime,timezone.utc).isoformat()}
  except FileNotFoundError:return {"configured":str(EXPORT_FILE),"exists":False,"bytes":0,"modified":None}
+
+def team_race_results(c,event_id):
+ """Build the shared-lap standings for one Group Teams event."""
+ teams={name:{"team":name,"laps":0,"adjustment":TEAM_RACE_LAP_ADJUSTMENTS.get(name,0),"last_time":None,"riders":[]} for name in set(TEAM_RACE_TEAMS.values())}
+ rows=c.execute("select r.athlete_id,r.bib,r.time,a.name from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by a.name",(event_id,))
+ for row in rows:
+  bib=clean(row["bib"]);team_name=TEAM_RACE_TEAMS.get(bib)
+  if not team_name:continue
+  raw_laps=[dict(item) for item in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,row["athlete_id"]))]
+  # The first timing-point read is a rider entering the course, not a completed
+  # circuit. A realistic floor also ignores accidental chip double-reads.
+  laps=[item for item in raw_laps if (time_ms(item["time"]) or 0)>=TEAM_RACE_MIN_LAP_MS]
+  final_time=display_time(row["time"])
+  rider={"athlete_id":row["athlete_id"],"name":rider_display_name(c,row["name"],bib),"bib":bib,"laps":len(laps),"fastest_lap":display_time(min((item["time"] for item in laps),key=lambda value:time_ms(value))) if laps else None,"lap_details":laps,"time":final_time}
+  teams[team_name]["riders"].append(rider);teams[team_name]["laps"]+=len(laps)
+  stamp=time_ms(final_time)
+  if stamp is not None and (teams[team_name]["last_time"] is None or stamp>time_ms(teams[team_name]["last_time"])):teams[team_name]["last_time"]=final_time
+ result=[]
+ for team in teams.values():
+  team["official_laps"]=max(0,team["laps"]+team["adjustment"])
+  team["penalty"]=("%+d lap" % team["adjustment"]) if team["adjustment"] else ""
+  team["riders"].sort(key=lambda rider:(-rider["laps"],rider["name"].casefold()))
+  result.append(team)
+ result.sort(key=lambda team:(-team["official_laps"],time_ms(team["last_time"]) if time_ms(team["last_time"]) is not None else 10**15,team["team"].casefold()))
+ for position,team in enumerate(result,1):team["position"]=position
+ return result
+
 def watch():
  candidate=None
  while True:
@@ -523,7 +572,7 @@ class App(SimpleHTTPRequestHandler):
  def do_GET(self):
   path=urlparse(self.path).path
   if path=="/api/public/events":
-   c=db();s=c.execute("select value from meta where key='status'").fetchone();updated=c.execute("select value from meta where key='last_import'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0];source_filter=" and e.id like 'paste:%'" if source_mode=="paste" else " and e.id not like 'paste:%'";e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,coalesce(t.highlight_count,2) highlight_count,case when lower(e.tournament)='multi lap' or exists(select 1 from event_mappings m join races mr on mr.id=m.race_id where m.event_id=e.id and mr.fastest_lap=1) then 1 else 0 end multi_lap,count(r.athlete_id) count from events e left join tournaments t on t.name=e.tournament left join results r on r.event_id=e.id where exists(select 1 from event_mappings m where m.event_id=e.id)"+source_filter+("" if show and show[0]=="true" else " and e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
+   c=db();s=c.execute("select value from meta where key='status'").fetchone();updated=c.execute("select value from meta where key='last_import'").fetchone();show=c.execute("select value from meta where key='force_show_all'").fetchone();source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0];source_filter=" and e.id like 'paste:%'" if source_mode=="paste" else " and e.id not like 'paste:%'";e=[dict(x) for x in c.execute("select e.id,e.name,e.tournament,e.level,e.stage,coalesce(t.highlight_count,2) highlight_count,case when lower(e.tournament)='multi lap' or exists(select 1 from event_mappings m join races mr on mr.id=m.race_id where m.event_id=e.id and mr.fastest_lap=1) then 1 else 0 end multi_lap,count(r.athlete_id) count from events e left join tournaments t on t.name=e.tournament left join results r on r.event_id=e.id where (exists(select 1 from event_mappings m where m.event_id=e.id) or lower(e.tournament)='team race')"+source_filter+("" if show and show[0]=="true" else " and e.publish_mode!='hide'")+" group by e.id "+("" if show and show[0]=="true" else "having e.publish_mode='always' or count(r.athlete_id)>0")+" order by e.tournament,e.level,e.sort_order,e.name")]
    manual_filter="" if show and show[0]=="true" else " and lower(t.name) in ('open','open men','women','groms','grom')"
    manual_source_filter=" and e.id like 'paste:%'" if source_mode=="paste" else " and e.id not like 'paste:%'"
    for row in c.execute("select r.id,r.name,t.name tournament,coalesce(l.name,'General') level from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id where not exists(select 1 from events e where e.tournament=t.name and e.stage=r.name"+manual_source_filter+")"+manual_filter+" order by t.name,l.sort_order,r.sort_order,r.id"):e.append({"id":"manual:"+str(row[0]),"name":row[1],"tournament":row[2],"level":row[3],"stage":row[1],"count":0})
@@ -537,6 +586,13 @@ class App(SimpleHTTPRequestHandler):
     for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["name"]=rider_display_name(c,row["name"],row["bib"]);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
+  if path=="/api/public/team-race":
+   event_id=clean(parse_qs(urlparse(self.path).query).get("event",[""])[0])
+   if not event_id:return self.js({"error":"An event is required"},400)
+   c=db();event=c.execute("select id,name,tournament from events where id=?",(event_id,)).fetchone()
+   if not event:return self.js({"error":"Event not found"},404)
+   teams=team_race_results(c,event_id);c.close()
+   return self.js({"event":dict(event),"teams":teams,"lapFloorMs":TEAM_RACE_MIN_LAP_MS})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
