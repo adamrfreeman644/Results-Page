@@ -515,7 +515,24 @@
         });
         continue;
       }
-      byKey.set(parsed.key, { ...item, parsed });
+      const existingStage = byKey.get(parsed.key);
+      if (existingStage) {
+        // RaceTec may expose the same stage under both its old "Open" and
+        // newer "Mens" names. Merge by bib, keeping a real rider name over
+        // a Winner/2nd placeholder from the duplicate event.
+        const merged = new Map();
+        for (const rider of [...existingStage.r, ...(item.r || [])]) {
+          const bib = String(rider.bib || "");
+          const key = bib || `${rider.athlete_id || ""}:${rider.name || ""}`;
+          const previous = merged.get(key);
+          const previousPlaceholder = /^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(previous?.name || "").trim());
+          const incomingPlaceholder = /^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(rider.name || "").trim());
+          merged.set(key, previous && !previousPlaceholder && incomingPlaceholder ? previous : rider);
+        }
+        byKey.set(parsed.key, { ...existingStage, r: [...merged.values()] });
+      } else {
+        byKey.set(parsed.key, { ...item, parsed });
+      }
       if (!seenStagesByFamily.has(parsed.family)) seenStagesByFamily.set(parsed.family, new Set());
       seenStagesByFamily.get(parsed.family).add(parsed.stage);
     }
