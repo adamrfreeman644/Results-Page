@@ -14,6 +14,7 @@ EXPORT_DIR=Path(os.getenv("RACE_EXPORT_DIR","/race-export")); EXPORT_FILENAME=os
 EXPORT_HOST_DIR=os.getenv("RACE_EXPORT_HOST_DIR",str(EXPORT_DIR))
 REGISTRATION_CACHE={"stamp":None,"cached_at":0.0,"riders":[]}
 REGISTRATION_CACHE_LOCK=threading.Lock()
+RDF_BIB_NAME_CACHE={"stamp":None,"names":{}}
 def now(): return datetime.now(timezone.utc).isoformat()
 def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
@@ -140,15 +141,31 @@ def rider_category(values):
  if re.search(r"\\b(female|women|womens)\\b",text):return "Female"
  if re.search(r"\\b(open|men|mens)\\b",text):return "Open"
  return ""
+def placeholder_rider_name(name):
+ return bool(re.match(r"^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b",clean(name),re.I))
+def rdf_bib_names():
+ # Athlete entries in a later round can be named "Winner…" by RaceTec.
+ # The same RDF has the actual people in their earlier race entries.
+ if not EXPORT_FILE.exists():return {}
+ stat=EXPORT_FILE.stat();stamp=(stat.st_mtime_ns,stat.st_size)
+ if RDF_BIB_NAME_CACHE["stamp"]==stamp:return RDF_BIB_NAME_CACHE["names"]
+ raw=EXPORT_FILE.read_bytes()
+ text=raw.decode("utf-16") if raw.startswith((b"\xff\xfe",b"\xfe\xff")) else raw.decode("utf-8-sig","replace")
+ athletes={val(row,0):" ".join(x for x in (val(row,1),val(row,2)) if x) for row in rows(text,"Athlete") if val(row,0)}
+ names={}
+ for row in rows(text,"EventAthlete"):
+  name=clean(athletes.get(val(row,2),""));bib=clean(val(row,18))
+  if bib and name and not placeholder_rider_name(name):names.setdefault(bib,name)
+ RDF_BIB_NAME_CACHE["stamp"]=stamp;RDF_BIB_NAME_CACHE["names"]=names
+ return names
 def rider_display_name(c,name,bib):
- # RaceTec may put a feeder label (rather than a person's name) in a later-round entry.
- # Its bib is still the rider's bib, so recover the real name already recorded elsewhere.
+ # First try the current database, then the authoritative RDF rider list.
  label=clean(name)
- if not re.match(r"^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b",label,re.I):return label
+ if not placeholder_rider_name(label):return label
  for row in c.execute("select distinct a.name from results r join athletes a on a.id=r.athlete_id where cast(r.bib as text)=? order by a.name",(clean(bib),)):
   candidate=clean(row[0])
-  if candidate and not re.match(r"^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b",candidate,re.I):return candidate
- return label
+  if candidate and not placeholder_rider_name(candidate):return candidate
+ return rdf_bib_names().get(clean(bib),label)
 def rows(text,table):
  p="[DATA].["+table+"]:"
  for line in text.splitlines():
