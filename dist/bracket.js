@@ -393,8 +393,8 @@
       const idx = finishers.findIndex(
         (f) => (id && String(f.athlete_id) === id) || normName(f.name) === name,
       );
-      if (idx === 0) return { fromRole: "W", fromLabel: `Winner · ${item.e?.name || prev}` };
-      if (idx === 1) return { fromRole: "RU", fromLabel: `2nd · ${item.e?.name || prev}` };
+      if (idx === 0) return { fromRole: "W", fromLabel: `Winner · ${item.e?.name || prev}`, riderName: finishers[idx].name, riderBib: finishers[idx].bib };
+      if (idx === 1) return { fromRole: "RU", fromLabel: `2nd · ${item.e?.name || prev}`, riderName: finishers[idx].name, riderBib: finishers[idx].bib };
     }
     return null;
   }
@@ -404,10 +404,14 @@
       const tag = inferRoleFromPreviousStage(r, family, stage, byKey) || {};
       return {
         ...r,
+        // RaceTec can temporarily export the feeder label as the rider name
+        // in a later round. Preserve the actual rider identity from that feeder.
+        name: tag.riderName || r.name,
+        bib: tag.riderBib || r.bib,
         finishPos: Number(r.position) || null,
         fromRole: tag.fromRole,
         fromLabel: tag.fromLabel,
-        ...seedMeta(r.name, family),
+        ...seedMeta(tag.riderName || r.name, family),
       };
     });
   }
