@@ -351,6 +351,19 @@ def parse_pasted_results(text):
   position=int(match.group()) if match else None
   position_label=position_text if position_text and not position_text.isdigit() else ""
   grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"position_label":position_label,"penalty":clean(row.get(penalty_col,"")) if penalty_col else "","laps":[(number,display_time(value)) for number,value in laps]})
+ # RaceTec may serialise equal finish times as consecutive positions.
+ # Normalise those records so a genuine tie displays the shared placing.
+ for event_rows in grouped.values():
+  tied={}
+  for row in event_rows:
+   if row["position"] is not None and time_ms(row["time"]) is not None:
+    tied.setdefault(time_ms(row["time"]),[]).append(row)
+  for rows_at_time in tied.values():
+   if len(rows_at_time)>1:
+    place=min(row["position"] for row in rows_at_time)
+    for row in rows_at_time:
+     row["position"]=place
+     row["position_label"]=str(place)
  if not grouped:raise ValueError("The pasted table has no usable rider rows")
  return grouped
 def import_pasted_results(text,replace=False):
