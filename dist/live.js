@@ -1,6 +1,7 @@
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
 
+function displayPenalty(value){const raw=String(value||'').trim().replace(/^\+/,'');const parts=raw.split(':').map(Number);if(parts.length===3&&parts.every(Number.isFinite)){const seconds=parts[0]*3600+parts[1]*60+parts[2];return '+'+(Number.isInteger(seconds)?seconds:String(seconds.toFixed(3)).replace(/0+$/,'').replace(/\.$/,''));}return raw?('+'+raw):''}
 function renderUpdateAge(){
   const el=$('#updated-status');if(!el)return;
   const seconds=Math.max(0,Math.floor((Date.now()-lastUpdateAt)/1000));
@@ -50,7 +51,7 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     // Known riders: name + seed tag. Unknown slots already say "Seed N" — skip duplicate tag.
     const nameWithSeed=x.known?`${esc(x.name||pathLabel)}${seedTag}${advancement}`:`${esc(pathLabel)}`;
     const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib bib--${categoryClass}">${esc(x.bib)}</span><span class="name">${nameWithSeed}</span>${category?`<span class="rider-category rider-category--${categoryClass}">${esc(category)}</span>`:''}</a>`:`<span class="rider ${x.known?'':'rider-placeholder'}"><span class="name">${nameWithSeed}</span></span>`;
-    const finishLabel=pendingRow?(x.startPos??'—'):(finish==null||finish===''?'N/A':finish),timeValue=pendingRow?(x.known?'Not started':'Awaiting qualification'):x.time,penaltyLabel=!pendingRow&&x.penalty?`<small class="penalty-label">Penalty: ${esc(x.penalty)}</small>`:'';
+    const finishLabel=pendingRow?(x.startPos??'—'):(finish==null||finish===''?'N/A':finish),timeValue=pendingRow?(x.known?'Not started':'Awaiting qualification'):x.time,penaltyLabel=!pendingRow&&x.penalty?`<small class="penalty-label">Penalty: ${esc(displayPenalty(x.penalty))}</small>`:'';
     if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
     if(mobileGlance)return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td class="seed">${x.seed!=null&&x.seed!==''?`s${esc(x.seed)}`:'—'}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}${penaltyLabel}</td></tr>`;
     return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed!=null&&x.seed!==''?esc(x.seed):'—'}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}${penaltyLabel}</td></tr>`;
