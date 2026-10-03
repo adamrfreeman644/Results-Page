@@ -601,6 +601,7 @@ function seededHeatBibs(target,events,results){
 function keyString(k) {
   return k.family + ":" + k.stage + ":" + k.num;
 }
+const displayRaceName=value=>String(value||"").replace(/\bmen'?s?\b/gi,"Open").replace(/\bopen\s+open\b/gi,"Open");
 function feedHealth(d) {
   const box = $("#feed-health");
   if (!box) return;
@@ -672,7 +673,7 @@ async function render() {
                   ? events
                       .map((e) => {
                         const bibs = qualifiedBibs(e, d.events, d.eventResults);
-                        return `<span class="assigned-race"><span>${esc(e.name)}</span>${bibs ? ` <span class="assigned-bibs"><label>Ready to paste</label><input class="race-bibs" value="${esc(bibs)}" readonly aria-label="Qualified race numbers for ${esc(e.name)}"><button class="icon copy-bibs" type="button" data-bibs="${esc(bibs)}" title="Copy qualified race numbers">⧉</button></span>` : ""}${r.fastest_lap ? '<span class="race-mode-tag" title="This race displays each rider’s fastest lap">↻ Multi-lap</span>' : ""} <select class="publish-mode" data-id="${esc(e.id)}"><option value="populated" ${(e.publish_mode || "populated") === "populated" ? "selected" : ""}>Show when populated</option><option value="always" ${e.publish_mode === "always" ? "selected" : ""}>Always show</option><option value="hide" ${e.publish_mode === "hide" ? "selected" : ""}>Hide</option></select></span>`;
+                        return `<span class="assigned-race"><span>${esc(displayRaceName(e.name))}</span>${bibs ? ` <span class="assigned-bibs"><label>Ready to paste</label><input class="race-bibs" value="${esc(bibs)}" readonly aria-label="Qualified race numbers for ${esc(displayRaceName(e.name))}"><button class="icon copy-bibs" type="button" data-bibs="${esc(bibs)}" title="Copy qualified race numbers">⧉</button></span>` : ""}${r.fastest_lap ? '<span class="race-mode-tag" title="This race displays each rider’s fastest lap">↻ Multi-lap</span>' : ""} <select class="publish-mode" data-id="${esc(e.id)}"><option value="populated" ${(e.publish_mode || "populated") === "populated" ? "selected" : ""}>Show when populated</option><option value="always" ${e.publish_mode === "always" ? "selected" : ""}>Always show</option><option value="hide" ${e.publish_mode === "hide" ? "selected" : ""}>Hide</option></select></span>`;
                       })
                       .join('<span class="assigned-separator"> · </span>')
                   : '<span class="unassigned-label">No RaceTec race assigned</span>';
@@ -710,7 +711,7 @@ async function render() {
       unassigned
         .map(
           (e) =>
-            `<div class="unassigned-race"><span>${esc(e.name)}</span><select data-event="${esc(e.id)}"><option value="">Choose destination…</option>${d.races
+            `<div class="unassigned-race"><span>${esc(displayRaceName(e.name))}</span><select data-event="${esc(e.id)}"><option value="">Choose destination…</option>${d.races
               .map((r) => {
                 const l = d.levels.find((x) => x.id === r.level_id),
                   t = d.tournaments.find((x) => x.id === r.tournament_id);
