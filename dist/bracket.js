@@ -525,9 +525,13 @@
         const raced = finishers.length > 0;
 
         if (raced && existing) {
-          // Once a race has any result, retain every RaceTec entrant in the
-          // visible card. Blank-time riders stay listed after the finishers.
-          const rows = decorateRows(sortFinishers(existing.r), family, node.stage, node.num, byKey, false);
+          // A pasted/RaceTec result is authoritative. Do not replace its rider
+          // values with predicted feeder labels or seed-derived identities.
+          const rows = sortFinishers(existing.r).map((r) => ({
+            ...r,
+            finishPos: Number(r.position) || null,
+            startPos: null,
+          }));
           projected.push({
             e: existing.e,
             r: rows,
