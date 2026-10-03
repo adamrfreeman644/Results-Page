@@ -383,3 +383,4 @@ body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
 .rider-times .time strong{font-weight:800}.rider-lap-label{display:block;margin-top:2px;color:#65707b;font-weight:600}.rider-times tr:not(.rider-lap--fastest) .time{font-weight:400;color:#59636d}
 
 .penalty-label{display:block;margin-top:3px;color:#ba1d26;font-size:.72rem;font-weight:800;white-space:nowrap}
+.race-table col.result-laps{width:180px}.race-table .lap-breakdown{text-align:left}.lap-breakdown span{display:inline-flex;gap:6px;align-items:baseline;margin-right:12px;white-space:nowrap;color:var(--muted);font-size:.78rem}.lap-breakdown b{color:var(--ink);font-variant-numeric:tabular-nums}

@@ -361,9 +361,18 @@ def parse_pasted_results(text):
  finish_col=field("Finish time","Finish")
  net_col=field("Net time","Net")
  leg_col=field("Finish Leg Time","Leg time")
+ race_total_col=field("Finish Race Time","Lap 2 Race Time")
  penalty_col=field("Penalty","Time penalty","Penalty time","Penalty seconds")
  position_col=field("Overall position","Position","Overall")
- lap_cols=sorted(((int(match.group(1)),header) for key,header in headers.items() if (match:=re.fullmatch(r"lap(\d+)legtime",key,re.I))),key=lambda item:item[0])
+ lap_cols=[]
+ for key,header in headers.items():
+  match=re.fullmatch(r"lap(\d+)legtime",key,re.I)
+  if match:lap_cols.append((int(match.group(1)),header));continue
+  # RaceTec's Chair Race export calls lap one simply "Lap Split Time".
+  if key=="lapsplittime":lap_cols.append((1,header));continue
+  match=re.fullmatch(r"lap(\d+)splittime",key,re.I)
+  if match:lap_cols.append((int(match.group(1)),header))
+ lap_cols.sort(key=lambda item:item[0])
  if not all((event_col,first_col,last_col,bib_col)):raise ValueError("The pasted table needs EventDescr, First name, Last name, and Race number columns")
  grouped={}
  for row in reader:
@@ -372,9 +381,16 @@ def parse_pasted_results(text):
   status=clean(row.get(status_col,"")) if status_col else ""
   laps=[(number,clean(row.get(header,""))) for number,header in lap_cols if clean(row.get(header,""))]
   timing=clean(row.get(finish_col,"")) if finish_col else ""
+  timing=timing or (clean(row.get(race_total_col,"")) if race_total_col else "")
   timing=timing or (clean(row.get(net_col,"")) if net_col else "") or (clean(row.get(leg_col,"")) if leg_col else "")
-  # Multi-lap RaceTec exports often leave Finish time blank. The race result
-  # is the fastest recorded lap in those columns.
+  # A completed Chair Race is two laps. RaceTec may leave its total blank,
+  # while providing both individual split times, so use their sum as the
+  # ranking time. Do not rank a rider from a partial lap.
+  if not timing and re.search(r"\bchair\s+race\b",event,re.I) and len(laps)>=2:
+   values=[time_ms(value) for _,value in laps[:2]]
+   if all(value is not None for value in values):timing=ms_display(sum(values))
+  # Other multi-lap RaceTec exports often leave Finish time blank. Their race
+  # result is the fastest recorded lap in those columns.
   if not timing and laps:
    timing=min((value for _,value in laps if time_ms(value) is not None),key=time_ms,default="")
   dsq=bool(re.search(r"\bdsq\b|disqualif",status,re.I))
