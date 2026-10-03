@@ -61,6 +61,14 @@ def db():
  except sqlite3.OperationalError:pass
  try:c.execute("alter table results add column penalty text not null default ''")
  except sqlite3.OperationalError:pass
+ # Early installations used integer athlete IDs. Pasted team records need
+ # stable text IDs as well, so widen this key without changing existing rows.
+ athlete_id_type=next((str(x[2]).lower() for x in c.execute("pragma table_info(athletes)") if x[1]=="id"),"text")
+ if "int" in athlete_id_type:
+  c.execute("alter table athletes rename to athletes_legacy")
+  c.execute("create table athletes(id text primary key,name text not null,category text not null default '')")
+  c.execute("insert into athletes(id,name,category) select cast(id as text),name,coalesce(category,'') from athletes_legacy")
+  c.execute("drop table athletes_legacy")
  # Older installations used an INTEGER primary key for events. RaceTec event IDs
  # are compound text values (for example, "14:43"), so migrate without losing
  # the existing published rows before the next import.
