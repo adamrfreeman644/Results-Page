@@ -140,6 +140,15 @@ def rider_category(values):
  if re.search(r"\\b(female|women|womens)\\b",text):return "Female"
  if re.search(r"\\b(open|men|mens)\\b",text):return "Open"
  return ""
+def rider_display_name(c,name,bib):
+ # RaceTec may put a feeder label (rather than a person's name) in a later-round entry.
+ # Its bib is still the rider's bib, so recover the real name already recorded elsewhere.
+ label=clean(name)
+ if not re.match(r"^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b",label,re.I):return label
+ for row in c.execute("select distinct a.name from results r join athletes a on a.id=r.athlete_id where cast(r.bib as text)=? order by a.name",(clean(bib),)):
+  candidate=clean(row[0])
+  if candidate and not re.match(r"^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b",candidate,re.I):return candidate
+ return label
 def rows(text,table):
  p="[DATA].["+table+"]:"
  for line in text.splitlines():
@@ -489,11 +498,12 @@ class App(SimpleHTTPRequestHandler):
    if ids:
     marks=",".join("?" for _ in ids)
     for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
-     row=dict(item);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
+     row=dict(item);row["name"]=rider_display_name(c,row["name"],row["bib"]);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
+    item["name"]=rider_display_name(c,item["name"],item["bib"])
     item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
    c.close()
    for item in r:item["time"]=display_time(item["time"])
