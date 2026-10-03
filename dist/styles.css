@@ -381,3 +381,5 @@ body[data-page="public"] .round-nav:has(.round:only-child){display:grid}
 
 /* Rider profiles retain every timed lap; public race cards remain fastest-lap only. */
 .rider-times .time strong{font-weight:800}.rider-lap-label{display:block;margin-top:2px;color:#65707b;font-weight:600}.rider-times tr:not(.rider-lap--fastest) .time{font-weight:400;color:#59636d}
+
+.penalty-label{display:block;margin-top:3px;color:#ba1d26;font-size:.72rem;font-weight:800;white-space:nowrap}
