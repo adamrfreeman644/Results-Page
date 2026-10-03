@@ -19,7 +19,7 @@ def db():
  c=sqlite3.connect(DB_FILE);c.row_factory=sqlite3.Row
  c.executescript("""create table if not exists events(id text primary key,name text not null,visible integer not null default 1,sort_order integer not null default 0);
  create table if not exists athletes(id text primary key,name text not null,category text not null default '');
- create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,category text not null default '',primary key(event_id,athlete_id));
+ create table if not exists results(event_id text,athlete_id text,bib text,position integer,time text,category text not null default '',penalty text not null default '',primary key(event_id,athlete_id));
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
  create table if not exists result_laps(event_id text,athlete_id text,lap_number integer,time text,primary key(event_id,athlete_id,lap_number));
@@ -56,6 +56,8 @@ def db():
  try:c.execute("alter table results add column category text not null default ''")
  except sqlite3.OperationalError:pass
  try:c.execute("alter table athletes add column category text not null default ''")
+ except sqlite3.OperationalError:pass
+ try:c.execute("alter table results add column penalty text not null default ''")
  except sqlite3.OperationalError:pass
  # Older installations used an INTEGER primary key for events. RaceTec event IDs
  # are compound text values (for example, "14:43"), so migrate without losing
@@ -325,6 +327,7 @@ def parse_pasted_results(text):
  finish_col=field("Finish time","Finish")
  net_col=field("Net time","Net")
  leg_col=field("Finish Leg Time","Leg time")
+ penalty_col=field("Penalty","Time penalty","Penalty time","Penalty seconds")
  position_col=field("Overall position","Position","Overall")
  lap_cols=sorted(((int(match.group(1)),header) for key,header in headers.items() if (match:=re.fullmatch(r"lap(\d+)legtime",key,re.I))),key=lambda item:item[0])
  if not all((event_col,first_col,last_col,bib_col)):raise ValueError("The pasted table needs EventDescr, First name, Last name, and Race number columns")
@@ -343,7 +346,7 @@ def parse_pasted_results(text):
   if re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
   try:position=int(clean(row.get(position_col,""))) if position_col and clean(row.get(position_col,"")).isdigit() else None
   except ValueError:position=None
-  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"laps":[(number,display_time(value)) for number,value in laps]})
+  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"penalty":clean(row.get(penalty_col,"")) if penalty_col else "","laps":[(number,display_time(value)) for number,value in laps]})
  if not grouped:raise ValueError("The pasted table has no usable rider rows")
  return grouped
 def import_pasted_results(text,replace=False):
@@ -374,7 +377,7 @@ def import_pasted_results(text,replace=False):
     athlete=c.execute("select id from athletes where lower(name)=lower(?) order by id limit 1",(row["name"],)).fetchone()
     athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1(row["name"].casefold().encode()).hexdigest()[:16]
     c.execute("insert into athletes(id,name,category) values(?,?,?) on conflict(id) do update set name=excluded.name,category=case when excluded.category<>'' then excluded.category else athletes.category end",(athlete_id,row["name"],row["category"]))
-    c.execute("insert into results(event_id,athlete_id,bib,position,time,category) values(?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"]))
+    c.execute("insert into results(event_id,athlete_id,bib,position,time,category,penalty) values(?,?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end,penalty=case when excluded.penalty<>'' then excluded.penalty else results.penalty end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"],row.get("penalty","")))
     if row.get("laps"):
      c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,athlete_id))
      for lap_number,lap_time in row["laps"]:
@@ -472,11 +475,11 @@ class App(SimpleHTTPRequestHandler):
    c=db();out={item:[] for item in ids}
    if ids:
     marks=",".join("?" for _ in ids)
-    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
+    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
+   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
     item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
    c.close()
@@ -527,7 +530,7 @@ class App(SimpleHTTPRequestHandler):
     except Exception:rider=None
     if not rider:return self.js({"error":"Rider not found"},404)
     return self.js({"id":rider["id"],"name":rider["name"],"bib":rider.get("bib",""),"records":[],"historical":[],"registered":True,"chipReturned":bool(rider.get("chipReturned")),"chipCode":"","chipReturnInfo":""})
-   records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time from results r join events e on e.id=r.event_id where r.athlete_id=? and e.id "+source_op+" ? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,source_like))]
+   records=[dict(x) for x in c.execute("select e.id event_id,e.tournament,e.level,e.stage,e.name race,r.bib,r.position,r.time,r.penalty from results r join events e on e.id=r.event_id where r.athlete_id=? and e.id "+source_op+" ? order by e.tournament,e.level,e.sort_order,r.position",(athlete_id,source_like))]
    for record in records:
     record["time"]=display_time(record["time"])
     record["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(record["event_id"],athlete_id))]
