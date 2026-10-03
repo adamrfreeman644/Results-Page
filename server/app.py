@@ -207,8 +207,10 @@ def parse(raw):
   try: pos=int(val(r,24,26)) if val(r,24,26) else None
   except ValueError: pos=None
   if eid and aid and athletes.get(aid):
-   dnf=any(re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",clean(item),re.I) for item in r)
-   out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),pos,"DNF" if dnf else display_time(val(r,21,22,23)),rider_category(r) or athlete_categories.get(aid,"")))
+   status_text=" ".join(clean(item) for item in r)
+   dsq=bool(re.search(r"\bdsq\b|disqualif",status_text,re.I))
+   dnf=not dsq and bool(re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status_text,re.I))
+   out.setdefault(eid,[]).append((aid,athletes[aid],val(r,18),None if dsq else pos,"DSQ" if dsq else ("DNF" if dnf else display_time(val(r,21,22,23))),rider_category(r) or athlete_categories.get(aid,"")))
  parsed=[]
  for order,(eid,standing) in enumerate(out.items()):
   tournament,name=events.get(eid,("Tournament", "Event "+eid))
@@ -375,10 +377,12 @@ def parse_pasted_results(text):
   # is the fastest recorded lap in those columns.
   if not timing and laps:
    timing=min((value for _,value in laps if time_ms(value) is not None),key=time_ms,default="")
-  if re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
+  dsq=bool(re.search(r"\bdsq\b|disqualif",status,re.I))
+  if dsq:timing="DSQ"
+  elif re.search(r"\bdnf\b|did\s+not\s+finish|withdrawn",status,re.I):timing="DNF"
   position_text=clean(row.get(position_col,"")) if position_col else ""
   match=re.search(r"\d+",position_text)
-  position=int(match.group()) if match else None
+  position=None if dsq else (int(match.group()) if match else None)
   grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"penalty":clean(row.get(penalty_col,"")) if penalty_col else "","laps":[(number,display_time(value)) for number,value in laps]})
  # RaceTec may serialise equal finish times as consecutive positions.
  # Normalise those records so a genuine tie displays the shared placing.
