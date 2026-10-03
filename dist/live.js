@@ -102,7 +102,11 @@ async function render(){
     }
     const ids=(f.events||[]).map(e=>String(e.id)).filter(id=>!id.startsWith('manual:')&&!id.startsWith('preview:'));
     const resultMap=ids.length?await get('/api/public/results?ids='+encodeURIComponent(ids.join(','))).catch(()=>({})):{};
-    const allItems=(f.events||[]).map(e=>({e,r:normaliseTiedPositions(resultMap[String(e.id)]||[])}));
+    const registrations=await get('/api/public/registrations').catch(()=>({riders:[]}));
+    const registeredNames=new Map((registrations.riders||[]).filter(r=>r.bib&&r.name).map(r=>[String(r.bib).trim(),r.name]));
+    const placeholderName=value=>/^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(value||'').trim());
+    const authoritativeRows=rows=>(rows||[]).map(row=>placeholderName(row.name)&&registeredNames.has(String(row.bib||'').trim())?{...row,name:registeredNames.get(String(row.bib).trim())}:row);
+    const allItems=(f.events||[]).map(e=>({e,r:normaliseTiedPositions(authoritativeRows(resultMap[String(e.id)]||[]))}));
     if(window.BracketProjection?.refreshSeeds){
       await BracketProjection.refreshSeeds({eventItems:allItems});
     }
