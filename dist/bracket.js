@@ -386,12 +386,13 @@
     const prev = { quarter: "heat", semi: "quarter", final: "semi" }[stage];
     if (!prev) return null;
     const id = rider.athlete_id != null ? String(rider.athlete_id) : "";
+    const bib = String(rider.bib ?? "").trim();
     const name = normName(rider.name);
     for (const [key, item] of byKey) {
       if (!key.startsWith(`${family}:${prev}:`)) continue;
       const finishers = sortFinishers(item.r);
       const idx = finishers.findIndex(
-        (f) => (id && String(f.athlete_id) === id) || normName(f.name) === name,
+        (f) => (id && String(f.athlete_id) === id) || (bib && String(f.bib ?? "").trim() === bib) || normName(f.name) === name,
       );
       if (idx === 0) return { fromRole: "W", fromLabel: `Winner · ${item.e?.name || prev}`, riderName: finishers[idx].name, riderBib: finishers[idx].bib };
       if (idx === 1) return { fromRole: "RU", fromLabel: `2nd · ${item.e?.name || prev}`, riderName: finishers[idx].name, riderBib: finishers[idx].bib };
