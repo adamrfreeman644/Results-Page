@@ -25,6 +25,10 @@ Current demo: https://owar-2026-live-results.adam-ow.chatgpt.site/
 
 RaceTec public-meeting URLs are imported automatically. The service discovers the meeting's event/stage list and refreshes published standings without changing timing files.
 
+## Team timing export
+
+Save the reader export as `/source/upload/team-timing.tsv` (or set `TIMING_FILE`). It must be tab-separated and include `Id`, `Timing Point`, `Chip Code`, `Race No`, `Chip Time`, `Can Use`, and `Name`. A `Base` reading is a completed, rider-owned lap. `Base-3` only attaches a lap duration to the next Base read for that chip; if Base-3 is unplugged, the finish remains counted and simply has no split time. The team page at `/teams/` shows team totals, time taken to reach the total, fastest confirmed lap, personal totals, and every numbered finish.
+
 ## Live results service
 
 The Docker service exposes the public page and admin API on Byte-Me port `6543`. RaceTec sometimes blocks plain HTTP clients, so the image includes Chromium as a browser-only fallback for its public pages. See `docker-compose.yml` for configuration.

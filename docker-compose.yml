@@ -10,6 +10,10 @@ services:
       SHARED_UPDATER_URL: ${SHARED_UPDATER_URL:-http://host.docker.internal:8093/apps/results-page}
       # Separate multiple public RaceTec result URLs with a | character.
       RACETEC_URLS: ""
+      RDF_FILE: ${RDF_FILE:-/source/upload/current.rdf}
+      # Tab-separated reader export containing Base and Base-3 timing reads.
+      TIMING_FILE: ${TIMING_FILE:-/source/upload/team-timing.tsv}
+      TEAM_RACE_START: ${TEAM_RACE_START:-18:18:30.0}
     volumes:
       - results-data:/data
       - racetec-feed:/source:ro
