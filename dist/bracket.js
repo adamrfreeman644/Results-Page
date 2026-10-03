@@ -527,11 +527,22 @@
         if (raced && existing) {
           // A pasted/RaceTec result is authoritative. Do not replace its rider
           // values with predicted feeder labels or seed-derived identities.
-          const rows = sortFinishers(existing.r).map((r) => ({
-            ...r,
-            finishPos: Number(r.position) || null,
-            startPos: null,
-          }));
+          const pastedRows = sortFinishers(existing.r);
+          const contextualRows = tagRolesFromFeeders(pastedRows, family, node.stage, node.num, byKey);
+          const rows = contextualRows.map((contextual, index) => {
+            const pasted = pastedRows[index];
+            return {
+              ...contextual,
+              // Keep all imported values authoritative; only retain the
+              // feeder route metadata calculated from the previous round.
+              name: pasted.name,
+              bib: pasted.bib,
+              time: pasted.time,
+              position: pasted.position,
+              finishPos: Number(pasted.position) || null,
+              startPos: null,
+            };
+          });
           projected.push({
             e: existing.e,
             r: rows,
