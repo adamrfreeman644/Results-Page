@@ -433,7 +433,7 @@ def import_pasted_results(text,replace=False):
      for stale_id in stale:
       c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,stale_id))
       c.execute("delete from results where event_id=? and athlete_id=?",(event_id,stale_id))
-    c.execute("insert into results(event_id,athlete_id,bib,position,time,category,penalty) values(?,?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end,penalty=case when excluded.penalty<>'' then excluded.penalty else results.penalty end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"],row.get("penalty","")))
+    c.execute("insert into results(event_id,athlete_id,bib,position,time,category,penalty) values(?,?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.time='DSQ' then null when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end,penalty=case when excluded.penalty<>'' then excluded.penalty else results.penalty end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"],row.get("penalty","")))
     if row.get("laps"):
      c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,athlete_id))
      for lap_number,lap_time in row["laps"]:
