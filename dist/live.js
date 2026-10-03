@@ -2,6 +2,20 @@ const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>
 let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
 
 function displayPenalty(value){const raw=String(value||'').trim().replace(/^\+/,'');const parts=raw.split(':').map(Number);if(parts.length===3&&parts.every(Number.isFinite)){const seconds=parts[0]*3600+parts[1]*60+parts[2];return '+'+(Number.isInteger(seconds)?seconds:String(seconds.toFixed(3)).replace(/0+$/,'').replace(/\.$/,''));}return raw?('+'+raw):''}
+function normaliseTiedPositions(rows){
+  const groups=new Map();
+  for(const row of rows||[]){
+    const time=String(row.time||'').trim();
+    if(row.position!=null&&time&&time!=='DNF'&&/^\d{1,2}:\d{2}:\d{2}(?:\.\d+)?$/.test(time)){
+      const group=groups.get(time)||[];group.push(row);groups.set(time,group);
+    }
+  }
+  for(const group of groups.values())if(group.length>1){
+    const position=Math.min(...group.map(row=>Number(row.position)).filter(Number.isFinite));
+    group.forEach(row=>row.position=position);
+  }
+  return rows;
+}
 function renderUpdateAge(){
   const el=$('#updated-status');if(!el)return;
   const seconds=Math.max(0,Math.floor((Date.now()-lastUpdateAt)/1000));
@@ -88,7 +102,7 @@ async function render(){
     }
     const ids=(f.events||[]).map(e=>String(e.id)).filter(id=>!id.startsWith('manual:')&&!id.startsWith('preview:'));
     const resultMap=ids.length?await get('/api/public/results?ids='+encodeURIComponent(ids.join(','))).catch(()=>({})):{};
-    const allItems=(f.events||[]).map(e=>({e,r:resultMap[String(e.id)]||[]}));
+    const allItems=(f.events||[]).map(e=>({e,r:normaliseTiedPositions(resultMap[String(e.id)]||[])}));
     if(window.BracketProjection?.refreshSeeds){
       await BracketProjection.refreshSeeds({eventItems:allItems});
     }
