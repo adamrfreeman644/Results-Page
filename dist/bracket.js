@@ -552,7 +552,9 @@
               ...contextual,
               // Keep all imported values authoritative; only retain the
               // feeder route metadata calculated from the previous round.
-              name: pasted.name,
+              // A RaceTec feeder label is not a rider name; use the
+              // resolved heat rider in that one case, otherwise keep paste data.
+              name: /^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(pasted.name || "").trim()) ? contextual.name : pasted.name,
               bib: pasted.bib,
               time: pasted.time,
               position: pasted.position,
