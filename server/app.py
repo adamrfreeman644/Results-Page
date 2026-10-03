@@ -165,6 +165,12 @@ def rider_display_name(c,name,bib):
  for row in c.execute("select distinct a.name from results r join athletes a on a.id=r.athlete_id where cast(r.bib as text)=? order by a.name",(clean(bib),)):
   candidate=clean(row[0])
   if candidate and not placeholder_rider_name(candidate):return candidate
+ # Registration keeps the real person and bib even when RaceTec creates a
+ # placeholder athlete for the knockout entry.
+ try:
+  for rider in registration_riders():
+   if clean(rider.get("bib",""))==clean(bib) and clean(rider.get("name","")):return clean(rider["name"])
+ except Exception:pass
  return rdf_bib_names().get(clean(bib),label)
 def rows(text,table):
  p="[DATA].["+table+"]:"
