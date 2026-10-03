@@ -63,8 +63,9 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     const pathLabel=x.fromLabel||x.placeholder||riderName||(x.seed!=null&&x.seed!==''?`Seed ${x.seed}`:'Awaiting qualification');
     const category=x.category?String(x.category):'',categoryClass=category.toLowerCase().replace(/[^a-z]+/g,'');
     const seedTag=showSeed&&x.seed!=null&&x.seed!==''?`<span class="seed-tag" title="Seed ${esc(x.seed)}">s${esc(x.seed)}</span>`:'';
-    // Known riders: name + seed tag. Unknown slots already say "Seed N" — skip duplicate tag.
-    const nameWithSeed=x.known?`${esc(riderName||pathLabel)}${seedTag}${advancement}`:`${esc(pathLabel)}`;
+    // Only an unknown pending slot should display its feeder placeholder.
+    // Completed results always render the authoritative rider name.
+    const nameWithSeed=pendingRow&&!x.known?`${esc(pathLabel)}`:`${esc(riderName||pathLabel)}${seedTag}${advancement}`;
     const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib bib--${categoryClass}">${esc(x.bib)}</span><span class="name">${nameWithSeed}</span>${category?`<span class="rider-category rider-category--${categoryClass}">${esc(category)}</span>`:''}</a>`:`<span class="rider ${x.known?'':'rider-placeholder'}"><span class="name">${nameWithSeed}</span></span>`;
     const finishLabel=pendingRow?(x.startPos??'—'):(finish==null||finish===''?'N/A':finish),timeValue=pendingRow?(x.known?'Not started':'Awaiting qualification'):x.time,penaltyLabel=!pendingRow&&x.penalty?`<small class="penalty-label">Penalty: ${esc(displayPenalty(x.penalty))}</small>`:'';
     if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
