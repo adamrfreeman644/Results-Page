@@ -400,19 +400,31 @@
     return null;
   }
 
+  function seedRiderName(family, seed) {
+    const category = FAMILY_SEED_CAT[family];
+    const entry = (seedCatalog?.categories?.[category] || []).find((r) => Number(r.seed) === Number(seed));
+    return entry?.name || "";
+  }
+
   function tagRolesFromFeeders(finishers, family, stage, num, byKey) {
     return finishers.map((r) => {
       const tag = inferRoleFromPreviousStage(r, family, stage, byKey) || {};
+      const meta = seedMeta(tag.riderName || r.name, family);
+      const seed = r.seed ?? meta.seed ?? null;
+      const placeholder = /^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(r.name || "").trim());
+      // Pasted RaceTec data can contain only the feeder label. The displayed
+      // seed is still authoritative, so use the seeded rider as the fallback.
+      const name = tag.riderName || (placeholder ? seedRiderName(family, seed) : "") || r.name;
       return {
         ...r,
-        // RaceTec can temporarily export the feeder label as the rider name
-        // in a later round. Preserve the actual rider identity from that feeder.
-        name: tag.riderName || r.name,
+        name,
         bib: tag.riderBib || r.bib,
         finishPos: Number(r.position) || null,
         fromRole: tag.fromRole,
         fromLabel: tag.fromLabel,
-        ...seedMeta(tag.riderName || r.name, family),
+        seed,
+        seedTimeSec: meta.seedTimeSec ?? null,
+        seedTime: meta.seedTime ?? null,
       };
     });
   }
