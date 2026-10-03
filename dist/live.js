@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-let selected=null,selectedLevel=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
+let selected=null,selectedLevel=null,selectedTeam=null,lastUpdateAt=Date.now(),lastSourceStamp=null,staleTimer=null;const raceDetails=new Map();
 
 function displayPenalty(value){const raw=String(value||'').trim().replace(/^\+/,'');const parts=raw.split(':').map(Number);if(parts.length===3&&parts.every(Number.isFinite)){const seconds=parts[0]*3600+parts[1]*60+parts[2];return '+'+(Number.isInteger(seconds)?seconds:String(seconds.toFixed(3)).replace(/0+$/,'').replace(/\.$/,''));}return raw?('+'+raw):''}
 function normaliseTiedPositions(rows){
@@ -93,6 +93,15 @@ function renderCard(item){
   if(item.pending) return table(item.e,item.r,{pending:true,projectedRows:item.projectedRows||[]});
   return table(item.e,item.r);
 }
+function renderTeamRace(feed){
+ const teams=feed.teams||[];if(!selectedTeam||!teams.some(team=>team.team===selectedTeam))selectedTeam='Standings';
+ $('#race-title').textContent='Team Race';$('#round-nav').hidden=true;$('#round-nav').innerHTML='';$('#result-count').textContent=`${teams.length} teams · official laps first`;
+ const tabs=['Standings',...teams.map(team=>team.team)].map(name=>`<button class="tab ${name===selectedTeam?'active':''}" data-team="${esc(name)}">${esc(name)}</button>`).join('');
+ let content='';
+ if(selectedTeam==='Standings')content=`<article class="race-table"><header><div><span>Results</span><h3>Team standings</h3></div><b>${teams.length} teams</b></header><div class="table-scroll"><table><thead><tr><th>Pos</th><th>Team</th><th>Official laps</th><th>Elapsed</th><th>Penalty</th></tr></thead><tbody>${teams.map(team=>`<tr class="${team.position<=3?'podium':''}"><td class="place">${esc(team.position)}</td><td><b>${esc(team.team)}</b></td><td>${esc(team.official_laps)}</td><td class="time">${esc(team.elapsed)}</td><td>${esc(team.penalty||'—')}</td></tr>`).join('')||'<tr><td colspan="5">No team results yet.</td></tr>'}</tbody></table></div></article><p class="stage-note">Standings use official laps, then elapsed time. Penalties are already reflected in the official result.</p>`;
+ else{const team=teams.find(item=>item.team===selectedTeam),laps=(team?.laps||[]);content=`<article class="race-table"><header><div><span>Team detail</span><h3>${esc(team.team)}</h3></div><b>${esc(team.official_laps)} laps</b></header><div class="table-scroll"><table><thead><tr><th>Timing</th><th>Rider</th><th>Time</th></tr></thead><tbody>${laps.map(lap=>`<tr><td>${lap.is_start?'Start':`Lap ${esc(lap.lap_number-1)}`}</td><td><span class="rider"><span class="bib">${esc(lap.rider_bib||'—')}</span><span class="name">${esc(lap.rider_name)}</span></span></td><td class="time">${esc(lap.time)}</td></tr>`).join('')||'<tr><td colspan="3">No laps recorded.</td></tr>'}</tbody></table></div></article>`}
+ $('#stage-results').innerHTML=`<div class="tabs team-tabs">${tabs}</div>${content}`;$('#stage-results').querySelectorAll('[data-team]').forEach(button=>button.onclick=()=>{selectedTeam=button.dataset.team;renderTeamRace(feed)});
+}
 
 async function render(){
   try{
@@ -134,6 +143,10 @@ async function render(){
     $('#event-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.t;selectedLevel=null;render()});
 
     const raw=allItems.filter(item=>displayTournament(item.e.tournament||'Tournament')===selected);
+    if(/^team race$/i.test(selected)){
+      const source=raw[0];if(!source){$('#race-title').textContent='Team Race';$('#result-count').textContent='Waiting for a Team Race paste.';$('#round-nav').hidden=true;$('#stage-results').innerHTML='';return}
+      renderTeamRace(await get('/api/public/team-race?event='+encodeURIComponent(source.e.id)));return;
+    }
     const knockout=raw.filter(item=>!(window.BracketProjection?.isSeedingEvent?.(item.e)));
     let enriched;
     let structureOnly=false;

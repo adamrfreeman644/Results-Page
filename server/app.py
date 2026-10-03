@@ -24,6 +24,7 @@ def db():
  create table if not exists imports(id integer primary key,fingerprint text unique,imported_at text,source_file text,event_count integer,result_count integer);
  create table if not exists result_history(import_id integer,event_id text,athlete_id text,bib text,position integer,time text,primary key(import_id,event_id,athlete_id));
  create table if not exists result_laps(event_id text,athlete_id text,lap_number integer,time text,primary key(event_id,athlete_id,lap_number));
+ create table if not exists team_laps(event_id text,team text,lap_number integer,rider_bib text,rider_name text,time text,is_start integer not null default 0,primary key(event_id,team,lap_number));
  create table if not exists tournaments(id integer primary key,name text not null unique,highlight_count integer not null default 2);
  create table if not exists levels(id integer primary key,tournament_id integer not null,name text not null,sort_order integer not null default 0,unique(tournament_id,name));
  create table if not exists races(id integer primary key,tournament_id integer not null,level_id integer,name text not null,unique(tournament_id,name));
@@ -342,6 +343,42 @@ def import_file(raw,digest):
 
 def pasted_key(value):
  return re.sub(r"[^a-z0-9]+","",clean(value).lower())
+def team_paste_headers(text):
+ first=text.lstrip("\ufeff").splitlines()[0] if text.lstrip("\ufeff").splitlines() else ""
+ headers={pasted_key(value) for value in next(csv.reader([first],dialect=csv.excel_tab if "\t" in first else csv.excel),[])}
+ return {"team","officiallaps","elapsed"}.issubset(headers)
+def team_elapsed(value):
+ value=clean(value);match=re.fullmatch(r"(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?",value)
+ if not match:return display_time(value)
+ hour,minute,second,decimal=match.groups();return str(int(hour))+":"+minute+":"+second+("."+decimal[:3].ljust(3,"0") if decimal else "")
+def parse_team_paste(text):
+ sample=text.lstrip("\ufeff").strip()
+ if not sample:raise ValueError("Paste a Team Race results table first")
+ reader=csv.DictReader(io.StringIO(sample),dialect=csv.excel_tab if "\t" in sample.splitlines()[0] else csv.excel)
+ headers={pasted_key(name):name for name in (reader.fieldnames or []) if name}
+ def field(name):return headers.get(pasted_key(name))
+ team_col,lap_col,elapsed_col=field("Team"),field("OfficialLaps"),field("Elapsed")
+ if not all((team_col,lap_col,elapsed_col)):raise ValueError("The Team Race table needs Team, OfficialLaps, and Elapsed columns")
+ pairs=[]
+ for key,rider_col in headers.items():
+  match=re.fullmatch(r"lap(\d+)rider",key)
+  if match and (time_col:=headers.get("lap"+match.group(1)+"time")):pairs.append((int(match.group(1)),rider_col,time_col))
+ teams=[]
+ for row in reader:
+  team=clean(row.get(team_col,""))
+  if not team:continue
+  laps=int(re.search(r"\d+",clean(row.get(lap_col,"")) or "0").group()) if re.search(r"\d+",clean(row.get(lap_col,"")) or "") else 0
+  circuits=[]
+  for number,rider_col,time_col in pairs:
+   rider,time_value=clean(row.get(rider_col,"")),display_time(clean(row.get(time_col,"")))
+   if not rider or not time_value:continue
+   match=re.match(r"\s*(\d+)\s*-\s*(.+)",rider);bib,name=(match.group(1),clean(match.group(2))) if match else ("",rider)
+   circuits.append({"number":number,"bib":bib,"name":name,"time":time_value,"start":number==1})
+  teams.append({"team":team,"official_laps":laps,"elapsed":team_elapsed(row.get(elapsed_col,"")),"penalty":clean(row.get(field("Penalty"),"")) if field("Penalty") else "","laps":circuits})
+ if not teams:raise ValueError("The Team Race table has no team rows")
+ teams.sort(key=lambda item:(-item["official_laps"],time_ms(item["elapsed"]) if time_ms(item["elapsed"]) is not None else 10**15,item["team"].casefold()))
+ for position,team in enumerate(teams,1):team["position"]=position
+ return teams
 def parse_pasted_results(text):
  sample=text.lstrip("\ufeff").strip()
  if not sample:raise ValueError("Paste a RaceTec results table first")
@@ -459,6 +496,33 @@ def import_pasted_results(text,replace=False):
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
   c.execute("insert into meta(key,value) values('last_error','') on conflict(key) do update set value=excluded.value")
  c.close();return {"events":len(parsed),"riders":sum(len(rows) for rows in parsed.values())}
+def import_team_pasted_results(text):
+ teams=parse_team_paste(text);event_id="paste:team-race";c=db();fingerprint=hashlib.sha256(text.encode("utf-8")).hexdigest()+"-team-"+str(time.time_ns())
+ with c:
+  iid=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(fingerprint,now(),"Pasted Team Race table",1,len(teams))).lastrowid
+  c.execute("delete from team_laps where event_id=?",(event_id,));c.execute("delete from result_laps where event_id=?",(event_id,));c.execute("delete from results where event_id=?",(event_id,));c.execute("delete from events where id=?",(event_id,));c.execute("delete from event_mappings where event_id=?",(event_id,))
+  c.execute("insert into events(id,name,tournament,level,stage,sort_order) values(?,?,?,?,?,?)",(event_id,"Team Race","Team Race","Results","Team Race",0))
+  c.execute("insert into event_mappings(event_id,tournament,level,stage,event_name) values(?,?,?,?,?)",(event_id,"Team Race","Results","Team Race","Team Race"))
+  rider_rows={}
+  for team in teams:
+   team_id="team:"+hashlib.sha1(team["team"].casefold().encode()).hexdigest()[:16]
+   c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(team_id,team["team"]))
+   c.execute("insert into results(event_id,athlete_id,bib,position,time,penalty) values(?,?,?,?,?,?)",(event_id,team_id,str(team["official_laps"]),team["position"],team["elapsed"],team["penalty"]))
+   c.execute("insert into result_history values(?,?,?,?,?,?)",(iid,event_id,team_id,str(team["official_laps"]),team["position"],team["elapsed"]))
+   for lap in team["laps"]:
+    c.execute("insert into team_laps values(?,?,?,?,?,?,?)",(event_id,team["team"],lap["number"],lap["bib"],lap["name"],lap["time"],1 if lap["start"] else 0))
+    if lap["start"]:continue
+    key=(lap["bib"],lap["name"]);rider_rows.setdefault(key,[]).append(lap)
+  for (bib,name),laps in rider_rows.items():
+   athlete=c.execute("select id from athletes where lower(name)=lower(?) limit 1",(name,)).fetchone() or c.execute("select athlete_id from results where cast(bib as text)=? limit 1",(bib,)).fetchone();athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1((bib+name).casefold().encode()).hexdigest()[:16]
+   c.execute("insert into athletes(id,name) values(?,?) on conflict(id) do update set name=excluded.name",(athlete_id,name))
+   fastest=min((lap["time"] for lap in laps),key=lambda value:time_ms(value) or 10**15)
+   c.execute("insert into results(event_id,athlete_id,bib,position,time) values(?,?,?,?,?)",(event_id,athlete_id,bib,None,fastest))
+   for lap in laps:c.execute("insert into result_laps values(?,?,?,?)",(event_id,athlete_id,lap["number"]-1,lap["time"]))
+  c.execute("insert into meta(key,value) values('source_mode','paste') on conflict(key) do update set value=excluded.value")
+  c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
+  c.execute("insert into meta(key,value) values('last_error','') on conflict(key) do update set value=excluded.value")
+ c.close();return {"events":1,"teams":len(teams),"riders":len(rider_rows)}
 def registration_riders():
  # The export stays authoritative, while parsing is reused until the file changes
  # (or for at most one reader interval).
@@ -553,6 +617,14 @@ class App(SimpleHTTPRequestHandler):
     for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["name"]=rider_display_name(c,row["name"],row["bib"]);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
+  if path=="/api/public/team-race":
+   event_id=clean(parse_qs(urlparse(self.path).query).get("event",["paste:team-race"])[0]);c=db()
+   teams=[]
+   for row in c.execute("select r.position,a.name team,r.bib official_laps,r.time elapsed,r.penalty from results r join athletes a on a.id=r.athlete_id where r.event_id=? and r.athlete_id like 'team:%' order by r.position,a.name",(event_id,)):
+    team=dict(row);team["laps"]=[]
+    for lap in c.execute("select lap_number,rider_bib,rider_name,time,is_start from team_laps where event_id=? and team=? order by lap_number",(event_id,team["team"])):team["laps"].append(dict(lap))
+    teams.append(team)
+   c.close();return self.js({"teams":teams})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
@@ -777,7 +849,7 @@ class App(SimpleHTTPRequestHandler):
    if not EXPORT_FILE.exists():return self.js({"error":"RDF file not found"},404)
    raw=EXPORT_FILE.read_bytes();import_file(raw,hashlib.sha256(raw).hexdigest()+"-manual-"+str(time.time_ns()));meta("source_mode","rdf");meta("source_state","Manually imported current RDF file")
   elif path=="/api/admin/import-text":
-   result=import_pasted_results(str(p.get("text","")),bool(p.get("replace")));meta("source_state","Imported pasted RaceTec table");return self.js({"ok":True,**result})
+   text=str(p.get("text",""));result=import_team_pasted_results(text) if team_paste_headers(text) else import_pasted_results(text,bool(p.get("replace")));meta("source_state","Imported Team Race table" if team_paste_headers(text) else "Imported pasted RaceTec table");return self.js({"ok":True,**result})
   elif path=="/api/admin/source-mode":
    mode="paste" if p.get("mode")=="paste" else "rdf";meta("source_mode",mode);meta("source_state","Using pasted RaceTec table" if mode=="paste" else "Waiting for RDF import")
   elif path=="/api/admin/feed":meta("feed_paused","false" if p.get("running") else "true")
