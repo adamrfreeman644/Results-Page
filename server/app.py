@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse,unquote,parse_qs
 from urllib.request import urlopen
 ROOT=Path(__file__).resolve().parents[1]; STATIC=ROOT/"dist"
-VERSION=(ROOT/"VERSION").read_text().strip(); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
+VERSION=os.getenv("BUILD_VERSION",(ROOT/"BUILD_VERSION").read_text().strip() if (ROOT/"BUILD_VERSION").exists() else (ROOT/"VERSION").read_text().strip()); DB_FILE=Path(os.getenv("DATABASE_FILE","/data/results.sqlite"))
 POLL_SECONDS=30; ADMIN_TOKEN=os.getenv("ADMIN_TOKEN","")
 EXPORT_DIR=Path(os.getenv("RACE_EXPORT_DIR","/race-export")); EXPORT_FILENAME=os.getenv("RACE_EXPORT_FILENAME","results.rdf"); EXPORT_FILE=EXPORT_DIR/EXPORT_FILENAME
 EXPORT_HOST_DIR=os.getenv("RACE_EXPORT_HOST_DIR",str(EXPORT_DIR))

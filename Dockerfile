@@ -1,6 +1,7 @@
 FROM python:3.13-alpine
 WORKDIR /app
 COPY . .
+RUN python server/write_build_version.py && rm -rf .git
 ENV PORT=6543 DATABASE_FILE=/data/results.sqlite POLL_SECONDS=5
 EXPOSE 6543
 CMD ["python", "server/app.py"]
