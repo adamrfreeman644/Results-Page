@@ -28,6 +28,7 @@ const displayTournament=t=>{
   if(/^open(\s+men)?$/i.test(n)) return 'Open';
   return n||'Tournament';
 };
+const displayRaceName=value=>String(value||'').replace(/\bmen'?s?\b/gi,'Open').replace(/\bopen\s+open\b/gi,'Open');
 const levelRank=level=>['Qualifiers','Heats','Quarters','Semi','Finals'].indexOf(level);
 
 async function get(u){
@@ -55,8 +56,8 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
     return `<tr class="${cls}"><td class="place">${esc(finishLabel)}</td><td class="start">${x.startPos??'—'}</td><td class="seed">${x.seed!=null&&x.seed!==''?esc(x.seed):'—'}</td><td>${riderInner}</td><td class="time">${esc(timeValue)}</td></tr>`;
   }).join(''):compact?'<tr class="pending-row"><td class="start">—</td><td class="seed">—</td><td><span class="rider rider-placeholder"><span class="name">Waiting for earlier results</span></span></td></tr>':mobileGlance?'<tr><td colspan="4">No results yet.</td></tr>':'<tr><td colspan="5">No results yet.</td></tr>';
   const columns=compact?'<colgroup><col class="result-start"><col class="result-seed"><col class="result-rider"></colgroup><thead><tr><th>Start</th><th>Seed</th><th>Rider</th></tr></thead>':mobileGlance?`<colgroup><col class="result-pos"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>${pending?'Entry':'Finish'}</th><th>Seed</th><th>Rider</th><th>${pending?'Status':esc(timeLabel)}</th></tr></thead>`:`<colgroup><col class="result-pos"><col class="result-start"><col class="result-seed"><col class="result-rider"><col class="result-time"></colgroup><thead><tr><th>Finish position</th><th>Starting grid position</th><th>Seed</th><th>Rider</th><th>${pending?'Status':esc(timeLabel)}</th></tr></thead>`;
-  const headerContent=`<div><span>${esc(badge)}</span><h3>${esc(e.name)}</h3></div><b>${esc(countLabel)}</b>`;
-  const cardHeader=expanded?`<header>${headerContent}</header>`:`<button type="button" class="race-card-header" data-race-detail="${esc(detailId)}" aria-label="Open ${esc(e.name)} details">${headerContent}</button>`;
+  const headerContent=`<div><span>${esc(badge)}</span><h3>${esc(displayRaceName(e.name))}</h3></div><b>${esc(countLabel)}</b>`;
+  const cardHeader=expanded?`<header>${headerContent}</header>`:`<button type="button" class="race-card-header" data-race-detail="${esc(detailId)}" aria-label="Open ${esc(displayRaceName(e.name))} details">${headerContent}</button>`;
   return `<article class="race-table ${pending?'race-table--pending':''}">${cardHeader}<div class="table-scroll"><table>${columns}<tbody>${body}</tbody></table></div></article>`;
 }
 function openRaceDetail(id){
