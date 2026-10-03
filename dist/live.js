@@ -147,8 +147,10 @@ async function render(){
     $('#result-count').textContent=structureOnly
       ?`Bracket structure · who faces who (no race data yet)`
       :`${raw.length} published${pendingCount?` · ${pendingCount} up next`:''}`;
-    $('#round-nav').innerHTML=levels.map((level,i)=>`<button class="round ${level===selectedLevel?'active':''}" data-level="${esc(level)}"><span class="round-name">${esc(level)}</span><span class="round-step">${i+1}</span></button>`).join('');
-    $('#round-nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
+    const roundNav=$('#round-nav');
+    roundNav.hidden=levels.length<2;
+    roundNav.innerHTML=levels.length>1?levels.map((level,i)=>`<button class="round ${level===selectedLevel?'active':''}" data-level="${esc(level)}"><span class="round-name">${esc(level)}</span><span class="round-step">${i+1}</span></button>`).join(''):'';
+    roundNav.querySelectorAll('button').forEach(b=>b.onclick=()=>{selectedLevel=b.dataset.level;render()});
     const set=all.filter(x=>(BracketProjection?BracketProjection.stageOfItem(x):'Qualifiers')===selectedLevel);
     $('#stage-results').innerHTML=`<div class="race-grid ${set.length===1?'single':''}">${set.map(renderCard).join('')}</div><p class="stage-note">${structureOnly?'Click a heat to expand. Heats show Seed N; later rounds show Winner of H… / 2nd place of …. ':'Rows are start order. Heats: better seed → earlier gate. Later rounds: winners take starts 1–2 (by seed), 2nds take 3–4. '}</p>`;
     $('#stage-results').querySelectorAll('.race-card-header[data-race-detail]').forEach(header=>{
