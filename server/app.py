@@ -635,6 +635,8 @@ class App(SimpleHTTPRequestHandler):
     for lap in c.execute("select lap_number,rider_bib,rider_name,time,is_start from team_laps where event_id=? and team=? order by lap_number",(event_id,team["team"])):
      item=dict(lap)
      if (time_ms(item["time"]) or 0)>=60000:team["laps"].append(item)
+    for item in team["laps"]:
+     rider=c.execute("select athlete_id from results where event_id=? and cast(bib as text)=? and position is null limit 1",(event_id,item["rider_bib"])).fetchone();item["athlete_id"]=rider[0] if rider else ""
     completed=[lap["time"] for lap in team["laps"] if time_ms(lap["time"]) is not None]
     team["fastest_lap"]=min(completed,key=time_ms) if completed else ""
     teams.append(team)
