@@ -530,11 +530,11 @@ class App(SimpleHTTPRequestHandler):
    c=db();out={item:[] for item in ids}
    if ids:
     marks=",".join("?" for _ in ids)
-    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
+    for item in c.execute("select r.event_id,r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id in ("+marks+") order by r.event_id,r.position is null,r.position,a.name",ids):
      row=dict(item);row["name"]=rider_display_name(c,row["name"],row["bib"]);row["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))];row["time"]=display_time(row["time"]);out.setdefault(row.pop("event_id"),[]).append(row)
    c.close();return self.js(out)
   if path.startswith("/api/public/events/") and path.endswith("/results"):
-   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
+   event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
     item["name"]=rider_display_name(c,item["name"],item["bib"])
     item["laps"]=[dict(x) for x in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(event_id,item["athlete_id"]))]
