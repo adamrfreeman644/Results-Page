@@ -406,9 +406,26 @@
     return entry?.name || "";
   }
 
+  function inferRoleFromPlaceholderName(rider, family, stage, byKey) {
+    const raw = String(rider.name || "");
+    const match = raw.match(/^\s*(winner|(?:2nd|second|runner\s*up))\b.*?heat[s]?\s*(\d+)/i);
+    if (!match) return null;
+    const source = byKey.get(`${family}:heat:${match[2]}`);
+    const finishers = sortFinishers(source?.r);
+    const isWinner = /^winner/i.test(match[1]);
+    const selected = finishers[isWinner ? 0 : 1];
+    if (!selected) return null;
+    return {
+      fromRole: isWinner ? "W" : "RU",
+      fromLabel: `${isWinner ? "Winner" : "2nd"} · ${source.e?.name || `Open Heat ${match[2]}`}`,
+      riderName: selected.name,
+      riderBib: selected.bib,
+    };
+  }
+
   function tagRolesFromFeeders(finishers, family, stage, num, byKey) {
     return finishers.map((r) => {
-      const tag = inferRoleFromPreviousStage(r, family, stage, byKey) || {};
+      const tag = inferRoleFromPreviousStage(r, family, stage, byKey) || inferRoleFromPlaceholderName(r, family, stage, byKey) || {};
       const meta = seedMeta(tag.riderName || r.name, family);
       const seed = r.seed ?? meta.seed ?? null;
       const placeholder = /^(winner|\d+(?:st|nd|rd|th)?|runner\s*up)\b/i.test(String(r.name || "").trim());
