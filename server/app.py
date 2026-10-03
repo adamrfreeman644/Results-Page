@@ -422,6 +422,13 @@ def import_pasted_results(text,replace=False):
     athlete=c.execute("select id from athletes where lower(name)=lower(?) order by id limit 1",(row["name"],)).fetchone()
     athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1(row["name"].casefold().encode()).hexdigest()[:16]
     c.execute("insert into athletes(id,name,category) values(?,?,?) on conflict(id) do update set name=excluded.name,category=case when excluded.category<>'' then excluded.category else athletes.category end",(athlete_id,row["name"],row["category"]))
+    # Preserve omitted riders, but replace only a stale RaceTec feeder placeholder
+    # when the same event + bib is now pasted with that person's real name.
+    if row["bib"] and not placeholder_rider_name(row["name"]):
+     stale=[item[0] for item in c.execute("select r.athlete_id from results r join athletes a on a.id=r.athlete_id where r.event_id=? and r.bib=? and r.athlete_id<>? and (lower(a.name) like 'winner%' or lower(a.name) like '2nd%' or lower(a.name) like 'runner up%')",(event_id,row["bib"],athlete_id))]
+     for stale_id in stale:
+      c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,stale_id))
+      c.execute("delete from results where event_id=? and athlete_id=?",(event_id,stale_id))
     c.execute("insert into results(event_id,athlete_id,bib,position,time,category,penalty) values(?,?,?,?,?,?,?) on conflict(event_id,athlete_id) do update set bib=excluded.bib,position=case when excluded.position is not null then excluded.position else results.position end,time=case when excluded.time<>'' then excluded.time else results.time end,category=case when excluded.category<>'' then excluded.category else results.category end,penalty=case when excluded.penalty<>'' then excluded.penalty else results.penalty end",(event_id,athlete_id,row["bib"],row["position"],row["time"],row["category"],row.get("penalty","")))
     if row.get("laps"):
      c.execute("delete from result_laps where event_id=? and athlete_id=?",(event_id,athlete_id))
