@@ -137,7 +137,7 @@
       "open-men": "Open",
       women: "Womens",
       groms: "Groms",
-      "wild-men": "Wild - Mens",
+      "wild-men": "Wild - Open",
       "wild-women": "Wild - Womens",
       "wild-groms": "Wild - Groms",
     }[family] || "Race";
