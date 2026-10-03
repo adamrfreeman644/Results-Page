@@ -59,11 +59,12 @@ function table(e,r,{pending=false,projectedRows=null,expanded=false}={}){
   const body=rows.length?rows.map(x=>{
     const pendingRow=pending||x.pending,finish=x.finishPos??x.position,cls=[!pendingRow&&Number(finish)>0&&Number(finish)<=Number(e.highlight_count??2)?'podium':'',pendingRow?'pending-row':'',x.known?'pending-known':(pendingRow?'pending-unknown':'')].filter(Boolean).join(' ');
     const advancement=x.fromLabel&&x.known?`<small class="advancement">${esc(x.fromLabel)}</small>`:'';
-    const pathLabel=x.fromLabel||x.placeholder||x.name||(x.seed!=null&&x.seed!==''?`Seed ${x.seed}`:'Awaiting qualification');
+    const riderName=x.display_name||x.name;
+    const pathLabel=x.fromLabel||x.placeholder||riderName||(x.seed!=null&&x.seed!==''?`Seed ${x.seed}`:'Awaiting qualification');
     const category=x.category?String(x.category):'',categoryClass=category.toLowerCase().replace(/[^a-z]+/g,'');
     const seedTag=showSeed&&x.seed!=null&&x.seed!==''?`<span class="seed-tag" title="Seed ${esc(x.seed)}">s${esc(x.seed)}</span>`:'';
     // Known riders: name + seed tag. Unknown slots already say "Seed N" — skip duplicate tag.
-    const nameWithSeed=x.known?`${esc(x.name||pathLabel)}${seedTag}${advancement}`:`${esc(pathLabel)}`;
+    const nameWithSeed=x.known?`${esc(riderName||pathLabel)}${seedTag}${advancement}`:`${esc(pathLabel)}`;
     const riderInner=x.athlete_id?`<a class="rider rider-link" href="/rider/?id=${encodeURIComponent(x.athlete_id)}"><span class="bib bib--${categoryClass}">${esc(x.bib)}</span><span class="name">${nameWithSeed}</span>${category?`<span class="rider-category rider-category--${categoryClass}">${esc(category)}</span>`:''}</a>`:`<span class="rider ${x.known?'':'rider-placeholder'}"><span class="name">${nameWithSeed}</span></span>`;
     const finishLabel=pendingRow?(x.startPos??'—'):(finish==null||finish===''?'N/A':finish),timeValue=pendingRow?(x.known?'Not started':'Awaiting qualification'):x.time,penaltyLabel=!pendingRow&&x.penalty?`<small class="penalty-label">Penalty: ${esc(displayPenalty(x.penalty))}</small>`:'';
     if(pendingRow&&compact)return `<tr class="${cls}"><td class="start">${x.startPos??'—'}</td><td class="seed">s${x.seed??'—'}</td><td>${riderInner}</td></tr>`;
