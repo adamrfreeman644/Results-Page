@@ -98,6 +98,11 @@ function renderTeamRace(feed){
  $('#race-title').textContent='Team Race';$('#round-nav').hidden=true;$('#round-nav').innerHTML='';$('#result-count').textContent=`${teams.length} teams · official laps first`;
  $('#stage-results').innerHTML=`<article class="race-table team-results-board"><header><div><span>Results</span><h3>Team standings</h3></div><b>${teams.length} teams</b></header><div class="team-board"><div class="team-board-head"><span>Pos</span><span>Team</span><span>Official laps</span><span>Fastest lap</span></div>${teams.map(team=>`<div class="team-board-row ${team.position<=3?'podium':''}"><strong class="team-board-pos">${esc(team.position)}</strong><a class="team-link" href="/team/?team=${encodeURIComponent(team.team)}">${esc(team.team)}</a><div class="team-board-laps"><b>${esc(team.official_laps)}</b>${team.penalty?`<small class="penalty-label">${esc(team.penalty)}</small>`:''}</div><div class="team-board-fastest">${esc(team.fastest_lap||'—')}</div></div>`).join('')||'<p class="empty">No team results yet.</p>'}</div></article><p class="stage-note">Standings use official laps, then elapsed time. Timings under one minute are excluded.</p>`;
 }
+function renderLapTimes(feed){
+ const stages=[['standard','Standard Laps'],['short','Short Track Laps']];if(!selectedLevel||!stages.some(stage=>stage[0]===selectedLevel))selectedLevel='standard';const rows=feed[selectedLevel]||[];
+ $('#race-title').textContent='Lap Times';$('#result-count').textContent=`${rows.length} recorded laps`;$('#round-nav').hidden=false;$('#round-nav').innerHTML=stages.map(([id,label])=>`<button class="round ${id===selectedLevel?'active':''}" data-level="${id}"><span class="round-name">${label}</span></button>`).join('');$('#round-nav').querySelectorAll('button').forEach(button=>button.onclick=()=>{selectedLevel=button.dataset.level;renderLapTimes(feed)});
+ $('#stage-results').innerHTML=`<article class="race-table lap-times-board"><header><div><span>${selectedLevel==='short'?'Short track':'Standard track'}</span><h3>${selectedLevel==='short'?'Short Track Laps':'Standard Laps'}</h3></div><b>${rows.length} laps</b></header><div>${rows.map(row=>`<div class="lap-time-row"><a class="rider rider-link" href="/rider/?id=${encodeURIComponent(row.athlete_id)}"><span class="bib">${esc(row.bib||'—')}</span><span class="name">${esc(row.name)}</span></a><span class="lap-time-race">${esc(row.race)}${row.lap_number?` · Lap ${esc(row.lap_number)}`:''}</span><strong class="time">${esc(row.time)}</strong></div>`).join('')||'<p class="empty">No laps recorded yet.</p>'}</div></article>`;
+}
 
 async function render(){
   try{
@@ -132,13 +137,14 @@ async function render(){
     }
 
     const rawTs=[...new Set((f.events||[]).map(e=>e.tournament||'Tournament'))];
-    const liveTabs=[...new Set(rawTs.map(displayTournament))];
+    const liveTabs=[...new Set(rawTs.map(displayTournament))];if(!liveTabs.includes('Lap Times'))liveTabs.push('Lap Times');
     const ts=(liveTabs.length?liveTabs:['Open','Women','Groms']).sort((a,b)=>tournamentRank(a)-tournamentRank(b)||a.localeCompare(b));
     if(!selected||!ts.includes(selected))selected=ts[0];
     $('#event-tabs').innerHTML=ts.map(t=>`<button class="tab ${t===selected?'active':''}" data-t="${esc(t)}">${esc(t)}</button>`).join('');
     $('#event-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{selected=b.dataset.t;selectedLevel=null;render()});
 
     const raw=allItems.filter(item=>displayTournament(item.e.tournament||'Tournament')===selected);
+    if(/^lap times$/i.test(selected)){renderLapTimes(await get('/api/public/lap-times'));return;}
     if(/^team race$/i.test(selected)){
       const source=raw[0];if(!source){$('#race-title').textContent='Team Race';$('#result-count').textContent='Waiting for a Team Race paste.';$('#round-nav').hidden=true;$('#stage-results').innerHTML='';return}
       renderTeamRace(await get('/api/public/team-race?event='+encodeURIComponent(source.e.id)));return;

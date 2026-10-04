@@ -641,6 +641,17 @@ class App(SimpleHTTPRequestHandler):
     team["fastest_lap"]=min(completed,key=time_ms) if completed else ""
     teams.append(team)
    c.close();return self.js({"teams":teams})
+  if path=="/api/public/lap-times":
+   c=db();source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0];source_op="like" if source_mode=="paste" else "not like";source_like="paste:%";standard=[];short=[]
+   for row in c.execute("select r.event_id,r.athlete_id,r.bib,r.time,e.tournament,e.name race,a.name from results r join events e on e.id=r.event_id join athletes a on a.id=r.athlete_id where e.id "+source_op+" ? and not exists(select 1 from team_laps tl where tl.event_id=r.event_id and tl.team=a.name)",(source_like,)):
+    label=" ".join(str(row[key] or "") for key in ("tournament","race"));is_short=bool(re.search(r"chair\s*race|legends|team\s*race",label,re.I));laps=[dict(item) for item in c.execute("select lap_number,time from result_laps where event_id=? and athlete_id=? order by lap_number",(row["event_id"],row["athlete_id"]))]
+    if not laps:laps=[{"lap_number":None,"time":row["time"]}]
+    for lap in laps:
+     value=display_time(lap["time"])
+     if time_ms(value) is None:continue
+     item={"athlete_id":row["athlete_id"],"bib":row["bib"],"name":rider_display_name(c,row["name"],row["bib"]),"race":row["race"],"lap_number":lap["lap_number"],"time":value}
+     (short if is_short else standard).append(item)
+   c.close();standard.sort(key=lambda item:(time_ms(item["time"]) or 10**15,item["name"].casefold()));short.sort(key=lambda item:(time_ms(item["time"]) or 10**15,item["name"].casefold()));return self.js({"standard":standard,"short":short})
   if path.startswith("/api/public/events/") and path.endswith("/results"):
    event_id=unquote(path.split("/")[4]);c=db();r=[] if event_id.startswith("manual:") else [dict(x) for x in c.execute("select r.athlete_id,r.position,a.name,a.name display_name,r.bib,r.time,r.penalty,coalesce(nullif(a.category,''),r.category) category from results r join athletes a on a.id=r.athlete_id where r.event_id=? order by r.position is null,r.position,a.name",(event_id,))]
    for item in r:
