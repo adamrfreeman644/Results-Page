@@ -15,7 +15,7 @@ function fitGrid(){
     const rowHeight=(height-(rows-1)*14)/rows;
     const density=rowHeight<72?'tight':rowHeight<105?'compact':'normal';
     grid.dataset.density=density;
-    grid.querySelectorAll('.chip-display-name').forEach(name=>name.textContent=density==='tight'?name.dataset.short:name.dataset.full);
+    grid.querySelectorAll('.chip-display-name').forEach(name=>name.textContent=name.dataset.short);
     grid.style.setProperty('--chip-grid-height',height+'px');
   });
 }
@@ -27,7 +27,7 @@ async function refresh(){
     outstanding=(data.riders||[]).filter(rider=>!rider.chipReturned).sort((a,b)=>Number(a.bib||9999)-Number(b.bib||9999)||String(a.name).localeCompare(String(b.name)));
     $('#chip-display-count').textContent=`${outstanding.length} chip${outstanding.length===1?'':'s'} outstanding`;
     $('#chip-display-grid').innerHTML=outstanding.length
-      ? outstanding.map(rider=>`<article class="chip-display-rider"><b>${esc(rider.bib||'—')}</b><span class="chip-display-name" data-full="${esc(rider.name)}" data-short="${esc(compactName(rider.name))}">${esc(rider.name)}</span></article>`).join('')
+      ? outstanding.map(rider=>`<article class="chip-display-rider"><b>${esc(rider.bib||'—')}</b><span class="chip-display-name" data-short="${esc(compactName(rider.name))}">${esc(compactName(rider.name))}</span></article>`).join('')
       : '<section class="chip-display-clear"><strong>All chips returned</strong><span>Thank you!</span></section>';
     fitGrid();
   }catch{
