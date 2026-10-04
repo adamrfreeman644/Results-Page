@@ -683,7 +683,10 @@ class App(SimpleHTTPRequestHandler):
   if path=="/api/public/registrations":
    try:
     c=db();source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0];return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
-    return self.js({"riders":pasted_registration_riders() if source_mode=="paste" else registration_riders(),"chipReturnMode":return_mode})
+    riders=pasted_registration_riders() if source_mode=="paste" else registration_riders()
+    # A pasted registration table with a Chip Returned column is always a
+    # return-control view: False means the chip remains outstanding.
+    return self.js({"riders":riders,"chipReturnMode":return_mode or (source_mode=="paste" and bool(riders))})
    except Exception as e:return self.js({"error":"Registration list unavailable: "+str(e)[:200]},503)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
