@@ -9,8 +9,12 @@ function fitGrid(){
   const rows=Math.ceil(count/columns);
   grid.style.setProperty('--chip-columns',columns);
   grid.style.setProperty('--chip-rows',rows);
-  grid.dataset.density=rows>=13?'tight':rows>=9?'compact':'normal';
-  requestAnimationFrame(()=>grid.style.setProperty('--chip-grid-height',Math.max(120,window.innerHeight-grid.getBoundingClientRect().top-24)+'px'));
+  requestAnimationFrame(()=>{
+    const height=Math.max(120,window.innerHeight-grid.getBoundingClientRect().top-24);
+    const rowHeight=(height-(rows-1)*14)/rows;
+    grid.dataset.density=rowHeight<72?'tight':rowHeight<105?'compact':'normal';
+    grid.style.setProperty('--chip-grid-height',height+'px');
+  });
 }
 async function refresh(){
   try{
