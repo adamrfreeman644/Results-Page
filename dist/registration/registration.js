@@ -21,7 +21,10 @@ async function refresh(){
     if(!response.ok)throw Error(data.error||'Unable to load registration');
     riders=data.riders||[];
     returnMode=Boolean(data.chipReturnMode);
-    $('#registration-count').textContent=`${riders.length} registered`;
+    const remaining=riders.filter(r=>!r.chipReturned).length;
+    $('#registration-count').innerHTML=returnMode
+      ? `<strong>${riders.length} registered</strong><span>${remaining} chip${remaining===1?'':'s'} to return</span>`
+      : `<strong>${riders.length} registered</strong>`;
     render();
   }catch(error){
     $('#registration-count').textContent='Registration unavailable';
