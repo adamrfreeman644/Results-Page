@@ -408,6 +408,8 @@ def parse_pasted_results(text):
  leg_col=field("Finish Leg Time","Leg time")
  race_total_col=field("Finish Race Time","Lap 2 Race Time")
  penalty_col=field("Penalty","Time penalty","Penalty time","Penalty seconds")
+ chip_code_col=field("Chip code","Chip")
+ chip_returned_col=field("Chip Returned","Chip return status")
  position_col=field("Overall position","Position","Overall")
  lap_cols=[]
  for key,header in headers.items():
@@ -444,7 +446,10 @@ def parse_pasted_results(text):
   position_text=clean(row.get(position_col,"")) if position_col else ""
   match=re.search(r"\d+",position_text)
   position=None if dsq else (int(match.group()) if match else None)
-  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"penalty":clean(row.get(penalty_col,"")) if penalty_col else "","laps":[(number,display_time(value)) for number,value in laps]})
+  chip_returned=None
+  if chip_returned_col:
+   chip_returned=clean(row.get(chip_returned_col,"")) .casefold() in {"true","yes","1","returned"}
+  grouped.setdefault(event,[]).append({"name":name,"bib":clean(row.get(bib_col,"")),"category":rider_category([row.get(category_col,"")]) if category_col else "","time":display_time(timing),"position":position,"penalty":clean(row.get(penalty_col,"")) if penalty_col else "","chip_code":clean(row.get(chip_code_col,"")) if chip_code_col else "","chip_returned":chip_returned,"laps":[(number,display_time(value)) for number,value in laps]})
  # RaceTec may serialise equal finish times as consecutive positions.
  # Normalise those records so a genuine tie displays the shared placing.
  for event_rows in grouped.values():
@@ -465,6 +470,7 @@ def import_pasted_results(text,replace=False):
   iid=c.execute("insert into imports(fingerprint,imported_at,source_file,event_count,result_count) values(?,?,?,?,?)",(fingerprint,now(),"Pasted RaceTec table",len(parsed),sum(len(rows) for rows in parsed.values()))).lastrowid
   mappings={clean(row["event_name"]).casefold():row for row in c.execute("select event_name,tournament,level,stage,race_id from event_mappings") if clean(row["event_name"])}
   prepared=[dict(row) for row in c.execute("select r.id,t.name tournament,coalesce(l.name,'General') level,r.name race from races r join tournaments t on t.id=r.tournament_id left join levels l on l.id=r.level_id")]
+  saw_chip_returns=False
   for order,(event_name,rows_for_event) in enumerate(parsed.items()):
    event_id="paste:"+hashlib.sha1(event_name.casefold().encode()).hexdigest()[:16]
    # Normal pastes merge into this event. Explicit replacement is available
@@ -487,6 +493,9 @@ def import_pasted_results(text,replace=False):
     athlete=c.execute("select id from athletes where lower(name)=lower(?) order by id limit 1",(row["name"],)).fetchone()
     athlete_id=athlete[0] if athlete else "paste:"+hashlib.sha1(row["name"].casefold().encode()).hexdigest()[:16]
     c.execute("insert into athletes(id,name,category) values(?,?,?) on conflict(id) do update set name=excluded.name,category=case when excluded.category<>'' then excluded.category else athletes.category end",(athlete_id,row["name"],row["category"]))
+    if "regist" in event_name.casefold() and row["chip_returned"] is not None:
+     c.execute("insert into athlete_settings(athlete_id,registered,chip_code,chip_returned) values(?,?,?,?) on conflict(athlete_id) do update set registered=1,chip_code=excluded.chip_code,chip_returned=excluded.chip_returned",(athlete_id,1,row["chip_code"],1 if row["chip_returned"] else 0))
+     saw_chip_returns=True
     # Preserve omitted riders, but replace only a stale RaceTec feeder placeholder
     # when the same event + bib is now pasted with that person's real name.
     if row["bib"] and not placeholder_rider_name(row["name"]):
@@ -503,6 +512,7 @@ def import_pasted_results(text,replace=False):
   c.execute("insert into meta(key,value) values('source_mode','paste') on conflict(key) do update set value=excluded.value")
   c.execute("insert into meta(key,value) values('last_import',?) on conflict(key) do update set value=excluded.value",(now(),))
   c.execute("insert into meta(key,value) values('last_error','') on conflict(key) do update set value=excluded.value")
+  if saw_chip_returns:c.execute("insert into meta(key,value) values('chip_return_mode','true') on conflict(key) do update set value=excluded.value")
  c.close();return {"events":len(parsed),"riders":sum(len(rows) for rows in parsed.values())}
 def import_team_pasted_results(text):
  teams=parse_team_paste(text);event_id="paste:team-race";c=db();fingerprint=hashlib.sha256(text.encode("utf-8")).hexdigest()+"-team-"+str(time.time_ns())
@@ -568,6 +578,11 @@ def registration_riders():
  with REGISTRATION_CACHE_LOCK:
   REGISTRATION_CACHE.update({"stamp":stamp,"cached_at":time.monotonic(),"riders":result})
  return result
+def pasted_registration_riders():
+ c=db()
+ rows=[dict(row) for row in c.execute("select a.id,a.name,r.bib,coalesce(s.chip_code,'') chipCode,coalesce(s.chip_returned,0) chipReturned from results r join events e on e.id=r.event_id join athletes a on a.id=r.athlete_id left join athlete_settings s on s.athlete_id=a.id where e.id like 'paste:%' and lower(e.name) like '%regist%' order by a.name")]
+ c.close()
+ return [{"id":row["id"],"name":row["name"],"bib":row["bib"],"chipCode":row["chipCode"],"chipReturned":bool(row["chipReturned"]),"chipAssigned":bool(row["chipCode"])} for row in rows]
 
 def fstatus():
  try:
@@ -667,8 +682,8 @@ class App(SimpleHTTPRequestHandler):
    return self.js({"fills":seed_fills()})
   if path=="/api/public/registrations":
    try:
-    c=db();return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
-    return self.js({"riders":registration_riders(),"chipReturnMode":return_mode})
+    c=db();source_mode=(c.execute("select value from meta where key='source_mode'").fetchone() or ["rdf"])[0];return_mode=(c.execute("select value from meta where key='chip_return_mode'").fetchone() or ["false"])[0]=="true";c.close()
+    return self.js({"riders":pasted_registration_riders() if source_mode=="paste" else registration_riders(),"chipReturnMode":return_mode})
    except Exception as e:return self.js({"error":"Registration list unavailable: "+str(e)[:200]},503)
   if path=="/api/public/riders/search":
    query=parse_qs(urlparse(self.path).query).get("name",[""])[0].strip();c=db();rows=[]
